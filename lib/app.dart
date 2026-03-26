@@ -15,7 +15,7 @@ class SekkaApp extends StatelessWidget {
       // Themes (Light + Dark)
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.light,
 
       // Locales (Arabic primary + English)
       locale: const Locale('ar'),
