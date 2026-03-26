@@ -1,0 +1,67 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'route_names.dart';
+
+/// Placeholder screen used before real screens are built.
+class _PlaceholderScreen extends StatelessWidget {
+  const _PlaceholderScreen({required this.name});
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Text(
+          name,
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final appRouter = GoRouter(
+  initialLocation: RouteNames.splash,
+  routes: [
+    GoRoute(
+      path: RouteNames.splash,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Splash'),
+    ),
+    GoRoute(
+      path: RouteNames.login,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Login'),
+    ),
+    GoRoute(
+      path: RouteNames.otp,
+      builder: (_, __) => const _PlaceholderScreen(name: 'OTP'),
+    ),
+    GoRoute(
+      path: RouteNames.register,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Register'),
+    ),
+    GoRoute(
+      path: RouteNames.main,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Main'),
+    ),
+    GoRoute(
+      path: RouteNames.addOrder,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Add Order'),
+    ),
+    GoRoute(
+      path: RouteNames.orderDetails,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Order Details'),
+    ),
+    GoRoute(
+      path: RouteNames.completeOrder,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Complete Order'),
+    ),
+    GoRoute(
+      path: RouteNames.profile,
+      builder: (_, __) => const _PlaceholderScreen(name: 'Profile'),
+    ),
+  ],
+);
