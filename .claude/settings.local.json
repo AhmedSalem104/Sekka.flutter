@@ -74,7 +74,15 @@
       "Bash(sed -i \"s|_dio.put\\(''/chat/messages/$messageId/read''\\)|_dio.put\\(''/chat/messages/$messageId/read'', data: {}\\)|\" lib/features/chat/data/repositories/chat_repository.dart)",
       "Bash(sed -i \"s|_dio.put\\(''/notifications/$id/read''\\)|_dio.put\\(''/notifications/$id/read'', data: {}\\)|\" lib/features/notifications/data/repositories/notification_repository.dart)",
       "Bash(sed -i \"s|_dio.put\\(''/notifications/read-all''\\)|_dio.put\\(''/notifications/read-all'', data: {}\\)|\" lib/features/notifications/data/repositories/notification_repository.dart)",
-      "Bash(sed -i \"s|_dio.post\\(''/sos/$id/dismiss''\\)|_dio.post\\(''/sos/$id/dismiss'', data: {}\\)|\" lib/features/sos/data/repositories/sos_repository.dart)"
+      "Bash(sed -i \"s|_dio.post\\(''/sos/$id/dismiss''\\)|_dio.post\\(''/sos/$id/dismiss'', data: {}\\)|\" lib/features/sos/data/repositories/sos_repository.dart)",
+      "Bash(find /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib -name *bloc.dart -o -name *provider.dart)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJlZDg1NzkyMS1hODEwLTQwMDgtYjg5My0wY2JmNDA0N2MwYzgiLCJleHAiOjE3NzQ3Mjk1MTIsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.w02BWz8saf9yqxrHXWl9c1AOBSX34U8q8ir6F1r2BwI\")",
+      "Bash(OID=\"eacde1f2-12a3-41e8-71c0-08de8c3f028e\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
