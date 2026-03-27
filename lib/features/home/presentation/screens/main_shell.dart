@@ -4,6 +4,7 @@ import '../../../../core/widgets/sekka_bottom_nav.dart';
 import '../../../orders/presentation/screens/orders_list_screen.dart';
 import '../../../wallet/presentation/screens/wallet_screen.dart';
 import '../../../settings/presentation/screens/profile_screen.dart';
+import 'contacts_screen.dart';
 import 'home_screen.dart';
 
 class MainShell extends StatefulWidget {
@@ -19,6 +20,7 @@ class _MainShellState extends State<MainShell> {
   final _screens = const [
     HomeScreen(),
     OrdersListScreen(),
+    ContactsScreen(),
     WalletScreen(),
     ProfileScreen(),
   ];
@@ -33,6 +35,11 @@ class _MainShellState extends State<MainShell> {
       icon: IconsaxPlusLinear.clipboard_text,
       activeIcon: IconsaxPlusBold.clipboard_text,
       label: 'الطلبات',
+    ),
+    SekkaBottomNavItem(
+      icon: IconsaxPlusLinear.profile_2user,
+      activeIcon: IconsaxPlusBold.profile_2user,
+      label: 'جهات الاتصال',
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.wallet_2,

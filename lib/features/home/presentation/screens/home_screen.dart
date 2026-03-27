@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -7,6 +8,12 @@ import '../../../../core/utils/responsive.dart';
 import '../../../../core/extensions/date_extensions.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../../shared/network/dio_client.dart';
+import '../../../../shared/storage/token_storage.dart';
+import '../../../notifications/data/repositories/notification_repository.dart';
+import '../../../notifications/presentation/screens/notifications_screen.dart';
+import '../../../sos/data/repositories/sos_repository.dart';
+import '../../../sos/presentation/screens/sos_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -26,7 +33,7 @@ class HomeScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: Responsive.h(20)),
-              _buildHeader(greeting, isDark),
+              _buildHeader(context, greeting, isDark),
               SizedBox(height: Responsive.h(28)),
               _buildCurrentOrderCard(isDark),
               SizedBox(height: Responsive.h(24)),
@@ -41,9 +48,33 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
+  void _openNotifications(BuildContext context) {
+    final dio = context.read<DioClient>().dio;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsScreen(
+          repository: NotificationRepository(dio),
+        ),
+      ),
+    );
+  }
+
+  void _openSos(BuildContext context) {
+    final dio = context.read<DioClient>().dio;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SosScreen(
+          repository: SosRepository(dio),
+        ),
+      ),
+    );
+  }
+
   // ── Header ──
 
-  Widget _buildHeader(String greeting, bool isDark) {
+  Widget _buildHeader(BuildContext context, String greeting, bool isDark) {
     return Row(
       children: [
         // Avatar
@@ -85,66 +116,46 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        // Notification bell
-        _buildIconButton(
-          icon: IconsaxPlusLinear.notification,
-          isDark: isDark,
-          badgeCount: 3,
+        // SOS
+        GestureDetector(
+          onTap: () => _openSos(context),
+          child: Icon(
+            IconsaxPlusLinear.danger,
+            color: AppColors.error,
+            size: Responsive.r(26),
+          ),
+        ),
+        SizedBox(width: Responsive.w(18)),
+        // Notifications
+        GestureDetector(
+          onTap: () => _openNotifications(context),
+          child: Stack(
+            children: [
+              Icon(
+                IconsaxPlusLinear.notification,
+                color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+                size: Responsive.r(26),
+              ),
+              Positioned(
+                top: 0,
+                left: 0,
+                child: Container(
+                  width: Responsive.r(9),
+                  height: Responsive.r(9),
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildIconButton({
-    required IconData icon,
-    required bool isDark,
-    int badgeCount = 0,
-  }) {
-    return Stack(
-      children: [
-        Container(
-          width: Responsive.r(48),
-          height: Responsive.r(48),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(Responsive.r(14)),
-            border: Border.all(
-              color: isDark ? AppColors.borderDark : AppColors.border,
-            ),
-          ),
-          child: Icon(
-            icon,
-            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-            size: Responsive.r(24),
-          ),
-        ),
-        if (badgeCount > 0)
-          Positioned(
-            top: 0,
-            left: 0,
-            child: Container(
-              width: Responsive.r(20),
-              height: Responsive.r(20),
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  '$badgeCount',
-                  style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontSize: Responsive.sp(10),
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textOnPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+
 
   // ── Current Order Card ──
 

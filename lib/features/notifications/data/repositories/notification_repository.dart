@@ -1,11 +1,12 @@
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_helper.dart';
-import '../../../../core/network/api_response.dart';
-import '../../../../core/network/api_result.dart';
+import 'package:dio/dio.dart';
+import '../../../../shared/network/api_helper.dart';
+import '../../../../shared/network/api_response.dart';
+import '../../../../shared/network/api_result.dart';
 import '../models/notification_model.dart';
 
 class NotificationRepository {
-  final _dio = ApiClient.instance.dio;
+    NotificationRepository(this._dio);
+  final Dio _dio;
 
   /// GET /notifications?page=&pageSize=
   Future<ApiResult<PagedData<NotificationModel>>> getNotifications({
@@ -14,7 +15,7 @@ class NotificationRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/api/v1/notifications',
+        '/notifications',
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(
@@ -27,7 +28,7 @@ class NotificationRepository {
   /// PUT /notifications/{id}/read
   Future<ApiResult<bool>> markAsRead(String id) async {
     return ApiHelper.execute(
-      () => _dio.put('/api/v1/notifications/$id/read'),
+      () => _dio.put('/notifications/$id/read', data: {}),
       parser: (data) => data as bool,
     );
   }
@@ -35,7 +36,7 @@ class NotificationRepository {
   /// PUT /notifications/read-all
   Future<ApiResult<bool>> markAllAsRead() async {
     return ApiHelper.execute(
-      () => _dio.put('/api/v1/notifications/read-all'),
+      () => _dio.put('/notifications/read-all', data: {}),
       parser: (data) => data as bool,
     );
   }
@@ -43,7 +44,7 @@ class NotificationRepository {
   /// GET /notifications/unread-count
   Future<ApiResult<int>> getUnreadCount() async {
     return ApiHelper.execute(
-      () => _dio.get('/api/v1/notifications/unread-count'),
+      () => _dio.get('/notifications/unread-count'),
       parser: (data) => data as int,
     );
   }

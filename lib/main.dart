@@ -70,14 +70,20 @@ void main() async {
   final router = createAppRouter(authStatusNotifier);
 
   runApp(
-    MultiBlocProvider(
+    MultiRepositoryProvider(
       providers: [
-        BlocProvider.value(value: authBloc),
-        BlocProvider(
-          create: (_) => AuthFormBloc(repository: authRepository),
-        ),
+        RepositoryProvider.value(value: dioClient),
+        RepositoryProvider.value(value: tokenStorage),
       ],
-      child: SekkaApp(router: router),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider.value(value: authBloc),
+          BlocProvider(
+            create: (_) => AuthFormBloc(repository: authRepository),
+          ),
+        ],
+        child: SekkaApp(router: router),
+      ),
     ),
   );
 }
