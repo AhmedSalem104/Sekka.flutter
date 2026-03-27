@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/utils/responsive.dart';
+import '../bloc/auth_bloc.dart';
+import '../bloc/auth_event.dart';
+import '../bloc/auth_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -50,7 +54,8 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    await Future<void>.delayed(const Duration(seconds: 4));
+    final bloc = context.read<AuthBloc>();
+    await Future<void>.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -60,6 +65,21 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!hasSeenOnboarding) {
       context.go(RouteNames.onboarding);
+      return;
+    }
+
+    // Check if user has a stored token
+    bloc.add(const AuthCheckRequested());
+
+    // Wait for the auth check to complete
+    await bloc.stream.firstWhere(
+      (state) => state is AuthAuthenticated || state is AuthUnauthenticated,
+    );
+
+    if (!mounted) return;
+
+    if (bloc.state is AuthAuthenticated) {
+      context.go(RouteNames.main);
     } else {
       context.go(RouteNames.auth);
     }

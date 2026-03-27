@@ -3,17 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/extensions/date_extensions.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../../shared/storage/token_storage.dart';
 import '../../../notifications/data/repositories/notification_repository.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../sos/data/repositories/sos_repository.dart';
 import '../../../sos/presentation/screens/sos_screen.dart';
+import '../bloc/daily_stats_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -75,6 +79,10 @@ class HomeScreen extends StatelessWidget {
   // ── Header ──
 
   Widget _buildHeader(BuildContext context, String greeting, bool isDark) {
+    final authState = context.watch<AuthBloc>().state;
+    final driverName = authState is AuthAuthenticated
+        ? authState.driver.name
+        : '';
     return Row(
       children: [
         // Avatar
@@ -106,7 +114,7 @@ class HomeScreen extends StatelessWidget {
               ),
               SizedBox(height: Responsive.h(2)),
               Text(
-                'أحمد محمد',
+                driverName,
                 style: AppTypography.headlineSmall.copyWith(
                   color: isDark
                       ? AppColors.textHeadlineDark
@@ -410,26 +418,71 @@ class HomeScreen extends StatelessWidget {
   // ── Daily Stats ──
 
   Widget _buildDailyStats(bool isDark) {
-    return Row(
-      children: [
-        _buildStatCard(
-          value: '8',
-          label: 'طلب',
-          isDark: isDark,
-        ),
-        SizedBox(width: Responsive.w(12)),
-        _buildStatCard(
-          value: '620',
-          label: 'جنيه',
-          isDark: isDark,
-        ),
-        SizedBox(width: Responsive.w(12)),
-        _buildStatCard(
-          value: '34',
-          label: 'كم',
-          isDark: isDark,
-        ),
-      ],
+    return BlocBuilder<DailyStatsBloc, DailyStatsState>(
+      builder: (context, state) {
+        final String orders;
+        final String earnings;
+        final String distance;
+
+        if (state is DailyStatsLoaded) {
+          orders = state.stats.totalOrders.toString();
+          earnings = state.stats.earnings.toInt().toString();
+          distance = state.stats.distanceKm.toStringAsFixed(0);
+        } else {
+          orders = '--';
+          earnings = '--';
+          distance = '--';
+        }
+
+        return Column(
+          children: [
+            Row(
+              children: [
+                _buildStatCard(
+                  value: orders,
+                  label: AppStrings.orders,
+                  isDark: isDark,
+                ),
+                SizedBox(width: Responsive.w(12)),
+                _buildStatCard(
+                  value: earnings,
+                  label: AppStrings.currency,
+                  isDark: isDark,
+                ),
+                SizedBox(width: Responsive.w(12)),
+                _buildStatCard(
+                  value: distance,
+                  label: AppStrings.km,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+            if (state is DailyStatsLoading)
+              Padding(
+                padding: EdgeInsets.only(top: Responsive.h(8)),
+                child: const LinearProgressIndicator(
+                  color: AppColors.primary,
+                  minHeight: 2,
+                ),
+              ),
+            if (state is DailyStatsError)
+              Padding(
+                padding: EdgeInsets.only(top: Responsive.h(8)),
+                child: GestureDetector(
+                  onTap: () => context
+                      .read<DailyStatsBloc>()
+                      .add(const DailyStatsLoadRequested()),
+                  child: Text(
+                    AppStrings.retry,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 

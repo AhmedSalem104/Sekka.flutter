@@ -10,6 +10,22 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_form_bloc.dart';
+import 'features/home/presentation/bloc/daily_stats_bloc.dart';
+import 'features/settlements/data/datasources/settlement_remote_datasource.dart';
+import 'features/settlements/data/repositories/settlement_repository_impl.dart';
+import 'features/settlements/presentation/bloc/settlement_bloc.dart';
+import 'features/statistics/data/datasources/statistics_remote_datasource.dart';
+import 'features/statistics/data/repositories/statistics_repository_impl.dart';
+import 'features/profile/data/datasources/profile_remote_datasource.dart';
+import 'features/profile/data/repositories/profile_repository_impl.dart';
+import 'features/profile/domain/repositories/profile_repository.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/settings/data/datasources/settings_remote_datasource.dart';
+import 'features/settings/data/repositories/settings_repository_impl.dart';
+import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/wallet/data/datasources/wallet_remote_datasource.dart';
+import 'features/wallet/data/repositories/wallet_repository_impl.dart';
+import 'features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'shared/network/dio_client.dart';
 import 'shared/storage/token_storage.dart';
 import 'shared/storage/user_storage.dart';
@@ -66,12 +82,38 @@ void main() async {
     authStatusNotifier: authStatusNotifier,
   );
 
+  // Statistics
+  final statisticsDataSource = StatisticsRemoteDataSource(dioClient);
+  final statisticsRepository =
+      StatisticsRepositoryImpl(remoteDataSource: statisticsDataSource);
+
+  // Settlements
+  final settlementDataSource = SettlementRemoteDataSource(dioClient);
+  final settlementRepository =
+      SettlementRepositoryImpl(remoteDataSource: settlementDataSource);
+
+  // Wallet
+  final walletDataSource = WalletRemoteDataSource(dioClient);
+  final walletRepository =
+      WalletRepositoryImpl(remoteDataSource: walletDataSource);
+
+  // Profile
+  final profileDataSource = ProfileRemoteDataSource(dioClient);
+  final profileRepository =
+      ProfileRepositoryImpl(remoteDataSource: profileDataSource);
+
+  // Settings
+  final settingsDataSource = SettingsRemoteDataSource(dioClient);
+  final settingsRepository =
+      SettingsRepositoryImpl(remoteDataSource: settingsDataSource);
+
   // Create router
   final router = createAppRouter(authStatusNotifier);
 
   runApp(
     MultiRepositoryProvider(
       providers: [
+        RepositoryProvider<ProfileRepository>.value(value: profileRepository),
         RepositoryProvider.value(value: dioClient),
         RepositoryProvider.value(value: tokenStorage),
       ],
@@ -80,6 +122,22 @@ void main() async {
           BlocProvider.value(value: authBloc),
           BlocProvider(
             create: (_) => AuthFormBloc(repository: authRepository),
+          ),
+          BlocProvider(
+            create: (_) => WalletBloc(repository: walletRepository),
+          ),
+          BlocProvider(
+            create: (_) => DailyStatsBloc(repository: statisticsRepository)
+              ..add(const DailyStatsLoadRequested()),
+          ),
+          BlocProvider(
+            create: (_) => SettlementBloc(repository: settlementRepository),
+          ),
+          BlocProvider(
+            create: (_) => ProfileBloc(repository: profileRepository),
+          ),
+          BlocProvider(
+            create: (_) => SettingsBloc(repository: settingsRepository),
           ),
         ],
         child: SekkaApp(router: router),

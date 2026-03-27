@@ -99,6 +99,77 @@ abstract final class AppStrings {
   static const String errorTitle = 'أوبس!';
   static const String successTitle = 'تمام!';
 
+  // Wallet
+  static const String walletTitle = 'المحفظة';
+  static const String currentBalance = 'رصيدك الحالي';
+  static const String cashOnHand = 'كاش في إيدك';
+  static const String pendingAmount = 'معلّق';
+  static const String todayCollected = 'تحصيل اليوم';
+  static const String todayCommissions = 'عمولات اليوم';
+  static const String availableBalance = 'المتاح للسحب';
+  static const String newSettlement = 'تسوية جديدة';
+  static const String allTransactions = 'الكل';
+  static const String incomeFilter = 'دخل';
+  static const String expenseFilter = 'مصاريف';
+  static const String settlementsFilter = 'تسويات';
+  static const String noTransactions = 'مفيش معاملات لسه';
+  static const String cashStatusSafe = 'كاشك تمام';
+  static const String cashStatusWarning = 'فكّر تسوّي قريب';
+  static const String cashStatusDanger = 'سوّي في أقرب وقت';
+  static const String cashStatusCritical = 'لازم تسوّي دلوقتي!';
+
+  // Settlements
+  static const String settlementsTitle = 'التسويات';
+  static const String createSettlement = 'تسوية جديدة';
+  static const String settlementAmount = 'المبلغ';
+  static const String settlementType = 'طريقة التسوية';
+  static const String settlementPartner = 'الشريك';
+  static const String settlementNotes = 'ملاحظات';
+  static const String sendWhatsApp = 'ابعت واتساب للشريك';
+  static const String uploadReceipt = 'ارفع الإيصال';
+  static const String todaySettlements = 'تسويات اليوم';
+  static const String noSettlements = 'مفيش تسويات';
+  static const String settlementCashToPartner = 'نقدي للشريك';
+  static const String settlementBankTransfer = 'تحويل بنكي';
+  static const String settlementVodafoneCash = 'فودافون كاش';
+  static const String settlementInstapay = 'انستاباي';
+  static const String settlementFawry = 'فوري';
+
+  // Statistics
+  static const String statsTitle = 'الإحصائيات';
+  static const String dailyStats = 'يومي';
+  static const String weeklyStats = 'أسبوعي';
+  static const String monthlyStats = 'شهري';
+  static const String totalOrders = 'إجمالي الطلبات';
+  static const String totalEarningsLabel = 'إجمالي الأرباح';
+  static const String totalDistance = 'المسافة';
+  static const String successRate = 'نسبة النجاح';
+  static const String avgOrderValue = 'متوسط الطلب';
+  static const String moreDetails = 'تفاصيل أكتر';
+  static const String exportReport = 'تصدير تقرير';
+
+  // Payment Requests
+  static const String paymentRequestsTitle = 'طلبات الدفع';
+  static const String createPaymentRequest = 'طلب دفع جديد';
+  static const String uploadProof = 'ارفع إثبات التحويل';
+  static const String cancelRequest = 'إلغاء الطلب';
+  static const String noPaymentRequests = 'مفيش طلبات دفع';
+  static const String paymentPending = 'قيد الانتظار';
+  static const String paymentUnderReview = 'قيد المراجعة';
+  static const String paymentApproved = 'مقبول';
+  static const String paymentRejected = 'مرفوض';
+  static const String paymentCancelled = 'ملغي';
+
+  // Invoices
+  static const String invoicesTitle = 'الفواتير';
+  static const String invoiceDetail = 'تفاصيل الفاتورة';
+  static const String downloadPdf = 'تحميل PDF';
+  static const String noInvoices = 'مفيش فواتير';
+  static const String invoicePending = 'معلقة';
+  static const String invoicePaid = 'مدفوعة';
+  static const String invoiceOverdue = 'متأخرة';
+  static const String invoiceVoided = 'ملغاة';
+
   // Home
   static const String goodMorning = 'صباح الخير';
   static const String goodEvening = 'مساء الخير';
@@ -135,10 +206,96 @@ abstract final class AppStrings {
   static const String totalCollected = 'إجمالي التحصيل';
   static const String netProfit = 'صافي الربح';
 
-  // Settings
-  static const String settings = 'الإعدادات';
+  // Profile
+  static const String profileTitle = 'البروفايل';
+  static const String editProfile = 'تعديل البيانات';
+  static const String profileCompletion = 'اكتمال الملف';
+  static const String profileComplete = 'ملفك مكتمل!';
+  static const String profileIncomplete = 'كمّل ملفك';
+  static const String level = 'المستوى';
+  static const String points = 'نقطة';
+  static const String memberSince = 'عضو من';
+  static const String online = 'متاح';
+  static const String offline = 'غير متاح';
+  static const String referralCode = 'كود الإحالة';
+  static const String copyCode = 'نسخ الكود';
+  static const String codeCopied = 'تم نسخ الكود!';
+  static const String detailedStats = 'الإحصائيات التفصيلية';
+  static const String emergencyContacts = 'جهات الطوارئ';
+  static const String addContact = 'إضافة جهة اتصال';
+  static const String noContacts = 'مفيش جهات طوارئ';
+  static const String contactName = 'اسم الشخص';
+  static const String contactPhone = 'رقم الموبايل';
+  static const String contactRelation = 'العلاقة';
+  static const String expenses = 'المصروفات';
+  static const String addExpense = 'إضافة مصروف';
+  static const String noExpenses = 'مفيش مصروفات';
+  static const String achievements = 'الإنجازات';
+  static const String challenges = 'التحديات';
+  static const String leaderboard = 'الترتيب';
+  static const String myRank = 'ترتيبي';
+  static const String topDrivers = 'أفضل السائقين';
+  static const String noAchievements = 'مفيش إنجازات لسه';
+  static const String noChallenges = 'مفيش تحديات لسه';
+  static const String totalFailed = 'فشل';
+  static const String totalCancelled = 'ملغي';
+  static const String avgDeliveryTime = 'متوسط وقت التسليم';
+  static const String bestDay = 'أفضل يوم';
+  static const String uploadPhoto = 'ارفع صورة';
+  static const String changePhoto = 'غيّر الصورة';
+  static const String removePhoto = 'امسح الصورة';
+  static const String uploadLicense = 'ارفع صورة الرخصة';
+  static const String profileUpdated = 'تم تحديث البيانات!';
+  static const String subscription = 'الاشتراك';
+  static const String noSubscription = 'مفيش اشتراك';
   static const String profile = 'الملف الشخصي';
   static const String logout = 'تسجيل الخروج';
+  static const String logoutConfirm = 'متأكد عايز تطلع؟';
+  static const String expenseCategory = 'النوع';
+  static const String expenseAmount = 'المبلغ';
+  static const String expenseNotes = 'ملاحظات';
+
+  // Settings
+  static const String settings = 'الإعدادات';
+  static const String appearance = 'المظهر';
+  static const String themeSystem = 'تلقائي';
+  static const String themeLight = 'فاتح';
+  static const String themeDark = 'غامق';
+  static const String languageLabel = 'اللغة';
+  static const String arabic = 'عربي';
+  static const String english = 'English';
+  static const String numberFormatLabel = 'شكل الأرقام';
+  static const String highContrast = 'تباين عالي';
+  static const String notifications = 'الإشعارات';
+  static const String notifyNewOrder = 'طلب جديد';
+  static const String notifyCashAlert = 'تنبيه الكاش';
+  static const String notifyBreakReminder = 'تذكير الاستراحة';
+  static const String notifyMaintenance = 'الصيانة';
+  static const String notifySettlement = 'التسويات';
+  static const String notifyAchievement = 'الإنجازات';
+  static const String notifySound = 'الصوت';
+  static const String notifyVibration = 'الاهتزاز';
+  static const String quietHours = 'ساعات الهدوء';
+  static const String quietHoursFrom = 'من';
+  static const String quietHoursTo = 'إلى';
+  static const String focusMode = 'وضع التركيز';
+  static const String focusModeAuto = 'تفعيل تلقائي';
+  static const String focusModeSpeed = 'حد السرعة (كم/س)';
+  static const String deliveryPreferences = 'تفضيلات التوصيل';
+  static const String preferredMap = 'تطبيق الخريطة';
+  static const String maxOrdersShift = 'أقصى عدد طلبات بالشفت';
+  static const String autoReceipt = 'إرسال إيصال تلقائي';
+  static const String locationSettings = 'الموقع';
+  static const String homeLocation = 'موقع البيت';
+  static const String setHomeLocation = 'حدد موقع البيت';
+  static const String backToBase = 'تنبيه الرجوع للبيت';
+  static const String backToBaseRadius = 'نطاق التنبيه (كم)';
+  static const String technicalSettings = 'إعدادات تقنية';
+  static const String locationInterval = 'فترة تتبع الموقع (ثانية)';
+  static const String syncInterval = 'فترة المزامنة (ثانية)';
+  static const String textToSpeech = 'القراءة الصوتية';
+  static const String hapticFeedback = 'الاهتزاز عند اللمس';
+  static const String settingsSaved = 'تم حفظ الإعدادات!';
 
   // Customers
   static const String customers = 'العملاء';
@@ -227,6 +384,7 @@ abstract final class AppStrings {
   static const String monthlyFlat = 'اشتراك شهري';
 
   // General
+  static const String retry = 'حاول تاني';
   static const String save = 'حفظ';
   static const String cancel = 'إلغاء';
   static const String confirm = 'تأكيد';

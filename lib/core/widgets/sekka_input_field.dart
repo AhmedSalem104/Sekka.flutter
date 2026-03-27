@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
 import '../theme/app_typography.dart';
 
@@ -49,6 +50,12 @@ class SekkaInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+    final iconColor = isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -76,14 +83,39 @@ class SekkaInputField extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             errorText: errorText,
-            // constrain error text so it doesn't overflow
             errorMaxLines: 2,
+            filled: true,
+            fillColor: bgColor,
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.lg,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              borderSide: BorderSide(color: borderColor, width: 1.5),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              borderSide: BorderSide(color: borderColor, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              borderSide: const BorderSide(color: AppColors.error),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              borderSide: const BorderSide(color: AppColors.error, width: 2),
+            ),
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: AppSizes.iconLg)
+                ? Icon(prefixIcon, size: AppSizes.iconLg, color: iconColor)
                 : null,
             suffixIcon: suffixIcon != null
                 ? IconButton(
-                    icon: Icon(suffixIcon, size: AppSizes.iconLg),
+                    icon: Icon(suffixIcon, size: AppSizes.iconLg, color: iconColor),
                     onPressed: onSuffixTap,
                   )
                 : null,
