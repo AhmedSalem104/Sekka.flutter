@@ -1,11 +1,12 @@
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_helper.dart';
-import '../../../../core/network/api_response.dart';
-import '../../../../core/network/api_result.dart';
+import 'package:dio/dio.dart';
+import '../../../../shared/network/api_helper.dart';
+import '../../../../shared/network/api_response.dart';
+import '../../../../shared/network/api_result.dart';
 import '../models/sos_model.dart';
 
 class SosRepository {
-  final _dio = ApiClient.instance.dio;
+    SosRepository(this._dio);
+  final Dio _dio;
 
   /// POST /sos/activate
   Future<ApiResult<SosModel>> activate({
@@ -14,7 +15,7 @@ class SosRepository {
     String? notes,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/sos/activate', data: {
+      () => _dio.post('/sos/activate', data: {
         'latitude': latitude,
         'longitude': longitude,
         if (notes != null) 'notes': notes,
@@ -26,7 +27,7 @@ class SosRepository {
   /// POST /sos/{id}/dismiss
   Future<ApiResult<bool>> dismiss(String id) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/sos/$id/dismiss'),
+      () => _dio.post('/sos/$id/dismiss', data: {}),
       parser: (data) => data as bool,
     );
   }
@@ -38,7 +39,7 @@ class SosRepository {
     required bool wasFalseAlarm,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/sos/$id/resolve', data: {
+      () => _dio.post('/sos/$id/resolve', data: {
         'resolution': resolution,
         'wasFalseAlarm': wasFalseAlarm,
       }),
@@ -53,7 +54,7 @@ class SosRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/api/v1/sos/history',
+        '/sos/history',
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(

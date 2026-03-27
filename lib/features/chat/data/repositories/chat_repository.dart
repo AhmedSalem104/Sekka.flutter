@@ -1,11 +1,12 @@
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_helper.dart';
-import '../../../../core/network/api_response.dart';
-import '../../../../core/network/api_result.dart';
+import 'package:dio/dio.dart';
+import '../../../../shared/network/api_helper.dart';
+import '../../../../shared/network/api_response.dart';
+import '../../../../shared/network/api_result.dart';
 import '../models/conversation_model.dart';
 
 class ChatRepository {
-  final _dio = ApiClient.instance.dio;
+    ChatRepository(this._dio);
+  final Dio _dio;
 
   /// GET /chat/conversations?page=&pageSize=
   Future<ApiResult<PagedData<ConversationModel>>> getConversations({
@@ -14,7 +15,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/api/v1/chat/conversations',
+        '/chat/conversations',
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(
@@ -31,7 +32,7 @@ class ChatRepository {
     required String initialMessage,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/chat/conversations', data: {
+      () => _dio.post('/chat/conversations', data: {
         'chatType': chatType,
         'subject': subject,
         'initialMessage': initialMessage,
@@ -49,7 +50,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/api/v1/chat/conversations/$conversationId/messages',
+        '/chat/conversations/$conversationId/messages',
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(
@@ -67,7 +68,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.post(
-        '/api/v1/chat/conversations/$conversationId/messages',
+        '/chat/conversations/$conversationId/messages',
         data: {
           'content': content,
           if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
@@ -81,7 +82,7 @@ class ChatRepository {
   /// PUT /chat/conversations/{id}/close
   Future<ApiResult<bool>> closeConversation(String conversationId) async {
     return ApiHelper.execute(
-      () => _dio.put('/api/v1/chat/conversations/$conversationId/close'),
+      () => _dio.put('/chat/conversations/$conversationId/close', data: {}),
       parser: (data) => data as bool,
     );
   }
@@ -89,7 +90,7 @@ class ChatRepository {
   /// PUT /chat/messages/{id}/read
   Future<ApiResult<bool>> markMessageRead(String messageId) async {
     return ApiHelper.execute(
-      () => _dio.put('/api/v1/chat/messages/$messageId/read'),
+      () => _dio.put('/chat/messages/$messageId/read', data: {}),
       parser: (data) => data as bool,
     );
   }
@@ -97,7 +98,7 @@ class ChatRepository {
   /// GET /chat/unread-count
   Future<ApiResult<int>> getUnreadCount() async {
     return ApiHelper.execute(
-      () => _dio.get('/api/v1/chat/unread-count'),
+      () => _dio.get('/chat/unread-count'),
       parser: (data) => data as int,
     );
   }

@@ -31,4 +31,17 @@ abstract final class RouteNames {
   static const String createPaymentRequest = '/payment-requests/create';
   static const String invoices = '/invoices';
   static const String invoiceDetail = '/invoices/detail';
+
+  // Customers
+  static const String customers = '/customers';
+  static const String customerDetail = '/customers/:id';
+
+  // Partners
+  static const String partners = '/partners';
+  static const String partnerDetail = '/partner-detail';
+
+  // Communication
+  static const String notifications = '/notifications';
+  static const String sos = '/sos';
+  static const String chat = '/chat';
 }

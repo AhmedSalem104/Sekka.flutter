@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
 import '../constants/app_strings.dart';
 import '../theme/app_typography.dart';
+import '../utils/responsive.dart';
 
 class SekkaSearchBar extends StatelessWidget {
   const SekkaSearchBar({
@@ -22,12 +24,16 @@ class SekkaSearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: AppSizes.inputHeight * 0.85,
+      height: Responsive.h(48),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.border),
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.border,
+        ),
       ),
       child: TextField(
         controller: controller,
@@ -35,23 +41,26 @@ class SekkaSearchBar extends StatelessWidget {
         onSubmitted: onSubmitted,
         autofocus: autofocus,
         textDirection: TextDirection.rtl,
-        style: AppTypography.bodyMedium,
+        style: AppTypography.bodyMedium.copyWith(
+          color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+        ),
         decoration: InputDecoration(
           hintText: hint ?? AppStrings.search,
           hintStyle: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textCaption,
+            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
           ),
           prefixIcon: Icon(
-            Icons.search_rounded,
-            color: AppColors.textCaption,
-            size: AppSizes.iconLg,
+            IconsaxPlusLinear.search_normal_1,
+            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+            size: Responsive.r(20),
           ),
+          filled: false,
           border: InputBorder.none,
           enabledBorder: InputBorder.none,
           focusedBorder: InputBorder.none,
           contentPadding: EdgeInsets.symmetric(
-            horizontal: AppSizes.lg,
-            vertical: AppSizes.md,
+            horizontal: Responsive.w(16),
+            vertical: Responsive.h(12),
           ),
         ),
       ),

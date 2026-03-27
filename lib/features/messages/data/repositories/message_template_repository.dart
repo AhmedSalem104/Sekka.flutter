@@ -1,15 +1,16 @@
-import '../../../../core/network/api_client.dart';
-import '../../../../core/network/api_helper.dart';
-import '../../../../core/network/api_result.dart';
+import 'package:dio/dio.dart';
+import '../../../../shared/network/api_helper.dart';
+import '../../../../shared/network/api_result.dart';
 import '../models/message_template_model.dart';
 
 class MessageTemplateRepository {
-  final _dio = ApiClient.instance.dio;
+    MessageTemplateRepository(this._dio);
+  final Dio _dio;
 
   /// GET /message-templates
   Future<ApiResult<List<MessageTemplateModel>>> getTemplates() async {
     return ApiHelper.execute(
-      () => _dio.get('/api/v1/message-templates'),
+      () => _dio.get('/message-templates'),
       parser: (data) => (data as List<dynamic>)
           .map((e) => MessageTemplateModel.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -22,7 +23,7 @@ class MessageTemplateRepository {
     required int category,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/message-templates', data: {
+      () => _dio.post('/message-templates', data: {
         'messageText': messageText,
         'category': category,
       }),
@@ -39,7 +40,7 @@ class MessageTemplateRepository {
     int? sortOrder,
   }) async {
     return ApiHelper.execute(
-      () => _dio.put('/api/v1/message-templates/$id', data: {
+      () => _dio.put('/message-templates/$id', data: {
         if (messageText != null) 'messageText': messageText,
         if (category != null) 'category': category,
         if (sortOrder != null) 'sortOrder': sortOrder,
@@ -52,7 +53,7 @@ class MessageTemplateRepository {
   /// DELETE /message-templates/{id}
   Future<ApiResult<bool>> delete(String id) async {
     return ApiHelper.execute(
-      () => _dio.delete('/api/v1/message-templates/$id'),
+      () => _dio.delete('/message-templates/$id'),
       parser: (data) => data as bool,
     );
   }
@@ -60,7 +61,7 @@ class MessageTemplateRepository {
   /// POST /message-templates/{id}/use
   Future<ApiResult<bool>> recordUsage(String id) async {
     return ApiHelper.execute(
-      () => _dio.post('/api/v1/message-templates/$id/use'),
+      () => _dio.post('/message-templates/$id/use', data: {}),
       parser: (data) => data as bool,
     );
   }

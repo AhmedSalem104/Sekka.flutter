@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/auth_screen.dart';
@@ -10,8 +9,11 @@ import '../../features/auth/presentation/screens/otp_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/auth/presentation/screens/success_screen.dart';
-import '../../features/auth/presentation/bloc/auth_bloc.dart';
-import '../../features/auth/presentation/bloc/auth_event.dart';
+import '../../features/customers/presentation/screens/customers_list_screen.dart';
+import '../../features/customers/presentation/screens/customer_detail_screen.dart';
+import '../../features/partners/presentation/screens/partners_list_screen.dart';
+import '../../features/partners/presentation/screens/partner_detail_screen.dart';
+import '../../features/partners/data/models/partner_model.dart';
 import '../../features/home/presentation/screens/main_shell.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/emergency_contacts_screen.dart';
@@ -196,6 +198,32 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
+      ),
+
+      // Customers
+      GoRoute(
+        path: RouteNames.customers,
+        builder: (_, __) => const CustomersListScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.customerDetail,
+        builder: (_, state) {
+          final customerId = state.pathParameters['id']!;
+          return CustomerDetailScreen(customerId: customerId);
+        },
+      ),
+
+      // Partners
+      GoRoute(
+        path: RouteNames.partners,
+        builder: (_, __) => const PartnersListScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.partnerDetail,
+        builder: (_, state) {
+          final partner = state.extra! as PartnerModel;
+          return PartnerDetailScreen(partner: partner);
+        },
       ),
     ],
   );

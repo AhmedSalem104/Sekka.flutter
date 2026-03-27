@@ -1,6 +1,9 @@
 // Core barrel file — import this single file to access all core utilities.
 // Usage: import 'package:sekka/core/core.dart';
 
+// Enums
+export 'enums/enums.dart';
+
 // Constants
 export 'constants/app_colors.dart';
 export 'constants/app_sizes.dart';

@@ -5,23 +5,38 @@ import 'api_result.dart';
 
 /// Helper to execute API calls with unified error handling.
 ///
-/// Usage:
-/// ```dart
-/// final result = await ApiHelper.execute(
-///   () => ApiClient.instance.dio.get('/api/orders'),
-/// );
-/// ```
+/// Automatically unwraps the Sekka API response format:
+/// `{ isSuccess: bool, data: T, message: string, errors: any }`
 abstract final class ApiHelper {
-  /// Executes an API call and wraps the result in [ApiResult].
   static Future<ApiResult<T>> execute<T>(
     Future<Response<dynamic>> Function() call, {
     T Function(dynamic data)? parser,
   }) async {
     try {
       final response = await call();
-      final data = parser != null
-          ? parser(response.data)
-          : response.data as T;
+      final body = response.data;
+
+      // Unwrap Sekka API response: { isSuccess, data, message, errors }
+      if (body is Map<String, dynamic> && body.containsKey('isSuccess')) {
+        final isSuccess = body['isSuccess'] as bool? ?? false;
+        final innerData = body['data'];
+        final message = body['message'] as String?;
+
+        if (!isSuccess) {
+          return ApiFailure<T>(
+            ApiError(
+              message: message ?? 'حصلت مشكلة',
+              statusCode: response.statusCode,
+            ),
+          );
+        }
+
+        final parsed = parser != null ? parser(innerData) : innerData as T;
+        return ApiSuccess<T>(parsed);
+      }
+
+      // Fallback: raw response
+      final data = parser != null ? parser(body) : body as T;
       return ApiSuccess<T>(data);
     } on DioException catch (e) {
       return ApiFailure<T>(_handleDioError(e));
@@ -63,27 +78,16 @@ abstract final class ApiHelper {
         final data = e.response?.data;
 
         String message = 'حصلت مشكلة';
-        Map<String, List<String>>? errors;
 
         if (data is Map<String, dynamic>) {
           message = (data['message'] as String?) ??
               (data['title'] as String?) ??
               message;
-
-          if (data['errors'] is Map) {
-            errors = (data['errors'] as Map<String, dynamic>).map(
-              (key, value) => MapEntry(
-                key,
-                (value as List<dynamic>).cast<String>(),
-              ),
-            );
-          }
         }
 
         return ApiError(
           message: message,
           statusCode: statusCode,
-          errors: errors,
         );
 
       case DioExceptionType.cancel:

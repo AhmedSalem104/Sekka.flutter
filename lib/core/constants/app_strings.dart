@@ -297,6 +297,92 @@ abstract final class AppStrings {
   static const String hapticFeedback = 'الاهتزاز عند اللمس';
   static const String settingsSaved = 'تم حفظ الإعدادات!';
 
+  // Customers
+  static const String customers = 'العملاء';
+  static const String customerDetails = 'تفاصيل العميل';
+  static const String searchCustomer = 'بحث عن عميل';
+  static const String totalDeliveries = 'إجمالي التوصيلات';
+  static const String successfulDeliveries = 'توصيلات ناجحة';
+  static const String averageRating = 'متوسط التقييم';
+  static const String blocked = 'محظور';
+  static const String unblocked = 'غير محظور';
+  static const String rateCustomer = 'تقييم العميل';
+  static const String blockCustomer = 'حظر العميل';
+  static const String unblockCustomer = 'إلغاء حظر العميل';
+  static const String blockReason = 'سبب الحظر';
+  static const String reportToCommunity = 'إبلاغ المجتمع';
+  static const String customerBlocked = 'تم حظر العميل بنجاح';
+  static const String customerUnblocked = 'تم إلغاء حظر العميل بنجاح';
+  static const String voiceMemo = 'مذكرة صوتية';
+  static const String interests = 'الاهتمامات';
+  static const String engagement = 'مستوى التفاعل';
+
+  // Rating Tags
+  static const String quickResponse = 'رد سريع';
+  static const String clearAddress = 'عنوان واضح';
+  static const String respectfulBehavior = 'تعامل محترم';
+  static const String easyPayment = 'دفع سهل';
+  static const String wrongAddress = 'عنوان غلط';
+  static const String noAnswer = 'مبيردش';
+  static const String delayedPickup = 'تأخير في الاستلام';
+  static const String paymentIssue = 'مشكلة في الدفع';
+  static const String ratingSuccess = 'تم تقييم العميل بنجاح';
+
+  // Partners
+  static const String partners = 'الشركاء';
+  static const String partnerDetails = 'تفاصيل الشريك';
+  static const String searchPartner = 'بحث عن شريك';
+  static const String commission = 'العمولة';
+  static const String pickupPoints = 'نقاط الاستلام';
+  static const String verification = 'التوثيق';
+  static const String submitDocument = 'رفع مستند';
+
+  // Partner Types
+  static const String restaurantType = 'مطعم';
+  static const String shopType = 'محل';
+  static const String pharmacyType = 'صيدلية';
+  static const String supermarketType = 'سوبرماركت';
+  static const String warehouseType = 'مخزن';
+  static const String eCommerceType = 'تجارة إلكترونية';
+
+  // Verification Status
+  static const String statusPending = 'قيد المراجعة';
+  static const String statusVerified = 'موثّق';
+  static const String statusRejected = 'مرفوض';
+  static const String statusDocumentRequested = 'مطلوب مستند إضافي';
+
+  // Address Types
+  static const String addressHome = 'منزل';
+  static const String addressWork = 'عمل';
+  static const String addressShop = 'محل';
+  static const String addressRestaurant = 'مطعم';
+  static const String addressWarehouse = 'مخزن';
+  static const String addressOther = 'أخرى';
+
+  // Addresses
+  static const String addresses = 'العناوين';
+  static const String addAddress = 'إضافة عنوان';
+  static const String editAddress = 'تعديل العنوان';
+  static const String deleteAddressConfirm = 'هل تريد حذف هذا العنوان؟';
+  static const String landmarks = 'معالم قريبة';
+  static const String deliveryNotes = 'ملاحظات التوصيل';
+  static const String nearbyAddresses = 'عناوين قريبة';
+
+  // Caller ID
+  static const String callerId = 'معرّف المتصل';
+  static const String callerNote = 'ملاحظة عن المتصل';
+
+  // Payment Methods
+  static const String paymentCash = 'كاش';
+  static const String paymentWallet = 'محفظة';
+  static const String paymentCard = 'بطاقة';
+  static const String paymentInstaPay = 'إنستاباي';
+
+  // Commission Types
+  static const String fixedPerOrder = 'مبلغ ثابت لكل طلب';
+  static const String percentagePerOrder = 'نسبة من كل طلب';
+  static const String monthlyFlat = 'اشتراك شهري';
+
   // General
   static const String retry = 'حاول تاني';
   static const String save = 'حفظ';

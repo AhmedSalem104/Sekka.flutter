@@ -114,30 +114,32 @@ void main() async {
     MultiRepositoryProvider(
       providers: [
         RepositoryProvider<ProfileRepository>.value(value: profileRepository),
+        RepositoryProvider.value(value: dioClient),
+        RepositoryProvider.value(value: tokenStorage),
       ],
       child: MultiBlocProvider(
         providers: [
-        BlocProvider.value(value: authBloc),
-        BlocProvider(
-          create: (_) => AuthFormBloc(repository: authRepository),
-        ),
-        BlocProvider(
-          create: (_) => WalletBloc(repository: walletRepository),
-        ),
-        BlocProvider(
-          create: (_) => DailyStatsBloc(repository: statisticsRepository)
-            ..add(const DailyStatsLoadRequested()),
-        ),
-        BlocProvider(
-          create: (_) => SettlementBloc(repository: settlementRepository),
-        ),
-        BlocProvider(
-          create: (_) => ProfileBloc(repository: profileRepository),
-        ),
-        BlocProvider(
-          create: (_) => SettingsBloc(repository: settingsRepository),
-        ),
-      ],
+          BlocProvider.value(value: authBloc),
+          BlocProvider(
+            create: (_) => AuthFormBloc(repository: authRepository),
+          ),
+          BlocProvider(
+            create: (_) => WalletBloc(repository: walletRepository),
+          ),
+          BlocProvider(
+            create: (_) => DailyStatsBloc(repository: statisticsRepository)
+              ..add(const DailyStatsLoadRequested()),
+          ),
+          BlocProvider(
+            create: (_) => SettlementBloc(repository: settlementRepository),
+          ),
+          BlocProvider(
+            create: (_) => ProfileBloc(repository: profileRepository),
+          ),
+          BlocProvider(
+            create: (_) => SettingsBloc(repository: settingsRepository),
+          ),
+        ],
         child: SekkaApp(router: router),
       ),
     ),
