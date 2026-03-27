@@ -61,8 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!hasSeenOnboarding) {
       context.go(RouteNames.onboarding);
     } else {
-      // TODO: check auth token → login or main
-      context.go(RouteNames.main);
+      context.go(RouteNames.auth);
     }
   }
 

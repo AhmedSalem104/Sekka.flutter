@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'core/routing/app_router.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:go_router/go_router.dart';
+
 import 'core/theme/app_theme.dart';
 import 'core/utils/responsive.dart';
 
 class SekkaApp extends StatelessWidget {
-  const SekkaApp({super.key});
+  const SekkaApp({
+    super.key,
+    required this.router,
+  });
+
+  final GoRouter router;
 
   @override
   Widget build(BuildContext context) {
@@ -12,12 +19,17 @@ class SekkaApp extends StatelessWidget {
       title: 'سِكّة',
       debugShowCheckedModeBanner: false,
 
-      // Themes (Light + Dark)
+      // Themes (Light + Dark ready)
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.light,
 
-      // Locales (Arabic primary + English)
+      // Localizations
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       locale: const Locale('ar'),
       supportedLocales: const [
         Locale('ar'),
@@ -25,7 +37,7 @@ class SekkaApp extends StatelessWidget {
       ],
 
       // Router
-      routerConfig: appRouter,
+      routerConfig: router,
 
       // Initialize Responsive + force RTL
       builder: (context, child) {

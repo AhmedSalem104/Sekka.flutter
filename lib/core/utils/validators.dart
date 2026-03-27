@@ -1,3 +1,4 @@
+import '../constants/app_strings.dart';
 import '../extensions/string_extensions.dart';
 
 /// Centralized validation for all user inputs.
@@ -5,22 +6,54 @@ abstract final class Validators {
   /// Validates Egyptian phone number (01xxxxxxxxx)
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'أدخل رقم الموبايل';
+      return AppStrings.phoneRequired;
     }
     if (!value.isValidEgyptianPhone) {
-      return 'رقم موبايل غير صحيح';
+      return AppStrings.phoneInvalid;
     }
     return null;
   }
 
-  /// Validates OTP code (6 digits)
+  /// Validates OTP code (4 digits)
   static String? otp(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'أدخل كود التحقق';
+      return AppStrings.otpRequired;
     }
     final cleaned = value.toEnglishNumbers.trim();
-    if (cleaned.length != 6 || !RegExp(r'^\d{6}$').hasMatch(cleaned)) {
-      return 'الكود لازم يكون 6 أرقام';
+    if (cleaned.length != 4 || !RegExp(r'^\d{4}$').hasMatch(cleaned)) {
+      return AppStrings.otpInvalid;
+    }
+    return null;
+  }
+
+  /// Validates password (minimum 6 characters)
+  static String? password(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return AppStrings.passwordRequired;
+    }
+    if (value.length < 6) {
+      return AppStrings.passwordTooShort;
+    }
+    return null;
+  }
+
+  /// Validates password confirmation
+  static String? confirmPassword(String? value, String password) {
+    if (value == null || value.trim().isEmpty) {
+      return AppStrings.confirmPasswordRequired;
+    }
+    if (value != password) {
+      return AppStrings.passwordMismatch;
+    }
+    return null;
+  }
+
+  /// Validates email (optional — only validates format if provided)
+  static String? email(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final regex = RegExp(r'^[\w\.\-]+@[\w\-]+\.[\w\.\-]+$');
+    if (!regex.hasMatch(value.trim())) {
+      return AppStrings.emailInvalid;
     }
     return null;
   }
@@ -36,10 +69,10 @@ abstract final class Validators {
   /// Validates name (at least 2 characters)
   static String? name(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'أدخل الاسم';
+      return AppStrings.nameRequired;
     }
     if (value.trim().length < 2) {
-      return 'الاسم لازم يكون حرفين على الأقل';
+      return AppStrings.nameTooShort;
     }
     return null;
   }

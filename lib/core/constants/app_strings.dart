@@ -3,13 +3,101 @@ abstract final class AppStrings {
   static const String appName = 'سِكّة';
   static const String appTagline = 'شريك شغلك في الديليفري';
 
-  // Auth
-  static const String enterPhone = 'أدخل رقم هاتفك';
-  static const String sendOtp = 'التالي';
-  static const String otpSent = 'تم إرسال كود التحقق';
-  static const String resendOtp = 'إعادة الإرسال';
-  static const String tryWithoutRegister = 'جرّب التطبيق بدون تسجيل';
-  static const String completeProfile = 'أكمل بياناتك';
+  // Auth — General
+  static const String welcome = 'أهلاً بيك!';
+  static const String welcomeSubtitle = 'سجّل دخولك أو افتح حساب جديد';
+  static const String login = 'دخول';
+  static const String signUp = 'حساب جديد';
+  static const String tryWithoutRegister = 'جرّب التطبيق من غير تسجيل';
+
+  // Auth — Login
+  static const String enterPhone = 'رقم الموبايل';
+  static const String enterPhoneHint = 'مثال: ٠١٠١٢٣٤٥٦٧٨';
+  static const String enterPassword = 'كلمة السر';
+  static const String forgotPassword = 'نسيت كلمة السر؟';
+
+  // Auth — OTP
+  static const String otpVerification = 'كود التحقق';
+  static const String otpSentTo = 'بعتنالك كود على الرقم';
+  static const String enterOtpCode = 'أدخل الكود';
+  static const String resendOtp = 'ابعتلي الكود تاني';
+  static const String resendIn = 'إعادة الإرسال بعد';
+  static const String seconds = 'ثانية';
+  static const String sendVerificationCode = 'ابعتلي الكود';
+  static const String verify = 'تأكيد';
+
+  // Auth — Register
+  static const String completeProfile = 'كمّل بياناتك';
+  static const String completeProfileSubtitle = 'عايزين نعرفك أكتر';
+  static const String driverName = 'اسمك إيه؟';
+  static const String password = 'كلمة السر';
+  static const String passwordHint = '٦ حروف أو أرقام على الأقل';
+  static const String confirmPassword = 'كلمة السر تاني';
+  static const String vehicleType = 'بتوصّل بإيه؟';
+  static const String emailOptional = 'الإيميل (مش لازم)';
+  static const String createAccount = 'يلا نسجّل!';
+
+  // Auth — Forgot / Reset Password
+  static const String resetPassword = 'كلمة سر جديدة';
+  static const String forgotPasswordSubtitle = 'اكتب رقم موبايلك وهنبعتلك كود';
+  static const String newPassword = 'كلمة السر الجديدة';
+  static const String confirmNewPassword = 'كلمة السر الجديدة تاني';
+  static const String passwordResetSuccess = 'تمام! كلمة السر اتغيّرت';
+
+  // Auth — Change Password
+  static const String changePassword = 'غيّر كلمة السر';
+  static const String currentPassword = 'كلمة السر الحالية';
+
+  // Auth — Success
+  static const String accountCreated = 'حسابك جاهز!';
+  static const String welcomeToSekka = 'أهلاً بيك في سِكّة\nيلا نبدأ شغل';
+  static const String startNow = 'يلا بينا!';
+
+  // Auth — Sessions
+  static const String activeSessions = 'الأجهزة النشطة';
+  static const String logoutAll = 'اطلع من كل الأجهزة';
+  static const String terminateSession = 'اقفل الجلسة دي';
+
+  // Auth — Delete Account
+  static const String deleteAccount = 'حذف الحساب';
+  static const String deleteAccountWarning = 'متأكد؟ مفيش رجوع بعد كدا!';
+  static const String deleteReason = 'قولنا السبب (اختياري)';
+  static const String confirmDeletion = 'أيوا امسح';
+
+  // Errors
+  static const String networkError = 'النت فصل عندك، شيّك على الاتصال';
+  static const String unknownError = 'حصلت مشكلة، جرّب تاني';
+  static const String sessionExpired = 'الجلسة خلصت، سجّل دخولك تاني';
+  static const String serverError = 'السيرفر تعبان، جرّب بعد شوية';
+  static const String timeoutError = 'النت بطيء عندك، جرّب تاني';
+
+  // Validation — friendly
+  static const String phoneRequired = 'اكتب رقم الموبايل';
+  static const String phoneInvalid = 'الرقم ده مش صح، لازم يكون ١١ رقم مصري';
+  static const String passwordRequired = 'اكتب كلمة السر';
+  static const String passwordTooShort = 'كلمة السر قصيرة، لازم ٦ حروف على الأقل';
+  static const String passwordMismatch = 'كلمتين السر مش زي بعض!';
+  static const String otpRequired = 'اكتب الكود اللي وصلك';
+  static const String otpInvalid = 'الكود لازم يكون ٤ أرقام';
+  static const String nameRequired = 'قولنا اسمك إيه';
+  static const String nameTooShort = 'الاسم قصير أوي، حرفين على الأقل';
+  static const String emailInvalid = 'الإيميل ده مش صح';
+  static const String vehicleTypeRequired = 'اختار بتوصّل بإيه';
+  static const String confirmPasswordRequired = 'اكتب كلمة السر تاني';
+
+  // Vehicle Types (Arabic mapping)
+  static const Map<String, String> vehicleTypesArabic = {
+    'Motorcycle': 'موتوسيكل',
+    'Car': 'عربية',
+    'Van': 'فان',
+    'Truck': 'تراك',
+    'Bicycle': 'عجلة',
+  };
+
+  // Dialog
+  static const String ok = 'تمام';
+  static const String errorTitle = 'أوبس!';
+  static const String successTitle = 'تمام!';
 
   // Home
   static const String goodMorning = 'صباح الخير';
