@@ -96,7 +96,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('has_seen_onboarding', true);
     if (!mounted) return;
-    context.go(RouteNames.login);
+    // TODO: change to RouteNames.login when auth is ready
+    context.go(RouteNames.main);
   }
 
   void _onTryDemo() {

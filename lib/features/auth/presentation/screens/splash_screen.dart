@@ -50,8 +50,7 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _navigate() async {
-    // 3 seconds total splash duration
-    await Future<void>.delayed(const Duration(seconds: 3));
+    await Future<void>.delayed(const Duration(seconds: 4));
     if (!mounted) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -62,7 +61,8 @@ class _SplashScreenState extends State<SplashScreen>
     if (!hasSeenOnboarding) {
       context.go(RouteNames.onboarding);
     } else {
-      context.go(RouteNames.login);
+      // TODO: check auth token → login or main
+      context.go(RouteNames.main);
     }
   }
 

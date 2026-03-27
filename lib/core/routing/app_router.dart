@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/home/presentation/screens/main_shell.dart';
 import 'route_names.dart';
 
 /// Placeholder screen used before real screens are built.
@@ -51,7 +52,7 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: RouteNames.main,
-      builder: (_, __) => const _PlaceholderScreen(name: 'Main'),
+      builder: (_, __) => const MainShell(),
     ),
     GoRoute(
       path: RouteNames.addOrder,

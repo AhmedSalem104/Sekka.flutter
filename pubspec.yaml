@@ -14,6 +14,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_svg: ^2.0.17
   shimmer: ^3.0.0
+  iconsax_plus: ^1.0.0
 
   # Navigation
   go_router: ^14.8.1

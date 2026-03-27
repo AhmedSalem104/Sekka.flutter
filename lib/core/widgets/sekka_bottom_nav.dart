@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/app_animations.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
+import '../theme/app_typography.dart';
 import '../utils/responsive.dart';
 
 class SekkaBottomNavItem {
@@ -29,54 +31,81 @@ class SekkaBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: AppSizes.bottomNavHeight + Responsive.safePadding.bottom,
-      padding: EdgeInsets.only(bottom: Responsive.safePadding.bottom),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 20,
-            offset: Offset(0, -4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: List.generate(items.length, (index) {
-          final isActive = index == currentIndex;
-          final item = items[index];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => onTap(index),
-              behavior: HitTestBehavior.opaque,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    isActive ? item.activeIcon : item.icon,
-                    color: isActive
-                        ? AppColors.primary
-                        : AppColors.textCaption,
-                    size: AppSizes.iconLg,
-                  ),
-                  SizedBox(height: AppSizes.xs),
-                  // Active dot indicator
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: isActive ? Responsive.r(6) : 0,
-                    height: isActive ? Responsive.r(6) : 0,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
-                    ),
+    return Container(
+      color: Colors.transparent,
+      padding: EdgeInsets.only(
+        bottom: Responsive.safePadding.bottom + Responsive.h(10),
+        left: Responsive.w(20),
+        right: Responsive.w(20),
+      ),
+      child: Container(
+        height: Responsive.h(60),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          borderRadius: BorderRadius.circular(Responsive.r(30)),
+          border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.border.withValues(alpha: 0.5),
+          ),
+          boxShadow: isDark
+              ? []
+              : const [
+                  BoxShadow(
+                    color: Color(0x12000000),
+                    blurRadius: 24,
+                    offset: Offset(0, 4),
                   ),
                 ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(items.length, (index) {
+            final isActive = index == currentIndex;
+            final item = items[index];
+
+            return GestureDetector(
+              onTap: () => onTap(index),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: AppAnimations.fast,
+                curve: AppAnimations.defaultCurve,
+                width: Responsive.w(60),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isActive ? item.activeIcon : item.icon,
+                      color: isActive
+                          ? AppColors.primary
+                          : (isDark
+                              ? AppColors.textCaptionDark
+                              : AppColors.textCaption),
+                      size: Responsive.r(22),
+                    ),
+                    SizedBox(height: Responsive.h(4)),
+                    Text(
+                      item.label,
+                      style: AppTypography.captionSmall.copyWith(
+                        color: isActive
+                            ? AppColors.primary
+                            : (isDark
+                                ? AppColors.textCaptionDark
+                                : AppColors.textCaption),
+                        fontWeight:
+                            isActive ? FontWeight.w700 : FontWeight.w400,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }

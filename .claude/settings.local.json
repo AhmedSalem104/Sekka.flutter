@@ -1,0 +1,43 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:/Users/B-SMART/Downloads/sekka-frontend-modules \\(3\\).rar\")",
+      "Bash(powershell -Command \"Expand-Archive -Path ''''c:/Users/B-SMART/Downloads/sekka-frontend-modules \\(3\\).rar'''' -DestinationPath ''''c:/Users/B-SMART/Downloads/sekka-frontend-modules-temp''''\")",
+      "Bash(pip install:*)",
+      "Bash(python -c \"import rarfile; rf = rarfile.RarFile\\(''''c:/Users/B-SMART/Downloads/sekka-frontend-modules \\(3\\).rar''''\\); rf.extractall\\(''''c:/Users/B-SMART/Downloads/sekka-frontend-extracted''''\\)\")",
+      "Bash(winget list:*)",
+      "Bash(powershell -Command \"Get-ChildItem 'C:/Program Files', 'C:/Program Files \\(x86\\)' -Filter '7z.exe' -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName\")",
+      "Bash(wc:*)",
+      "Bash(flutter create:*)",
+      "Bash(curl -sL \"https://fonts.google.com/download?family=Tajawal\" -o /tmp/tajawal.zip)",
+      "Bash(unzip -o /tmp/tajawal.zip -d /tmp/tajawal)",
+      "Bash(flutter pub:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(cp \"C:/Users/B-SMART/Downloads/Gemini_Generated_Image_s28vb4s28vb4s28v.png\" \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/assets/images/app_icon.png\")",
+      "Bash(cp \"C:/Users/B-SMART/Downloads/Gemini_Generated_Image_s28vb4s28vb4s28v-removebg-preview.png\" \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/assets/images/logo.png\")",
+      "Bash(flutter devices:*)",
+      "Bash(flutter run:*)",
+      "Bash(adb devices:*)",
+      "Bash(where adb:*)",
+      "Read(//c/Users/B-SMART/Documents/GitHub/Sekka.flutter/$LOCALAPPDATA/**)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" devices:*)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" shell:*)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" kill-server:*)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" start-server:*)",
+      "Bash(flutter build:*)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" install:*)",
+      "Bash(dart run:*)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S shell am force-stop com.sekka.sekka)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S shell am start -n com.sekka.sekka/.MainActivity)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S shell pm list packages)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S install -r build/app/outputs/flutter-apk/app-debug.apk)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S shell monkey -p com.sekka.sekka -c android.intent.category.LAUNCHER 1 2>&1)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S shell monkey -p com.sekka.sekka -c android.intent.category.LAUNCHER 1)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S install build/app/outputs/flutter-apk/app-debug.apk)",
+      "Bash(\"C:/Users/B-SMART/AppData/Local/Android/Sdk/platform-tools/adb.exe\" -s HMRSWSIZ7HOFIN6S uninstall com.sekka.sekka)",
+      "Bash(curl:*)",
+      "Bash(xargs grep:*)",
+      "Bash(xargs cat:*)"
+    ]
+  }
+}
