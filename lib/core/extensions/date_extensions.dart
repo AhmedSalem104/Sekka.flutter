@@ -1,9 +1,10 @@
 extension DateExtensions on DateTime {
   /// Returns Arabic greeting based on time of day
   String get arabicGreeting {
-    if (hour < 12) return 'صباح الخير';
-    if (hour < 17) return 'مساء الخير';
-    return 'مساء الخير';
+    if (hour >= 5 && hour < 12) return 'صباح الخير';
+    if (hour >= 12 && hour < 18) return 'مساء الخير';
+    if (hour >= 18 && hour < 22) return 'مساء الخير';
+    return 'أهلا بيك'; // late night
   }
 
   /// Returns formatted Arabic date: "الأحد 2 مارس"

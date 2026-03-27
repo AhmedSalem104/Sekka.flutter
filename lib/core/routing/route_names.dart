@@ -15,4 +15,20 @@ abstract final class RouteNames {
   static const String orderDetails = '/order-details';
   static const String completeOrder = '/complete-order';
   static const String profile = '/profile';
+
+  // Profile
+  static const String editProfile = '/edit-profile';
+  static const String profileStats = '/profile-stats';
+  static const String emergencyContacts = '/emergency-contacts';
+  static const String profileExpenses = '/profile-expenses';
+  static const String settings = '/settings';
+
+  // Financial
+  static const String settlements = '/settlements';
+  static const String createSettlement = '/settlements/create';
+  static const String detailedStats = '/detailed-stats';
+  static const String paymentRequests = '/payment-requests';
+  static const String createPaymentRequest = '/payment-requests/create';
+  static const String invoices = '/invoices';
+  static const String invoiceDetail = '/invoices/detail';
 }

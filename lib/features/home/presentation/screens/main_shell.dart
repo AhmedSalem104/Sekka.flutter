@@ -3,7 +3,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/widgets/sekka_bottom_nav.dart';
 import '../../../orders/presentation/screens/orders_list_screen.dart';
 import '../../../wallet/presentation/screens/wallet_screen.dart';
-import '../../../settings/presentation/screens/profile_screen.dart';
+import '../../../profile/presentation/screens/profile_screen.dart';
 import 'home_screen.dart';
 
 class MainShell extends StatefulWidget {

@@ -1,0 +1,65 @@
+import '../../domain/entities/profile_entity.dart';
+
+class ProfileModel extends ProfileEntity {
+  const ProfileModel({
+    required super.id,
+    required super.name,
+    required super.phone,
+    required super.email,
+    required super.profileImageUrl,
+    required super.licenseImageUrl,
+    required super.vehicleType,
+    required super.isOnline,
+    required super.defaultRegion,
+    required super.cashOnHand,
+    required super.walletBalance,
+    required super.totalPoints,
+    required super.level,
+    required super.nextLevelPoints,
+    required super.joinedAt,
+    required super.totalOrders,
+    required super.totalDelivered,
+    required super.averageRating,
+    required super.shiftStatus,
+    required super.healthScore,
+    required super.badgesCount,
+    required super.currentStreak,
+    required super.completionPercentage,
+    required super.todayOrdersCount,
+    required super.todayEarnings,
+    required super.referralCode,
+  });
+
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    return ProfileModel(
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      email: json['email'] as String?,
+      profileImageUrl: json['profileImageUrl'] as String?,
+      licenseImageUrl: json['licenseImageUrl'] as String?,
+      vehicleType: json['vehicleType'] as int? ?? 0,
+      isOnline: json['isOnline'] as bool? ?? false,
+      defaultRegion: json['defaultRegion'] as String?,
+      cashOnHand: (json['cashOnHand'] as num?)?.toDouble() ?? 0,
+      walletBalance: (json['walletBalance'] as num?)?.toDouble() ?? 0,
+      totalPoints: json['totalPoints'] as int? ?? 0,
+      level: json['level'] as int? ?? 1,
+      nextLevelPoints: json['nextLevelPoints'] as int? ?? 0,
+      joinedAt: DateTime.parse(
+        json['joinedAt'] as String? ?? DateTime.now().toIso8601String(),
+      ),
+      totalOrders: json['totalOrders'] as int? ?? 0,
+      totalDelivered: json['totalDelivered'] as int? ?? 0,
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0,
+      shiftStatus: json['shiftStatus'] as int? ?? 0,
+      healthScore: json['healthScore'] as int? ?? 0,
+      badgesCount: json['badgesCount'] as int? ?? 0,
+      currentStreak: json['currentStreak'] as int? ?? 0,
+      completionPercentage: json['completionPercentage'] as int? ?? 0,
+      todayOrdersCount: json['todayOrdersCount'] as int? ?? 0,
+      todayEarnings: (json['todayEarnings'] as num?)?.toDouble() ?? 0,
+      referralCode: json['referralCode'] as String?,
+    );
+  }
+}

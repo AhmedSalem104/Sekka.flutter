@@ -103,7 +103,7 @@ class OtpInputBoxState extends State<OtpInputBox> {
                 decoration: InputDecoration(
                   counterText: '',
                   filled: true,
-                  fillColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+                  fillColor: isDark ? AppColors.backgroundDark : AppColors.background,
                   contentPadding: EdgeInsets.zero,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -113,6 +113,7 @@ class OtpInputBoxState extends State<OtpInputBox> {
                           : isDark
                               ? AppColors.borderDark
                               : AppColors.border,
+                      width: 1.5,
                     ),
                   ),
                   enabledBorder: OutlineInputBorder(
@@ -123,6 +124,7 @@ class OtpInputBoxState extends State<OtpInputBox> {
                           : isDark
                               ? AppColors.borderDark
                               : AppColors.border,
+                      width: 1.5,
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(

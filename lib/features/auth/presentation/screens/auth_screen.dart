@@ -194,7 +194,6 @@ class _AuthScreenState extends State<AuthScreen> {
           },
           onSubmitted: (_) => _onLogin(),
         ),
-        SizedBox(height: AppSizes.sm),
         Align(
           alignment: AlignmentDirectional.centerStart,
           child: TextButton(

@@ -13,6 +13,11 @@ import '../../features/auth/presentation/screens/success_screen.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/bloc/auth_event.dart';
 import '../../features/home/presentation/screens/main_shell.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/profile/presentation/screens/emergency_contacts_screen.dart';
+import '../../features/profile/presentation/screens/expenses_screen.dart';
+import '../../features/profile/presentation/screens/profile_stats_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
 import 'route_names.dart';
 
 /// Placeholder for screens not yet implemented.
@@ -119,6 +124,36 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         builder: (_, __) => const SuccessScreen(),
       ),
 
+      // Financial routes
+      GoRoute(
+        path: RouteNames.settlements,
+        builder: (_, __) => const _PlaceholderScreen(name: 'التسويات'),
+      ),
+      GoRoute(
+        path: RouteNames.createSettlement,
+        builder: (_, __) => const _PlaceholderScreen(name: 'تسوية جديدة'),
+      ),
+      GoRoute(
+        path: RouteNames.detailedStats,
+        builder: (_, __) => const _PlaceholderScreen(name: 'الإحصائيات'),
+      ),
+      GoRoute(
+        path: RouteNames.paymentRequests,
+        builder: (_, __) => const _PlaceholderScreen(name: 'طلبات الدفع'),
+      ),
+      GoRoute(
+        path: RouteNames.createPaymentRequest,
+        builder: (_, __) => const _PlaceholderScreen(name: 'طلب دفع جديد'),
+      ),
+      GoRoute(
+        path: RouteNames.invoices,
+        builder: (_, __) => const _PlaceholderScreen(name: 'الفواتير'),
+      ),
+      GoRoute(
+        path: RouteNames.invoiceDetail,
+        builder: (_, __) => const _PlaceholderScreen(name: 'تفاصيل الفاتورة'),
+      ),
+
       // Main routes
       GoRoute(
         path: RouteNames.main,
@@ -139,6 +174,28 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       GoRoute(
         path: RouteNames.profile,
         builder: (_, __) => const _PlaceholderScreen(name: 'Profile'),
+      ),
+
+      // Profile sub-pages
+      GoRoute(
+        path: RouteNames.editProfile,
+        builder: (_, __) => const EditProfileScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.profileStats,
+        builder: (_, __) => const ProfileStatsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.emergencyContacts,
+        builder: (_, __) => const EmergencyContactsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.profileExpenses,
+        builder: (_, __) => const ExpensesScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.settings,
+        builder: (_, __) => const SettingsScreen(),
       ),
     ],
   );

@@ -26,6 +26,10 @@ export 'widgets/sekka_swipe_action.dart';
 export 'widgets/sekka_empty_state.dart';
 export 'widgets/sekka_loading.dart';
 export 'widgets/sekka_message_dialog.dart';
+export 'widgets/sekka_avatar.dart';
+export 'widgets/sekka_progress_bar.dart';
+export 'widgets/sekka_expandable_section.dart';
+export 'widgets/sekka_toggle_tile.dart';
 
 // Extensions
 export 'extensions/context_extensions.dart';
