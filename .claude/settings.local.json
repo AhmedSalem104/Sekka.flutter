@@ -82,7 +82,21 @@
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJlZDg1NzkyMS1hODEwLTQwMDgtYjg5My0wY2JmNDA0N2MwYzgiLCJleHAiOjE3NzQ3Mjk1MTIsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.w02BWz8saf9yqxrHXWl9c1AOBSX34U8q8ir6F1r2BwI\")",
       "Bash(OID=\"eacde1f2-12a3-41e8-71c0-08de8c3f028e\")",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git pull:*)",
+      "Bash(flutter --version)",
+      "Bash(dart doc:*)",
+      "Bash(grep -r \"MessageTemplateRepository\\\\|Dio\\(\\)\\\\|dio\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/shared/network/ --include=*.dart -l)",
+      "Bash(grep -r \"GetIt\\\\|serviceLocator\\\\|getIt\\\\|injection\\\\|di\\\\.dart\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib --include=*.dart -l)",
+      "Bash(grep -rn \"DioClient\\\\|OrdersBloc\\\\|BlocProvider\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/core/routing/app_router.dart --include=*.dart)",
+      "Bash(flutter logs:*)",
+      "Bash(adb -s HMRSWSIZ7HOFIN6S logcat -d -s flutter)",
+      "Bash(adb -s HMRSWSIZ7HOFIN6S logcat -d)",
+      "Bash(adb -s HMRSWSIZ7HOFIN6S logcat -d -t 100)",
+      "Bash(tee /tmp/flutter_run.log)",
+      "Bash(grep -E \"\\\\.dart$\")",
+      "Bash(find /c/Users/B-SMART/Documents/GitHub/Sekka.flutter -type f -path */notifications/*)",
+      "Bash(grep -r \"quiet\\\\|focus\\\\|settings.*notification\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features --include=*.dart -l)"
     ]
   }
 }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_helper.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/api_result.dart';
@@ -24,7 +25,7 @@ class CustomerRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/customers',
+        ApiConstants.customers,
         queryParameters: {
           'pageNumber': pageNumber,
           'pageSize': pageSize,
@@ -44,7 +45,7 @@ class CustomerRepository {
   /// GET /api/v1/customers/{id}
   Future<ApiResult<CustomerDetailModel>> getCustomer(String id) async {
     return ApiHelper.execute(
-      () => _dio.get('/customers/$id'),
+      () => _dio.get(ApiConstants.customerDetail(id)),
       parser: (data) =>
           CustomerDetailModel.fromJson(data as Map<String, dynamic>),
     );
@@ -53,7 +54,7 @@ class CustomerRepository {
   /// GET /api/v1/customers/by-phone/{phone}
   Future<ApiResult<CustomerModel>> findByPhone(String phone) async {
     return ApiHelper.execute(
-      () => _dio.get('/customers/by-phone/$phone'),
+      () => _dio.get(ApiConstants.customerByPhone(phone)),
       parser: (data) =>
           CustomerModel.fromJson(data as Map<String, dynamic>),
     );
@@ -68,7 +69,7 @@ class CustomerRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.put(
-        '/customers/$id',
+        ApiConstants.customerDetail(id),
         data: {
           if (name != null) 'name': name,
           if (notes != null) 'notes': notes,
@@ -88,10 +89,10 @@ class CustomerRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.post(
-        '/customers/$id/rate',
+        ApiConstants.customerRate(id),
         data: rating.toJson(),
       ),
-      parser: (data) => data as bool,
+      parser: (data) => data == true,
     );
   }
 
@@ -103,21 +104,21 @@ class CustomerRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.post(
-        '/customers/$id/block',
+        ApiConstants.customerBlock(id),
         data: {
           'reason': reason,
           'reportToCommunity': reportToCommunity,
         },
       ),
-      parser: (data) => data as bool,
+      parser: (data) => data == true,
     );
   }
 
   /// POST /api/v1/customers/{id}/unblock
   Future<ApiResult<bool>> unblockCustomer(String id) async {
     return ApiHelper.execute(
-      () => _dio.post('/customers/$id/unblock', data: {}),
-      parser: (data) => data as bool,
+      () => _dio.post(ApiConstants.customerUnblock(id), data: {}),
+      parser: (data) => data == true,
     );
   }
 
@@ -129,7 +130,7 @@ class CustomerRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/customers/$id/orders',
+        ApiConstants.customerOrders(id),
         queryParameters: {
           'pageNumber': pageNumber,
           'pageSize': pageSize,
@@ -142,26 +143,10 @@ class CustomerRepository {
     );
   }
 
-  /// POST /api/v1/customers/{id}/voice-memo
-  Future<ApiResult<Map<String, dynamic>>> uploadVoiceMemo(
-    String id, {
-    required String filePath,
-  }) async {
-    return ApiHelper.execute(
-      () async => _dio.post(
-        '/customers/$id/voice-memo',
-        data: FormData.fromMap({
-          'file': await MultipartFile.fromFile(filePath),
-        }),
-      ),
-      parser: (data) => data as Map<String, dynamic>,
-    );
-  }
-
   /// GET /api/v1/customers/{id}/interests
   Future<ApiResult<CustomerInterestsModel>> getInterests(String id) async {
     return ApiHelper.execute(
-      () => _dio.get('/customers/$id/interests'),
+      () => _dio.get(ApiConstants.customerInterests(id)),
       parser: (data) =>
           CustomerInterestsModel.fromJson(data as Map<String, dynamic>),
     );
@@ -170,7 +155,7 @@ class CustomerRepository {
   /// GET /api/v1/customers/{id}/engagement
   Future<ApiResult<CustomerEngagementModel>> getEngagement(String id) async {
     return ApiHelper.execute(
-      () => _dio.get('/customers/$id/engagement'),
+      () => _dio.get(ApiConstants.customerEngagement(id)),
       parser: (data) =>
           CustomerEngagementModel.fromJson(data as Map<String, dynamic>),
     );

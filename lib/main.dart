@@ -11,6 +11,9 @@ import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_form_bloc.dart';
 import 'features/home/presentation/bloc/daily_stats_bloc.dart';
+import 'features/orders/data/datasources/order_remote_datasource.dart';
+import 'features/orders/data/repositories/order_repository_impl.dart';
+import 'features/orders/presentation/bloc/orders_bloc.dart';
 import 'features/settlements/data/datasources/settlement_remote_datasource.dart';
 import 'features/settlements/data/repositories/settlement_repository_impl.dart';
 import 'features/settlements/presentation/bloc/settlement_bloc.dart';
@@ -102,6 +105,11 @@ void main() async {
   final profileRepository =
       ProfileRepositoryImpl(remoteDataSource: profileDataSource);
 
+  // Orders
+  final orderDataSource = OrderRemoteDataSource(dioClient);
+  final orderRepository =
+      OrderRepositoryImpl(remoteDataSource: orderDataSource);
+
   // Settings
   final settingsDataSource = SettingsRemoteDataSource(dioClient);
   final settingsRepository =
@@ -135,6 +143,9 @@ void main() async {
           ),
           BlocProvider(
             create: (_) => ProfileBloc(repository: profileRepository),
+          ),
+          BlocProvider(
+            create: (_) => OrdersBloc(repository: orderRepository),
           ),
           BlocProvider(
             create: (_) => SettingsBloc(repository: settingsRepository),

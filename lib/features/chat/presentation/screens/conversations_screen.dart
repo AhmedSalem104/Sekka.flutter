@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_card.dart';
@@ -44,10 +45,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   }
 
   Future<void> _createConversation() async {
+    final args = await _showNewConversationDialog();
+    if (args == null || !mounted) return;
+
+    final (chatType, message) = args;
+
     final result = await widget.repository.createConversation(
-      chatType: 0,
-      subject: 'محادثة جديدة',
-      initialMessage: 'مرحبا، محتاج مساعدة',
+      chatType: chatType,
+      initialMessage: message,
     );
     if (!mounted) return;
     switch (result) {
@@ -60,10 +65,118 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     }
   }
 
+  Future<(int, String)?> _showNewConversationDialog() async {
+    int selectedType = 0;
+    final messageController = TextEditingController();
+
+    final types = [
+      (0, AppStrings.chatTypeSupport),
+      (1, AppStrings.chatTypeComplaint),
+      (2, AppStrings.chatTypeSuggestion),
+      (3, AppStrings.chatTypeGeneral),
+    ];
+
+    return showDialog<(int, String)>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(
+            AppStrings.chatNewConversation,
+            style: AppTypography.headlineSmall,
+            textAlign: TextAlign.center,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Type chips
+              Wrap(
+                spacing: Responsive.w(8),
+                runSpacing: Responsive.h(8),
+                children: types.map((t) {
+                  final (value, label) = t;
+                  final isSelected = selectedType == value;
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedType = value),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: Responsive.w(14),
+                        vertical: Responsive.h(8),
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius:
+                            BorderRadius.circular(Responsive.r(10)),
+                      ),
+                      child: Text(
+                        label,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isSelected
+                              ? AppColors.textOnPrimary
+                              : AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              SizedBox(height: Responsive.h(16)),
+              // Message
+              TextField(
+                controller: messageController,
+                textDirection: TextDirection.rtl,
+                maxLines: 3,
+                style: AppTypography.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: AppStrings.chatMessageHint,
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textCaption,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(Responsive.r(12)),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  contentPadding: EdgeInsets.all(Responsive.w(12)),
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                AppStrings.cancel,
+                style: AppTypography.button.copyWith(
+                  color: AppColors.textCaption,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                final msg = messageController.text.trim();
+                if (msg.isEmpty) return;
+                Navigator.pop(ctx, (selectedType, msg));
+              },
+              child: Text(
+                AppStrings.confirm,
+                style: AppTypography.button.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _openChat(ConversationModel conversation) {
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => ChatMessagesScreen(
           repository: widget.repository,
           conversation: conversation,
@@ -80,8 +193,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
+        elevation: 0,
         title: Text(
-          'تواصل معنا',
+          AppStrings.chatTitle,
           style: AppTypography.headlineSmall.copyWith(
             color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
           ),
@@ -98,7 +212,11 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _createConversation,
         backgroundColor: AppColors.primary,
-        child: Icon(IconsaxPlusBold.add, color: AppColors.textOnPrimary, size: Responsive.r(24)),
+        child: Icon(
+          IconsaxPlusBold.add,
+          color: AppColors.textOnPrimary,
+          size: Responsive.r(24),
+        ),
       ),
       body: _buildBody(isDark),
     );
@@ -111,7 +229,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       return SekkaEmptyState(
         icon: IconsaxPlusLinear.warning_2,
         title: _error!,
-        actionLabel: 'حاول تاني',
+        actionLabel: AppStrings.retry,
         onAction: _load,
       );
     }
@@ -119,8 +237,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     if (_data == null || _data!.items.isEmpty) {
       return const SekkaEmptyState(
         icon: IconsaxPlusLinear.message,
-        title: 'مفيش محادثات',
-        description: 'ابدأ محادثة جديدة مع فريق الدعم',
+        title: AppStrings.chatNoConversations,
+        description: AppStrings.chatNoConversationsDesc,
       );
     }
 
@@ -141,10 +259,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   Widget _buildConversationItem(ConversationModel conv, bool isDark) {
     final chatTypeLabel = switch (conv.chatType) {
-      0 => 'دعم فني',
-      1 => 'شكوى',
-      2 => 'اقتراح',
-      _ => 'عام',
+      0 => AppStrings.chatTypeSupport,
+      1 => AppStrings.chatTypeComplaint,
+      2 => AppStrings.chatTypeSuggestion,
+      _ => AppStrings.chatTypeGeneral,
     };
 
     return SekkaCard(
@@ -153,7 +271,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       onTap: () => _openChat(conv),
       child: Row(
         children: [
-          // Icon
           Container(
             width: Responsive.r(48),
             height: Responsive.r(48),
@@ -162,14 +279,14 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               borderRadius: BorderRadius.circular(Responsive.r(14)),
             ),
             child: Icon(
-              conv.isClosed ? IconsaxPlusBold.message_remove : IconsaxPlusBold.message,
+              conv.isClosed
+                  ? IconsaxPlusBold.message_remove
+                  : IconsaxPlusBold.message,
               color: conv.isClosed ? AppColors.textCaption : AppColors.primary,
               size: Responsive.r(22),
             ),
           ),
           SizedBox(width: Responsive.w(14)),
-
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +297,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       child: Text(
                         conv.subject ?? chatTypeLabel,
                         style: AppTypography.titleMedium.copyWith(
-                          color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+                          color: isDark
+                              ? AppColors.textHeadlineDark
+                              : AppColors.textHeadline,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -194,7 +313,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(Responsive.r(10)),
+                          borderRadius:
+                              BorderRadius.circular(Responsive.r(10)),
                         ),
                         child: Text(
                           '${conv.unreadCount}',
@@ -213,7 +333,9 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   Text(
                     conv.lastMessage!,
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? AppColors.textBodyDark : AppColors.textCaption,
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textCaption,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

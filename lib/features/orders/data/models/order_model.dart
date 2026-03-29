@@ -1,0 +1,159 @@
+import '../../../../shared/enums/order_enums.dart';
+
+class OrderModel {
+  const OrderModel({
+    required this.id,
+    required this.orderNumber,
+    this.customerName,
+    this.customerPhone,
+    this.partnerName,
+    this.partnerColor,
+    this.description,
+    required this.amount,
+    this.commissionAmount,
+    required this.paymentMethod,
+    required this.status,
+    required this.priority,
+    this.pickupAddress,
+    this.pickupLatitude,
+    this.pickupLongitude,
+    required this.deliveryAddress,
+    this.deliveryLatitude,
+    this.deliveryLongitude,
+    this.distanceKm,
+    this.sequenceIndex,
+    this.worthScore,
+    this.notes,
+    this.itemCount,
+    this.timeWindowStart,
+    this.timeWindowEnd,
+    this.scheduledDate,
+    required this.createdAt,
+    this.deliveredAt,
+  });
+
+  final String id;
+  final String orderNumber;
+  final String? customerName;
+  final String? customerPhone;
+  final String? partnerName;
+  final String? partnerColor;
+  final String? description;
+  final double amount;
+  final double? commissionAmount;
+  final PaymentMethod paymentMethod;
+  final OrderStatus status;
+  final OrderPriority priority;
+  final String? pickupAddress;
+  final double? pickupLatitude;
+  final double? pickupLongitude;
+  final String deliveryAddress;
+  final double? deliveryLatitude;
+  final double? deliveryLongitude;
+  final double? distanceKm;
+  final int? sequenceIndex;
+  final double? worthScore;
+  final String? notes;
+  final int? itemCount;
+  final DateTime? timeWindowStart;
+  final DateTime? timeWindowEnd;
+  final String? scheduledDate;
+  final DateTime createdAt;
+  final DateTime? deliveredAt;
+
+  factory OrderModel.fromJson(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'] as String,
+      orderNumber: json['orderNumber'] as String? ?? '',
+      customerName: json['customerName'] as String?,
+      customerPhone: json['customerPhone'] as String?,
+      partnerName: json['partnerName'] as String?,
+      partnerColor: json['partnerColor'] as String?,
+      description: json['description'] as String?,
+      amount: (json['amount'] as num).toDouble(),
+      commissionAmount: (json['commissionAmount'] as num?)?.toDouble(),
+      paymentMethod: PaymentMethod.fromValue(json['paymentMethod'] as int? ?? 0),
+      status: OrderStatus.fromValue(json['status'] as int? ?? 0),
+      priority: OrderPriority.fromValue(json['priority'] as int? ?? 0),
+      pickupAddress: json['pickupAddress'] as String?,
+      pickupLatitude: (json['pickupLatitude'] as num?)?.toDouble(),
+      pickupLongitude: (json['pickupLongitude'] as num?)?.toDouble(),
+      deliveryAddress: json['deliveryAddress'] as String? ?? '',
+      deliveryLatitude: (json['deliveryLatitude'] as num?)?.toDouble(),
+      deliveryLongitude: (json['deliveryLongitude'] as num?)?.toDouble(),
+      distanceKm: (json['distanceKm'] as num?)?.toDouble(),
+      sequenceIndex: json['sequenceIndex'] as int?,
+      worthScore: (json['worthScore'] as num?)?.toDouble(),
+      notes: json['notes'] as String?,
+      itemCount: json['itemCount'] as int?,
+      timeWindowStart: json['timeWindowStart'] != null
+          ? DateTime.parse(json['timeWindowStart'] as String)
+          : null,
+      timeWindowEnd: json['timeWindowEnd'] != null
+          ? DateTime.parse(json['timeWindowEnd'] as String)
+          : null,
+      scheduledDate: json['scheduledDate'] as String?,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      deliveredAt: json['deliveredAt'] != null
+          ? DateTime.parse(json['deliveredAt'] as String)
+          : null,
+    );
+  }
+
+  OrderModel copyWith({
+    String? customerName,
+    String? customerPhone,
+    String? pickupAddress,
+    String? description,
+    String? notes,
+  }) {
+    return OrderModel(
+      id: id,
+      orderNumber: orderNumber,
+      customerName: customerName ?? this.customerName,
+      customerPhone: customerPhone ?? this.customerPhone,
+      partnerName: partnerName,
+      partnerColor: partnerColor,
+      description: description ?? this.description,
+      amount: amount,
+      commissionAmount: commissionAmount,
+      paymentMethod: paymentMethod,
+      status: status,
+      priority: priority,
+      pickupAddress: pickupAddress ?? this.pickupAddress,
+      pickupLatitude: pickupLatitude,
+      pickupLongitude: pickupLongitude,
+      deliveryAddress: deliveryAddress,
+      deliveryLatitude: deliveryLatitude,
+      deliveryLongitude: deliveryLongitude,
+      distanceKm: distanceKm,
+      sequenceIndex: sequenceIndex,
+      worthScore: worthScore,
+      notes: notes ?? this.notes,
+      itemCount: itemCount,
+      timeWindowStart: timeWindowStart,
+      timeWindowEnd: timeWindowEnd,
+      scheduledDate: scheduledDate,
+      createdAt: createdAt,
+      deliveredAt: deliveredAt,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        if (customerName != null) 'customerName': customerName,
+        if (customerPhone != null) 'customerPhone': customerPhone,
+        if (description != null) 'description': description,
+        'amount': amount,
+        'paymentMethod': paymentMethod.value,
+        'priority': priority.value,
+        if (pickupAddress != null) 'pickupAddress': pickupAddress,
+        if (pickupLatitude != null) 'pickupLatitude': pickupLatitude,
+        if (pickupLongitude != null) 'pickupLongitude': pickupLongitude,
+        'deliveryAddress': deliveryAddress,
+        if (deliveryLatitude != null) 'deliveryLatitude': deliveryLatitude,
+        if (deliveryLongitude != null) 'deliveryLongitude': deliveryLongitude,
+        if (notes != null) 'notes': notes,
+        if (itemCount != null) 'itemCount': itemCount,
+        if (scheduledDate != null) 'scheduledDate': scheduledDate,
+      };
+}

@@ -12,9 +12,12 @@ import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/status_badge.dart';
+import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../data/models/address_model.dart';
 import '../../data/models/customer_detail_model.dart';
+import '../../data/models/customer_engagement_model.dart';
+import '../../data/models/customer_interests_model.dart';
 import '../../data/models/customer_order_model.dart';
 import '../../data/models/customer_rating_model.dart';
 import '../../data/repositories/customer_repository.dart';
@@ -35,14 +38,35 @@ class CustomerDetailScreen extends StatefulWidget {
 
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late final CustomerDetailBloc _bloc;
+  late final CustomerRepository _repository;
+  CustomerInterestsModel? _interests;
+  CustomerEngagementModel? _engagement;
 
   @override
   void initState() {
     super.initState();
     final dioClient = context.read<DioClient>();
-    final repository = CustomerRepository(dioClient.dio);
-    _bloc = CustomerDetailBloc(repository: repository);
+    _repository = CustomerRepository(dioClient.dio);
+    _bloc = CustomerDetailBloc(repository: _repository);
     _bloc.add(CustomerDetailLoadRequested(widget.customerId));
+    _loadExtras();
+  }
+
+  Future<void> _loadExtras() async {
+    final results = await Future.wait([
+      _repository.getInterests(widget.customerId),
+      _repository.getEngagement(widget.customerId),
+    ]);
+
+    if (!mounted) return;
+
+    final interestsResult = results[0] as ApiResult<CustomerInterestsModel>;
+    final engagementResult = results[1] as ApiResult<CustomerEngagementModel>;
+
+    setState(() {
+      if (interestsResult case ApiSuccess(:final data)) _interests = data;
+      if (engagementResult case ApiSuccess(:final data)) _engagement = data;
+    });
   }
 
   @override
@@ -167,6 +191,22 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ...customer.ratings.map(
               (rating) => _buildRatingCard(rating, isDark),
             ),
+            SizedBox(height: Responsive.h(24)),
+          ],
+
+          // Interests section (Endpoint 9)
+          if (_interests != null) ...[
+            _buildSectionTitle(AppStrings.interests, isDark),
+            SizedBox(height: Responsive.h(12)),
+            _buildInterestsSection(_interests!, isDark),
+            SizedBox(height: Responsive.h(24)),
+          ],
+
+          // Engagement section (Endpoint 10)
+          if (_engagement != null) ...[
+            _buildSectionTitle(AppStrings.engagement, isDark),
+            SizedBox(height: Responsive.h(12)),
+            _buildEngagementSection(_engagement!, isDark),
             SizedBox(height: Responsive.h(24)),
           ],
 
@@ -644,6 +684,264 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Interests Section (Endpoint 9) ──
+
+  Widget _buildInterestsSection(CustomerInterestsModel interests, bool isDark) {
+    return SekkaCard(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      padding: EdgeInsets.all(Responsive.w(16)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (interests.topCategories.isNotEmpty) ...[
+            Text(
+              'الفئات المفضلة',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+              ),
+            ),
+            SizedBox(height: Responsive.h(8)),
+            Wrap(
+              spacing: Responsive.w(8),
+              runSpacing: Responsive.h(6),
+              children: interests.topCategories.map((cat) {
+                return Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.w(12),
+                    vertical: Responsive.h(6),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  ),
+                  child: Text(
+                    cat,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            SizedBox(height: Responsive.h(14)),
+          ],
+          if (interests.preferredPartners.isNotEmpty) ...[
+            Text(
+              'شركاء مفضلين',
+              style: AppTypography.bodySmall.copyWith(
+                color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+              ),
+            ),
+            SizedBox(height: Responsive.h(8)),
+            ...interests.preferredPartners.take(3).map((p) {
+              return Padding(
+                padding: EdgeInsets.only(bottom: Responsive.h(6)),
+                child: Row(
+                  children: [
+                    Icon(
+                      IconsaxPlusLinear.shop,
+                      size: Responsive.r(16),
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: Responsive.w(8)),
+                    Expanded(
+                      child: Text(
+                        p.partnerName,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textHeadlineDark
+                              : AppColors.textHeadline,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${p.orderCount} طلب',
+                      style: AppTypography.captionSmall.copyWith(
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+          Row(
+            children: [
+              Text(
+                'متوسط قيمة الطلب: ',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                ),
+              ),
+              Text(
+                '${interests.averageOrderValue.toStringAsFixed(0)} ${AppStrings.currency}',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Engagement Section (Endpoint 10) ──
+
+  Widget _buildEngagementSection(
+    CustomerEngagementModel engagement,
+    bool isDark,
+  ) {
+    final (levelColor, levelLabel) = switch (engagement.engagementLevel.toLowerCase()) {
+      'high' => (AppColors.success, 'عالي'),
+      'medium' => (AppColors.warning, 'متوسط'),
+      'low' => (AppColors.error, 'منخفض'),
+      _ => (AppColors.textCaption, engagement.engagementLevel),
+    };
+
+    final (riskColor, riskLabel) = switch (engagement.retentionRisk.toLowerCase()) {
+      'low' => (AppColors.success, 'منخفض'),
+      'medium' => (AppColors.warning, 'متوسط'),
+      'high' => (AppColors.error, 'عالي'),
+      _ => (AppColors.textCaption, engagement.retentionRisk),
+    };
+
+    return SekkaCard(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      padding: EdgeInsets.all(Responsive.w(16)),
+      child: Column(
+        children: [
+          // Engagement level + risk
+          Row(
+            children: [
+              Expanded(
+                child: _buildEngagementChip(
+                  'مستوى التفاعل',
+                  levelLabel,
+                  levelColor,
+                  isDark,
+                ),
+              ),
+              SizedBox(width: Responsive.w(10)),
+              Expanded(
+                child: _buildEngagementChip(
+                  'خطر الفقد',
+                  riskLabel,
+                  riskColor,
+                  isDark,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: Responsive.h(14)),
+          // Stats row
+          Row(
+            children: [
+              _buildMiniStat(
+                '${engagement.ordersThisMonth}',
+                'الشهر ده',
+                isDark,
+              ),
+              _buildMiniStat(
+                '${engagement.ordersLastMonth}',
+                'الشهر اللي فات',
+                isDark,
+              ),
+              _buildMiniStat(
+                '${engagement.daysSinceLastOrder}',
+                'يوم من آخر طلب',
+                isDark,
+              ),
+            ],
+          ),
+          SizedBox(height: Responsive.h(10)),
+          // Lifetime value
+          Row(
+            children: [
+              Text(
+                'القيمة الكلية: ',
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                ),
+              ),
+              Text(
+                '${engagement.lifetimeValue.toStringAsFixed(0)} ${AppStrings.currency}',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEngagementChip(
+    String label,
+    String value,
+    Color color,
+    bool isDark,
+  ) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: Responsive.h(10),
+        horizontal: Responsive.w(10),
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(Responsive.r(12)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+            ),
+          ),
+          SizedBox(height: Responsive.h(4)),
+          Text(
+            value,
+            style: AppTypography.titleMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String value, String label, bool isDark) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: AppTypography.titleLarge.copyWith(
+              color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: Responsive.h(2)),
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }

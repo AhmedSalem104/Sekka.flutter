@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_helper.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/api_result.dart';
@@ -15,7 +16,7 @@ class SosRepository {
     String? notes,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/sos/activate', data: {
+      () => _dio.post(ApiConstants.sosActivate, data: {
         'latitude': latitude,
         'longitude': longitude,
         if (notes != null) 'notes': notes,
@@ -27,8 +28,8 @@ class SosRepository {
   /// POST /sos/{id}/dismiss
   Future<ApiResult<bool>> dismiss(String id) async {
     return ApiHelper.execute(
-      () => _dio.post('/sos/$id/dismiss', data: {}),
-      parser: (data) => data as bool,
+      () => _dio.post(ApiConstants.sosDismiss(id), data: {}),
+      parser: (data) => data == true,
     );
   }
 
@@ -39,11 +40,11 @@ class SosRepository {
     required bool wasFalseAlarm,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/sos/$id/resolve', data: {
+      () => _dio.post(ApiConstants.sosResolve(id), data: {
         'resolution': resolution,
         'wasFalseAlarm': wasFalseAlarm,
       }),
-      parser: (data) => data as bool,
+      parser: (data) => data == true,
     );
   }
 
@@ -54,7 +55,7 @@ class SosRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/sos/history',
+        ApiConstants.sosHistory,
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(

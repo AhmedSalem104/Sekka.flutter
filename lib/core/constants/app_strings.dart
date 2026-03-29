@@ -179,16 +179,79 @@ abstract final class AppStrings {
 
   // Orders
   static const String orders = 'الطلبات';
-  static const String addOrder = 'إضافة طلب';
+  static const String addOrder = 'أضف طلب';
   static const String orderDetails = 'تفاصيل الطلب';
   static const String clientName = 'اسم العميل';
   static const String phone = 'رقم الموبايل';
   static const String address = 'العنوان';
   static const String amount = 'المبلغ';
   static const String note = 'ملاحظة';
-  static const String confirmAdd = 'تأكيد وإضافة';
-  static const String swipeToDeliver = 'اسحب لإتمام التسليم';
-  static const String delivered = 'تم التسليم!';
+  static const String confirmAdd = 'يلا أضيف!';
+  static const String pickupAddress = 'هتستلم منين؟';
+  static const String deliveryAddress = 'هتوصّل فين؟';
+  static const String paymentMethodLabel = 'طريقة الدفع';
+  static const String priorityLabel = 'الأولوية';
+  static const String itemCount = 'كام قطعة؟';
+  static const String scheduledDate = 'هتوصّل إمتى؟';
+  static const String notScheduled = 'مش محدد';
+  static const String deliveryAddressRequired = 'لازم تكتب عنوان التسليم';
+  static const String amountRequired = 'لازم تكتب المبلغ';
+  static const String amountInvalid = 'المبلغ لازم يكون أكبر من صفر';
+  static const String swipeToDeliver = 'اسحب عشان تسلّم';
+  static const String delivered = 'اتسلّم!';
+  static const String saveChanges = 'حفظ التعديلات';
+  static const String duplicateWarning = 'الطلب ده ممكن يكون مكرر، عايز تكمل؟';
+  static const String yesContinue = 'أيوا كمّل';
+  static const String bulkImportTitle = 'استيراد طلبات';
+  static const String pasteOrdersHere = 'الصق الطلبات هنا...';
+  static const String bulkImportHint =
+      'انسخ الطلبات من واتساب أو أي مكان والصقها هنا.\nكل سطر = طلب واحد';
+  static const String importOrders = 'يلا نستورد!';
+  static const String separator = 'الفاصل';
+
+  // Order Detail Actions
+  static const String acceptOrder = 'اقبل الطلب';
+  static const String pickedUpOrder = 'استلمت الشحنة';
+  static const String startDelivery = 'يلا نوصّل!';
+  static const String failDelivery = 'معرفتش أسلّم';
+  static const String cancelOrder = 'ألغي الطلب';
+  static const String retryDelivery = 'جرّب تاني';
+  static const String confirmDelivery = 'أكّد التسليم';
+  static const String collectedAmount = 'حصّلت كام؟';
+  static const String failReason = 'إيه السبب؟';
+  static const String cancelReason = 'ليه بتلغي؟';
+  static const String orderNumberLabel = 'رقم الطلب';
+  static const String distance = 'المسافة';
+  static const String additionalNotes = 'عايز تضيف حاجة؟';
+  static const String notes = 'ملاحظات';
+  static const String editOrder = 'عدّل الطلب';
+  static const String deleteOrder = 'امسح الطلب';
+  static const String deleteOrderConfirm = 'متأكد إنك عايز تمسح الطلب ده؟';
+  static const String phoneCopied = 'الرقم اتنسخ';
+  static const String quickMessages = 'رسائل سريعة';
+  static const String messageCopied = 'الرسالة اتنسخت';
+  static const String createdAt = 'اتعمل إمتى';
+  static const String deliveredAt = 'اتسلّم إمتى';
+
+  // Order Actions — Success Messages
+  static const String orderCreatedSuccess = 'تمام! الطلب اتضاف';
+  static const String orderUpdatedSuccess = 'تمام! الطلب اتعدّل';
+  static const String orderDeletedSuccess = 'تمام! الطلب اتمسح';
+  static const String orderStatusUpdatedSuccess = 'تمام! الحالة اتغيّرت';
+  static const String orderDeliveredSuccess = 'برافو! الطلب اتسلّم';
+  static const String orderFailedSuccess = 'تم تسجيل المحاولة';
+  static const String orderCancelledSuccess = 'الطلب اتلغى';
+  static const String photoUploadedSuccess = 'تمام! الصورة اترفعت';
+  static const String addressSwappedSuccess = 'تمام! العنوان اتغيّر';
+  static const String bulkImportSuccess = 'تمام! الطلبات اتضافت';
+  static const String transferSuccess = 'تمام! الطلب اتحوّل';
+  static const String partialDeliverySuccess = 'تمام! التسليم الجزئي اتسجّل';
+  static const String waitingStarted = 'المؤقت شغال';
+  static const String waitingStopped = 'المؤقت وقف';
+  static const String disclaimerAdded = 'تمام! إخلاء المسؤولية اتضاف';
+  static const String disputeCreated = 'تمام! النزاع اتفتح';
+  static const String refundRequested = 'تمام! طلب الاسترداد اتبعت';
+  static const String slotBooked = 'تمام! الموعد اتحجز';
 
   // Order Status
   static const String statusNew = 'جديد';
@@ -382,6 +445,61 @@ abstract final class AppStrings {
   static const String fixedPerOrder = 'مبلغ ثابت لكل طلب';
   static const String percentagePerOrder = 'نسبة من كل طلب';
   static const String monthlyFlat = 'اشتراك شهري';
+
+  // Notifications
+  static const String notificationsTitle = 'الإشعارات';
+  static const String readAll = 'قراءة الكل';
+  static const String noNotifications = 'مفيش إشعارات';
+  static const String noNotificationsDesc = 'هيظهرلك هنا لما يكون فيه إشعارات جديدة';
+
+  // Chat
+  static const String chatTitle = 'تواصل معنا';
+  static const String chatNoConversations = 'مفيش محادثات';
+  static const String chatNoConversationsDesc = 'ابدأ محادثة جديدة مع فريق الدعم';
+  static const String chatNewConversation = 'محادثة جديدة';
+  static const String chatInitialMessage = 'مرحبا، محتاج مساعدة';
+  static const String chatTypeSupport = 'دعم فني';
+  static const String chatTypeComplaint = 'شكوى';
+  static const String chatTypeSuggestion = 'اقتراح';
+  static const String chatTypeGeneral = 'عام';
+  static const String chatConversation = 'محادثة';
+  static const String chatStartConversation = 'ابدأ المحادثة...';
+  static const String chatMessageHint = 'اكتب رسالة...';
+  static const String chatCloseConversation = 'قفل المحادثة';
+  static const String chatCloseConfirm = 'متأكد عايز تقفل المحادثة دي؟';
+  static const String chatClosed = 'المحادثة مقفولة';
+  static const String chatClosedDesc = 'المحادثة دي اتقفلت. افتح محادثة جديدة لو محتاج مساعدة.';
+
+  // SOS
+  static const String sosEmergency = 'حالة طوارئ';
+  static const String sosSubtitle = 'اضغط الزر لإرسال إشارة طوارئ\nلجهات الاتصال والإدارة';
+  static const String sosActivated = 'تم تفعيل الطوارئ';
+  static const String sosActivatedSubtitle = 'تم إبلاغ جهات الطوارئ والإدارة\nابقى في مكانك';
+  static const String sosResolve = 'تم حل المشكلة';
+  static const String sosDismiss = 'كان بالغلط';
+  static const String sosSelectProblem = 'إيه المشكلة؟';
+  static const String sosAddNotes = 'تفاصيل أكتر (اختياري)';
+  static const String sosNotesHint = 'اكتب أي تفاصيل ممكن تساعد...';
+  static const String sosSendSignal = 'ابعت إشارة طوارئ';
+  static const String sosResolutionNote = 'إيه اللي حصل؟';
+  static const String sosResolutionHint = 'اكتب ملخص للحل...';
+  static const String sosConfirmResolve = 'تأكيد الحل';
+  static const String sosDismissConfirm = 'متأكد إن دي كانت بالغلط؟';
+  static const String sosHistory = 'سجل الطوارئ';
+  static const String sosNoHistory = 'مفيش حالات طوارئ سابقة';
+  static const String sosNoHistoryDesc = 'لو حصل أي طوارئ هيظهر هنا';
+  static const String sosWasFalseAlarm = 'كان إنذار كاذب';
+  static const String sosStatusActive = 'نشط';
+  static const String sosStatusResolved = 'تم الحل';
+  static const String sosStatusDismissed = 'ملغي';
+  static const String sosStatusExpired = 'منتهي';
+  static const String sosProblemAccident = 'حادث سير';
+  static const String sosProblemVehicle = 'عطل في المركبة';
+  static const String sosProblemTheft = 'سرقة';
+  static const String sosProblemAssault = 'اعتداء';
+  static const String sosProblemHealth = 'حالة صحية طارئة';
+  static const String sosProblemRoadBlock = 'طريق مغلق';
+  static const String sosProblemOther = 'أخرى';
 
   // General
   static const String retry = 'حاول تاني';

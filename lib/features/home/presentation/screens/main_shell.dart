@@ -17,12 +17,19 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
 
-  final _screens = const [
-    HomeScreen(),
-    OrdersListScreen(),
-    ContactsScreen(),
-    WalletScreen(),
-    ProfileScreen(),
+  void _openProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+    );
+  }
+
+  late final List<Widget> _screens = [
+    HomeScreen(onAvatarTap: _openProfile),
+    const OrdersListScreen(),
+    const ContactsScreen(),
+    const WalletScreen(),
+    const Scaffold(body: SizedBox.shrink()), // الحسابات — placeholder
   ];
 
   final _navItems = [
@@ -47,9 +54,9 @@ class _MainShellState extends State<MainShell> {
       label: 'المحفظة',
     ),
     SekkaBottomNavItem(
-      icon: IconsaxPlusLinear.profile_circle,
-      activeIcon: IconsaxPlusBold.profile_circle,
-      label: 'البروفايل',
+      icon: IconsaxPlusLinear.calculator,
+      activeIcon: IconsaxPlusBold.calculator,
+      label: 'الحسابات',
     ),
   ];
 

@@ -43,5 +43,6 @@ abstract final class RouteNames {
   // Communication
   static const String notifications = '/notifications';
   static const String sos = '/sos';
+  static const String sosHistory = '/sos-history';
   static const String chat = '/chat';
 }

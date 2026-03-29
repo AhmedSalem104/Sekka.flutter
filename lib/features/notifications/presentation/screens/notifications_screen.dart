@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_card.dart';
@@ -65,6 +67,37 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     _loadNotifications();
   }
 
+  void _onNotificationTap(NotificationModel notification) {
+    // Mark as read first
+    if (!notification.isRead) {
+      _markAsRead(notification.id);
+    }
+
+    // Navigate based on actionType
+    final action = notification.actionType;
+    final data = notification.actionData;
+
+    if (action == null || action.isEmpty) return;
+
+    switch (action) {
+      case 'order':
+        if (data != null && data.isNotEmpty) {
+          context.push(RouteNames.orderDetails, extra: data);
+        }
+      case 'wallet':
+        // MainShell tab 3 is wallet — pop to main first
+        Navigator.pop(context);
+      case 'settlement':
+        context.push(RouteNames.settlements);
+      case 'profile':
+        context.push(RouteNames.editProfile);
+      case 'settings':
+        context.push(RouteNames.settings);
+      case 'chat':
+        context.push(RouteNames.chat);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -75,8 +108,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       appBar: AppBar(
         backgroundColor:
             isDark ? AppColors.backgroundDark : AppColors.background,
+        elevation: 0,
         title: Text(
-          'الإشعارات',
+          AppStrings.notificationsTitle,
           style: AppTypography.headlineSmall.copyWith(
             color: isDark
                 ? AppColors.textHeadlineDark
@@ -96,7 +130,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             TextButton(
               onPressed: _markAllAsRead,
               child: Text(
-                'قراءة الكل',
+                AppStrings.readAll,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,
@@ -118,7 +152,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return SekkaEmptyState(
         icon: IconsaxPlusLinear.warning_2,
         title: _error!,
-        actionLabel: 'حاول تاني',
+        actionLabel: AppStrings.retry,
         onAction: _loadNotifications,
       );
     }
@@ -126,8 +160,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (_data == null || _data!.items.isEmpty) {
       return const SekkaEmptyState(
         icon: IconsaxPlusLinear.notification,
-        title: 'مفيش إشعارات',
-        description: 'هيظهرلك هنا لما يكون فيه إشعارات جديدة',
+        title: AppStrings.noNotifications,
+        description: AppStrings.noNotificationsDesc,
       );
     }
 
@@ -150,11 +184,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final (icon, color) = _getNotificationStyle(notification.notificationType);
 
     return GestureDetector(
-      onTap: () {
-        if (!notification.isRead) {
-          _markAsRead(notification.id);
-        }
-      },
+      onTap: () => _onNotificationTap(notification),
       child: SekkaCard(
         color: notification.isRead
             ? (isDark ? AppColors.surfaceDark : AppColors.surface)

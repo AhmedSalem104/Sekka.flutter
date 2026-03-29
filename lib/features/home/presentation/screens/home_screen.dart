@@ -11,8 +11,8 @@ import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
-import '../../../../shared/storage/token_storage.dart';
 import '../../../notifications/data/repositories/notification_repository.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../sos/data/repositories/sos_repository.dart';
@@ -20,7 +20,9 @@ import '../../../sos/presentation/screens/sos_screen.dart';
 import '../bloc/daily_stats_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, this.onAvatarTap});
+
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +54,11 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _openNotifications(BuildContext context) {
+  Future<void> _openNotifications(BuildContext context) {
     final dio = context.read<DioClient>().dio;
-    Navigator.push(
+    return Navigator.push<void>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => NotificationsScreen(
           repository: NotificationRepository(dio),
         ),
@@ -66,9 +68,9 @@ class HomeScreen extends StatelessWidget {
 
   void _openSos(BuildContext context) {
     final dio = context.read<DioClient>().dio;
-    Navigator.push(
+    Navigator.push<void>(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => SosScreen(
           repository: SosRepository(dio),
         ),
@@ -86,17 +88,20 @@ class HomeScreen extends StatelessWidget {
     return Row(
       children: [
         // Avatar
-        Container(
-          width: Responsive.r(50),
-          height: Responsive.r(50),
-          decoration: const BoxDecoration(
-            gradient: AppColors.primaryGradient,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            IconsaxPlusBold.profile_circle,
-            color: AppColors.textOnPrimary,
-            size: Responsive.r(26),
+        GestureDetector(
+          onTap: onAvatarTap,
+          child: Container(
+            width: Responsive.r(50),
+            height: Responsive.r(50),
+            decoration: const BoxDecoration(
+              gradient: AppColors.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              IconsaxPlusBold.profile_circle,
+              color: AppColors.textOnPrimary,
+              size: Responsive.r(26),
+            ),
           ),
         ),
         SizedBox(width: Responsive.w(14)),
@@ -135,29 +140,9 @@ class HomeScreen extends StatelessWidget {
         ),
         SizedBox(width: Responsive.w(18)),
         // Notifications
-        GestureDetector(
-          onTap: () => _openNotifications(context),
-          child: Stack(
-            children: [
-              Icon(
-                IconsaxPlusLinear.notification,
-                color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-                size: Responsive.r(26),
-              ),
-              Positioned(
-                top: 0,
-                left: 0,
-                child: Container(
-                  width: Responsive.r(9),
-                  height: Responsive.r(9),
-                  decoration: const BoxDecoration(
-                    color: AppColors.error,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        _NotificationBadge(
+          isDark: isDark,
+          onTap: () async => _openNotifications(context),
         ),
       ],
     );
@@ -696,6 +681,95 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Notification icon with dynamic unread count badge.
+class _NotificationBadge extends StatefulWidget {
+  const _NotificationBadge({
+    required this.isDark,
+    required this.onTap,
+  });
+  final bool isDark;
+  final Future<void> Function() onTap;
+
+  @override
+  State<_NotificationBadge> createState() => _NotificationBadgeState();
+}
+
+class _NotificationBadgeState extends State<_NotificationBadge> {
+  int _unreadCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUnreadCount();
+  }
+
+  Future<void> _loadUnreadCount() async {
+    final dio = context.read<DioClient>().dio;
+    final repo = NotificationRepository(dio);
+    final result = await repo.getUnreadCount();
+    if (!mounted) return;
+    switch (result) {
+      case ApiSuccess(:final data):
+        setState(() => _unreadCount = data);
+      case ApiFailure():
+        break;
+    }
+  }
+
+  Future<void> _handleTap() async {
+    await widget.onTap();
+    // Refresh count when returning from notifications screen
+    _loadUnreadCount();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _handleTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(
+            IconsaxPlusLinear.notification,
+            color: widget.isDark ? AppColors.textBodyDark : AppColors.textBody,
+            size: Responsive.r(26),
+          ),
+          if (_unreadCount > 0)
+            Positioned(
+              top: -2,
+              left: -4,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.w(5),
+                  vertical: Responsive.h(1),
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  borderRadius: BorderRadius.circular(Responsive.r(10)),
+                ),
+                constraints: BoxConstraints(
+                  minWidth: Responsive.r(16),
+                  minHeight: Responsive.r(16),
+                ),
+                child: Center(
+                  child: Text(
+                    _unreadCount > 99 ? '99+' : '$_unreadCount',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: Responsive.sp(9),
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textOnPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

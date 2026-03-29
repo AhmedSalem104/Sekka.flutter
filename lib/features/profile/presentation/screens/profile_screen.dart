@@ -8,6 +8,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/sekka_back_button.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -43,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         title: Text(AppStrings.profileTitle, style: AppTypography.headlineSmall),
+        leading: const SekkaBackButton(),
       ),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
@@ -121,6 +123,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // ── Sections ──────────────────────────────
           ProfileSectionTile(
+            icon: IconsaxPlusLinear.notification,
+            label: AppStrings.notificationsTitle,
+            onTap: () => context.push(RouteNames.notifications),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
             icon: IconsaxPlusLinear.chart_2,
             label: AppStrings.detailedStats,
             onTap: () => context.push(RouteNames.profileStats),
@@ -135,9 +144,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
+            icon: IconsaxPlusLinear.danger,
+            label: AppStrings.sosHistory,
+            color: AppColors.error,
+            onTap: () => context.push(RouteNames.sosHistory),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
             icon: IconsaxPlusLinear.money_send,
             label: AppStrings.expenses,
             onTap: () => context.push(RouteNames.profileExpenses),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
+            icon: IconsaxPlusLinear.message,
+            label: AppStrings.chatTitle,
+            onTap: () => context.push(RouteNames.chat),
           ),
           SizedBox(height: AppSizes.sm),
 
@@ -158,8 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: AppSizes.xxl),
 
-          // Bottom safe area
-          SizedBox(height: AppSizes.bottomNavHeight + AppSizes.xl),
+          SizedBox(height: AppSizes.xl),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_helper.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/api_result.dart';
@@ -15,7 +16,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/chat/conversations',
+        ApiConstants.chatConversations,
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(
@@ -32,9 +33,9 @@ class ChatRepository {
     required String initialMessage,
   }) async {
     return ApiHelper.execute(
-      () => _dio.post('/chat/conversations', data: {
+      () => _dio.post(ApiConstants.chatConversations, data: {
         'chatType': chatType,
-        'subject': subject,
+        if (subject != null) 'subject': subject,
         'initialMessage': initialMessage,
       }),
       parser: (data) =>
@@ -50,7 +51,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.get(
-        '/chat/conversations/$conversationId/messages',
+        ApiConstants.chatMessages(conversationId),
         queryParameters: {'page': page, 'pageSize': pageSize},
       ),
       parser: (data) => PagedData.fromJson(
@@ -68,7 +69,7 @@ class ChatRepository {
   }) async {
     return ApiHelper.execute(
       () => _dio.post(
-        '/chat/conversations/$conversationId/messages',
+        ApiConstants.chatMessages(conversationId),
         data: {
           'content': content,
           if (attachmentUrl != null) 'attachmentUrl': attachmentUrl,
@@ -82,24 +83,24 @@ class ChatRepository {
   /// PUT /chat/conversations/{id}/close
   Future<ApiResult<bool>> closeConversation(String conversationId) async {
     return ApiHelper.execute(
-      () => _dio.put('/chat/conversations/$conversationId/close', data: {}),
-      parser: (data) => data as bool,
+      () => _dio.put(ApiConstants.chatClose(conversationId), data: {}),
+      parser: (data) => data == true,
     );
   }
 
   /// PUT /chat/messages/{id}/read
   Future<ApiResult<bool>> markMessageRead(String messageId) async {
     return ApiHelper.execute(
-      () => _dio.put('/chat/messages/$messageId/read', data: {}),
-      parser: (data) => data as bool,
+      () => _dio.put(ApiConstants.chatMessageRead(messageId), data: {}),
+      parser: (data) => data == true,
     );
   }
 
   /// GET /chat/unread-count
   Future<ApiResult<int>> getUnreadCount() async {
     return ApiHelper.execute(
-      () => _dio.get('/chat/unread-count'),
-      parser: (data) => data as int,
+      () => _dio.get(ApiConstants.chatUnreadCount),
+      parser: (data) => (data as num?)?.toInt() ?? 0,
     );
   }
 }

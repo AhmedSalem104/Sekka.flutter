@@ -68,6 +68,12 @@ abstract final class AppColors {
   static const Color statusReturned = Color(0xFF805AD5);
   static const Color statusPostponed = Color(0xFFA0AEC0);
 
+  // SOS Status
+  static const Color sosActive = Color(0xFFE53E3E);
+  static const Color sosResolved = Color(0xFF38A169);
+  static const Color sosDismissed = Color(0xFF718096);
+  static const Color sosExpired = Color(0xFFA0AEC0);
+
   // Logo colors (extracted from the logo)
   static const Color logoOrange = Color(0xFFFC5D01);
   static const Color logoNavy = Color(0xFF2D3748);

@@ -180,7 +180,7 @@ class ProfileRemoteDataSource {
   Future<String> uploadProfileImage(File imageFile) async {
     try {
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
+        'file': await MultipartFile.fromFile(
           imageFile.path,
           filename: imageFile.path.split('/').last,
         ),
@@ -216,7 +216,7 @@ class ProfileRemoteDataSource {
   Future<String> uploadLicenseImage(File imageFile) async {
     try {
       final formData = FormData.fromMap({
-        'image': await MultipartFile.fromFile(
+        'file': await MultipartFile.fromFile(
           imageFile.path,
           filename: imageFile.path.split('/').last,
         ),

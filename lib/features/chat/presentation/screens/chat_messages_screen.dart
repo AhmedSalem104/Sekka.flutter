@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../shared/network/api_result.dart';
-import '../../../../shared/network/api_response.dart';
 import '../../data/models/conversation_model.dart';
 import '../../data/repositories/chat_repository.dart';
 
@@ -30,10 +29,12 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
   List<ChatMessageModel> _messages = [];
   bool _isLoading = true;
   bool _isSending = false;
+  late bool _isClosed;
 
   @override
   void initState() {
     super.initState();
+    _isClosed = widget.conversation.isClosed;
     _loadMessages();
   }
 
@@ -43,6 +44,8 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
     _scrollController.dispose();
     super.dispose();
   }
+
+  // ── Endpoint 3: GET /conversations/{id}/messages ──
 
   Future<void> _loadMessages() async {
     setState(() => _isLoading = true);
@@ -55,15 +58,15 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
           _isLoading = false;
         });
         _scrollToBottom();
+        // Endpoint 6: mark unread messages as read
+        _markUnreadMessagesAsRead();
       case ApiFailure(:final error):
         setState(() => _isLoading = false);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error.arabicMessage)),
-          );
-        }
+        _showError(error.arabicMessage);
     }
   }
+
+  // ── Endpoint 4: POST /conversations/{id}/messages ──
 
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
@@ -88,10 +91,78 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
       case ApiFailure(:final error):
         setState(() => _isSending = false);
         _messageController.text = text;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.arabicMessage)),
-        );
+        _showError(error.arabicMessage);
     }
+  }
+
+  // ── Endpoint 5: PUT /conversations/{id}/close ──
+
+  Future<void> _closeConversation() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(
+          AppStrings.chatCloseConversation,
+          style: AppTypography.titleLarge,
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          AppStrings.chatCloseConfirm,
+          style: AppTypography.bodyMedium,
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(
+              AppStrings.cancel,
+              style: AppTypography.button.copyWith(color: AppColors.textCaption),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              AppStrings.confirm,
+              style: AppTypography.button.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    final result = await widget.repository.closeConversation(
+      widget.conversation.id,
+    );
+
+    if (!mounted) return;
+    switch (result) {
+      case ApiSuccess():
+        setState(() => _isClosed = true);
+      case ApiFailure(:final error):
+        _showError(error.arabicMessage);
+    }
+  }
+
+  // ── Endpoint 6: PUT /messages/{id}/read ──
+
+  Future<void> _markUnreadMessagesAsRead() async {
+    // Mark non-driver (admin) messages as read
+    final unread = _messages.where((m) => !m.isDriver && m.status == 0);
+    for (final msg in unread) {
+      widget.repository.markMessageRead(msg.id);
+    }
+  }
+
+  // ── Helpers ──
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   void _scrollToBottom() {
@@ -106,6 +177,8 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
     });
   }
 
+  // ── Build ──
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -114,8 +187,9 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: AppBar(
         backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
+        elevation: 0,
         title: Text(
-          widget.conversation.subject ?? 'محادثة',
+          widget.conversation.subject ?? AppStrings.chatConversation,
           style: AppTypography.titleLarge.copyWith(
             color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
           ),
@@ -128,9 +202,51 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
             color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
           ),
         ),
+        actions: [
+          // Close conversation action (Endpoint 5)
+          if (!_isClosed)
+            IconButton(
+              onPressed: _closeConversation,
+              tooltip: AppStrings.chatCloseConversation,
+              icon: Icon(
+                IconsaxPlusLinear.close_circle,
+                color: AppColors.error,
+                size: Responsive.r(22),
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [
+          // Closed banner
+          if (_isClosed)
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                vertical: Responsive.h(10),
+                horizontal: Responsive.w(16),
+              ),
+              color: AppColors.textCaption.withValues(alpha: 0.1),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    IconsaxPlusBold.lock_1,
+                    color: AppColors.textCaption,
+                    size: Responsive.r(16),
+                  ),
+                  SizedBox(width: Responsive.w(8)),
+                  Text(
+                    AppStrings.chatClosed,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textCaption,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // Messages
           Expanded(
             child: _isLoading
@@ -138,26 +254,32 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
                 : _messages.isEmpty
                     ? Center(
                         child: Text(
-                          'ابدأ المحادثة...',
+                          AppStrings.chatStartConversation,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                            color: isDark
+                                ? AppColors.textCaptionDark
+                                : AppColors.textCaption,
                           ),
                         ),
                       )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: Responsive.w(16),
-                          vertical: Responsive.h(12),
+                    : RefreshIndicator(
+                        onRefresh: _loadMessages,
+                        color: AppColors.primary,
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          padding: EdgeInsets.symmetric(
+                            horizontal: Responsive.w(16),
+                            vertical: Responsive.h(12),
+                          ),
+                          itemCount: _messages.length,
+                          itemBuilder: (_, index) =>
+                              _buildMessage(_messages[index], isDark),
                         ),
-                        itemCount: _messages.length,
-                        itemBuilder: (_, index) =>
-                            _buildMessage(_messages[index], isDark),
                       ),
           ),
 
-          // Input
-          if (!widget.conversation.isClosed) _buildInput(isDark),
+          // Input (hidden when closed)
+          if (!_isClosed) _buildInput(isDark),
         ],
       ),
     );
@@ -199,7 +321,7 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isMe)
+              if (!isMe && msg.senderName.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.only(bottom: Responsive.h(4)),
                   child: Text(
@@ -259,7 +381,6 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
       ),
       child: Row(
         children: [
-          // Text field
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -273,12 +394,16 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
                 controller: _messageController,
                 textDirection: TextDirection.rtl,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'اكتب رسالة...',
+                  hintText: AppStrings.chatMessageHint,
                   hintStyle: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
                   ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(
@@ -295,7 +420,6 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
 
           SizedBox(width: Responsive.w(10)),
 
-          // Send button
           GestureDetector(
             onTap: _sendMessage,
             child: Container(
@@ -308,7 +432,7 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
               child: _isSending
                   ? Padding(
                       padding: EdgeInsets.all(Responsive.r(12)),
-                      child: CircularProgressIndicator(
+                      child: const CircularProgressIndicator(
                         strokeWidth: 2,
                         color: AppColors.textOnPrimary,
                       ),

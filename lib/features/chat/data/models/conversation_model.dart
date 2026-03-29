@@ -21,7 +21,7 @@ class ConversationModel {
 
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       chatType: json['chatType'] as int? ?? 3,
       subject: json['subject'] as String?,
       isClosed: json['isClosed'] as bool? ?? false,
@@ -30,7 +30,9 @@ class ConversationModel {
           ? DateTime.parse(json['lastMessageAt'] as String)
           : null,
       unreadCount: json['unreadCount'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
     );
   }
 }
@@ -61,14 +63,16 @@ class ChatMessageModel {
 
   factory ChatMessageModel.fromJson(Map<String, dynamic> json) {
     return ChatMessageModel(
-      id: json['id'] as String,
-      senderId: json['senderId'] as String,
-      senderName: json['senderName'] as String,
-      senderType: json['senderType'] as String,
-      content: json['content'] as String,
+      id: json['id'] as String? ?? '',
+      senderId: json['senderId'] as String? ?? '',
+      senderName: json['senderName'] as String? ?? '',
+      senderType: json['senderType'] as String? ?? 'Driver',
+      content: json['content'] as String? ?? '',
       attachmentUrl: json['attachmentUrl'] as String?,
       status: json['status'] as int? ?? 0,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
     );
   }
 }

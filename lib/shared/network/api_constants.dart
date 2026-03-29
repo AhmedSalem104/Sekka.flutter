@@ -99,6 +99,86 @@ abstract final class ApiConstants {
   static const String analyticsProfitabilityTrends =
       '$_analytics/profitability-trends';
 
+  // Notification endpoints
+  static const String _notifications = '$baseUrl/notifications';
+  static const String notifications = _notifications;
+  static String notificationRead(String id) => '$_notifications/$id/read';
+  static const String notificationsReadAll = '$_notifications/read-all';
+  static const String notificationsUnreadCount = '$_notifications/unread-count';
+
+  // Customer endpoints
+  static const String _customers = '$baseUrl/customers';
+  static const String customers = _customers;
+  static String customerDetail(String id) => '$_customers/$id';
+  static String customerByPhone(String phone) => '$_customers/by-phone/$phone';
+  static String customerRate(String id) => '$_customers/$id/rate';
+  static String customerBlock(String id) => '$_customers/$id/block';
+  static String customerUnblock(String id) => '$_customers/$id/unblock';
+  static String customerOrders(String id) => '$_customers/$id/orders';
+  static String customerInterests(String id) => '$_customers/$id/interests';
+  static String customerEngagement(String id) => '$_customers/$id/engagement';
+
+  // Chat endpoints
+  static const String _chat = '$baseUrl/chat';
+  static const String chatConversations = '$_chat/conversations';
+  static String chatMessages(String id) => '$_chat/conversations/$id/messages';
+  static String chatClose(String id) => '$_chat/conversations/$id/close';
+  static String chatMessageRead(String id) => '$_chat/messages/$id/read';
+  static const String chatUnreadCount = '$_chat/unread-count';
+
+  // SOS endpoints
+  static const String _sos = '$baseUrl/sos';
+  static const String sosActivate = '$_sos/activate';
+  static String sosDismiss(String id) => '$_sos/$id/dismiss';
+  static String sosResolve(String id) => '$_sos/$id/resolve';
+  static const String sosHistory = '$_sos/history';
+
+  // Order endpoints
+  static const String _orders = '$baseUrl/orders';
+  static const String orders = _orders;
+  static String orderDetail(String id) => '$_orders/$id';
+  static String orderStatus(String id) => '$_orders/$id/status';
+  static String orderDeliver(String id) => '$_orders/$id/deliver';
+  static String orderFail(String id) => '$_orders/$id/fail';
+  static String orderCancel(String id) => '$_orders/$id/cancel';
+  static String orderTransfer(String id) => '$_orders/$id/transfer';
+  static String orderPartial(String id) => '$_orders/$id/partial';
+  static const String ordersBulk = '$_orders/bulk';
+  static const String ordersCheckDuplicate = '$_orders/check-duplicate';
+  static String orderWorth(String id) => '$_orders/$id/worth';
+  static String orderPhotos(String id) => '$_orders/$id/photos';
+  static String orderSwapAddress(String id) => '$_orders/$id/swap-address';
+  static String orderWaitingStart(String id) => '$_orders/$id/waiting/start';
+  static String orderWaitingStop(String id) => '$_orders/$id/waiting/stop';
+  static const String ordersCalculatePrice = '$_orders/calculate-price';
+  static String orderDisclaimer(String id) => '$_orders/$id/disclaimer';
+  static String orderDispute(String id) => '$_orders/$id/dispute';
+  static String orderDisputes(String id) => '$_orders/$id/disputes';
+  static String orderRefund(String id) => '$_orders/$id/refund';
+  static String orderRefunds(String id) => '$_orders/$id/refunds';
+  static const String ordersTimeSlots = '$_orders/time-slots';
+  static String orderBookSlot(String id) => '$_orders/$id/book-slot';
+
+  // Route endpoints
+  static const String _routes = '$baseUrl/routes';
+  static const String routesOptimize = '$_routes/optimize';
+  static const String routesActive = '$_routes/active';
+  static String routeReorder(String id) => '$_routes/$id/reorder';
+  static String routeAddOrder(String id) => '$_routes/$id/add-order';
+  static String routeComplete(String id) => '$_routes/$id/complete';
+
+  // Recurring Order endpoints
+  static const String ordersRecurring = '$_orders/recurring';
+  static String recurringOrderDetail(String id) => '$_orders/recurring/$id';
+  static String recurringOrderPause(String id) => '$_orders/recurring/$id/pause';
+  static String recurringOrderResume(String id) => '$_orders/recurring/$id/resume';
+
+  // Timeline endpoints
+  static const String _timeline = '$baseUrl/timeline';
+  static const String timelineDaily = '$_timeline/daily';
+  static const String timelineRange = '$_timeline/range';
+  static const String timelineDailyFilter = '$_timeline/daily/filter';
+
   /// Endpoints that don't require authentication.
   static const publicEndpoints = [
     vehicleTypes,

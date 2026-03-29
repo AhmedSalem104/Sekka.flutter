@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/auth_screen.dart';
@@ -15,11 +16,20 @@ import '../../features/partners/presentation/screens/partners_list_screen.dart';
 import '../../features/partners/presentation/screens/partner_detail_screen.dart';
 import '../../features/partners/data/models/partner_model.dart';
 import '../../features/home/presentation/screens/main_shell.dart';
+import '../../features/orders/presentation/screens/create_order_screen.dart';
+import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/emergency_contacts_screen.dart';
 import '../../features/profile/presentation/screens/expenses_screen.dart';
 import '../../features/profile/presentation/screens/profile_stats_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/chat/data/repositories/chat_repository.dart';
+import '../../features/chat/presentation/screens/conversations_screen.dart';
+import '../../features/notifications/data/repositories/notification_repository.dart';
+import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/sos/data/repositories/sos_repository.dart';
+import '../../features/sos/presentation/screens/sos_history_screen.dart';
+import '../../shared/network/dio_client.dart';
 import 'route_names.dart';
 
 /// Placeholder for screens not yet implemented.
@@ -163,15 +173,14 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       ),
       GoRoute(
         path: RouteNames.addOrder,
-        builder: (_, __) => const _PlaceholderScreen(name: 'Add Order'),
+        builder: (_, __) => const CreateOrderScreen(),
       ),
       GoRoute(
         path: RouteNames.orderDetails,
-        builder: (_, __) => const _PlaceholderScreen(name: 'Order Details'),
-      ),
-      GoRoute(
-        path: RouteNames.completeOrder,
-        builder: (_, __) => const _PlaceholderScreen(name: 'Complete Order'),
+        builder: (_, state) {
+          final orderId = state.extra as String;
+          return OrderDetailScreen(orderId: orderId);
+        },
       ),
       GoRoute(
         path: RouteNames.profile,
@@ -210,6 +219,35 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         builder: (_, state) {
           final customerId = state.pathParameters['id']!;
           return CustomerDetailScreen(customerId: customerId);
+        },
+      ),
+
+      // Chat
+      GoRoute(
+        path: RouteNames.chat,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return ConversationsScreen(repository: ChatRepository(dio));
+        },
+      ),
+
+      // Notifications
+      GoRoute(
+        path: RouteNames.notifications,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return NotificationsScreen(
+            repository: NotificationRepository(dio),
+          );
+        },
+      ),
+
+      // SOS
+      GoRoute(
+        path: RouteNames.sosHistory,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return SosHistoryScreen(repository: SosRepository(dio));
         },
       ),
 
