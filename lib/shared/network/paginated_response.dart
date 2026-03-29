@@ -21,16 +21,21 @@ class PaginatedResponse<T> {
     Map<String, dynamic> json, {
     required T Function(Map<String, dynamic>) fromJsonT,
   }) {
+    final page = json['pageNumber'] as int? ?? json['page'] as int? ?? 1;
+    final size = json['pageSize'] as int? ?? 10;
+    final total = json['totalCount'] as int? ?? 0;
+    final pages = json['totalPages'] as int? ?? 0;
+
     return PaginatedResponse<T>(
       items: (json['items'] as List)
           .map((e) => fromJsonT(e as Map<String, dynamic>))
           .toList(),
-      pageNumber: json['pageNumber'] as int? ?? 1,
-      pageSize: json['pageSize'] as int? ?? 10,
-      totalCount: json['totalCount'] as int? ?? 0,
-      totalPages: json['totalPages'] as int? ?? 0,
-      hasNextPage: json['hasNextPage'] as bool? ?? false,
-      hasPreviousPage: json['hasPreviousPage'] as bool? ?? false,
+      pageNumber: page,
+      pageSize: size,
+      totalCount: total,
+      totalPages: pages,
+      hasNextPage: json['hasNextPage'] as bool? ?? (page < pages),
+      hasPreviousPage: json['hasPreviousPage'] as bool? ?? (page > 1),
     );
   }
 }

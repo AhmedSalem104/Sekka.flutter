@@ -4,6 +4,12 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../constants/app_colors.dart';
 import '../utils/responsive.dart';
 
+/// Resolves image URLs — handles both full URLs and relative API paths.
+String _resolveImageUrl(String url) {
+  if (url.startsWith('http')) return url;
+  return 'https://sekka.runasp.net$url';
+}
+
 class SekkaAvatar extends StatelessWidget {
   const SekkaAvatar({
     super.key,
@@ -41,7 +47,7 @@ class SekkaAvatar extends StatelessWidget {
             child: ClipOval(
               child: imageUrl != null && imageUrl!.isNotEmpty
                   ? Image.network(
-                      imageUrl!,
+                      _resolveImageUrl(imageUrl!),
                       fit: BoxFit.cover,
                       width: resolvedSize,
                       height: resolvedSize,

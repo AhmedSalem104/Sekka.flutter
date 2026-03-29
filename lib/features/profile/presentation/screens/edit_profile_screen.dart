@@ -11,6 +11,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../shared/network/api_constants.dart';
 import '../../../../core/widgets/sekka_avatar.dart';
 import '../../../../core/widgets/sekka_back_button.dart';
 import '../../../../core/widgets/sekka_button.dart';
@@ -322,7 +323,9 @@ class _LicenseUploadTile extends StatelessWidget {
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                 child: Image.network(
-                  licenseUrl!,
+                  licenseUrl!.startsWith('http')
+                      ? licenseUrl!
+                      : '${ApiConstants.baseUrl.replaceAll('/api/v1', '')}$licenseUrl',
                   height: Responsive.h(150),
                   width: double.infinity,
                   fit: BoxFit.cover,
