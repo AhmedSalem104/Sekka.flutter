@@ -429,7 +429,7 @@ abstract final class AppStrings {
       _isAr ? 'يلا نستورد!' : 'Import';
   static String get separator => _isAr ? 'الفاصل' : 'Separator';
 
-  // Order — Create Steps
+  // Order — Create Steps (legacy const kept for non-duplicates)
   static const String stepCustomerInfo = 'العميل';
   static const String stepAddresses = 'العناوين';
   static const String stepDetails = 'التفاصيل';
@@ -437,9 +437,7 @@ abstract final class AppStrings {
   static const String nextStep = 'التالي';
   static const String shipmentDescription = 'وصف الشحنة';
   static const String expectedChange = 'مبلغ الفكة';
-  static const String selectPartner = 'هتستلم من مين؟';
   static const String noPartner = 'من غير شريك';
-  static const String useCurrentLocation = 'حدد موقعي';
   static const String orderTypeLabel = 'نوع الطلب';
   static const String orderTypeNormal = 'طلب عادي';
   static const String orderTypeRecurring = 'طلب متكرر';
@@ -454,7 +452,7 @@ abstract final class AppStrings {
   static const String timeWindowLabel = 'عايز توصّل من إمتى لإمتى؟';
   static const String timeWindowFrom = 'من الساعة';
   static const String timeWindowTo = 'لحد الساعة';
-  static const String locationPermissionDenied = 'لازم تسمحلنا نوصل للموقع عشان نحدده';
+  // locationPermissionDenied moved to i18n getter below
   static const String fetchingLocation = 'ثانية بنحدد موقعك...';
   static const String customerPhoneRequired = 'اكتب رقم موبايل العميل';
   static const String selectPickupPoint = 'اختار نقطة الاستلام';
