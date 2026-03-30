@@ -24,8 +24,68 @@ class QuickMessagesSheet extends StatefulWidget {
 }
 
 class _QuickMessagesSheetState extends State<QuickMessagesSheet> {
-  List<MessageTemplateModel>? _templates;
+  List<MessageTemplateModel> _templates = [];
   bool _isLoading = true;
+
+  // رسائل افتراضية لو الـ API رجع فاضي
+  static const _defaultTemplates = [
+    MessageTemplateModel(
+      id: 'default_1',
+      messageText: 'السلام عليكم، أنا سائق سِكّة، طلبك في الطريق',
+      category: 0,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 0,
+    ),
+    MessageTemplateModel(
+      id: 'default_2',
+      messageText: 'أنا وصلت، ممكن تنزل تستلم الطلب؟',
+      category: 0,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 1,
+    ),
+    MessageTemplateModel(
+      id: 'default_3',
+      messageText: 'أنا قدام العنوان، فين بالظبط؟',
+      category: 0,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 2,
+    ),
+    MessageTemplateModel(
+      id: 'default_4',
+      messageText: 'الطلب محتاج المبلغ كاش، تمام؟',
+      category: 1,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 3,
+    ),
+    MessageTemplateModel(
+      id: 'default_5',
+      messageText: 'معلش اتأخرت عليك، دقايق وأكون عندك',
+      category: 3,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 4,
+    ),
+    MessageTemplateModel(
+      id: 'default_6',
+      messageText: 'مبردش على التليفون، ممكن تكلمني؟',
+      category: 4,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 5,
+    ),
+    MessageTemplateModel(
+      id: 'default_7',
+      messageText: 'تم التسليم، شكراً ليك!',
+      category: 2,
+      usageCount: 0,
+      isSystemTemplate: true,
+      sortOrder: 6,
+    ),
+  ];
 
   @override
   void initState() {
@@ -38,14 +98,23 @@ class _QuickMessagesSheetState extends State<QuickMessagesSheet> {
     if (!mounted) return;
     switch (result) {
       case ApiSuccess(:final data):
-        setState(() { _templates = data; _isLoading = false; });
+        setState(() {
+          _templates = data.isNotEmpty ? data : _defaultTemplates;
+          _isLoading = false;
+        });
       case ApiFailure():
-        setState(() => _isLoading = false);
+        setState(() {
+          _templates = _defaultTemplates;
+          _isLoading = false;
+        });
     }
   }
 
-  Future<void> _selectTemplate(MessageTemplateModel template) async {
-    widget.repository.recordUsage(template.id);
+  void _selectTemplate(MessageTemplateModel template) {
+    // سجل الاستخدام بس لو مش default
+    if (!template.id.startsWith('default_')) {
+      widget.repository.recordUsage(template.id);
+    }
     widget.onTemplateSelected(template.messageText);
     if (mounted) Navigator.pop(context);
   }
@@ -99,16 +168,6 @@ class _QuickMessagesSheetState extends State<QuickMessagesSheet> {
               padding: EdgeInsets.all(Responsive.w(40)),
               child: const SekkaLoading(),
             )
-          else if (_templates == null || _templates!.isEmpty)
-            Padding(
-              padding: EdgeInsets.all(Responsive.w(40)),
-              child: Text(
-                'مفيش رسائل جاهزة',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                ),
-              ),
-            )
           else
             Flexible(
               child: ListView.separated(
@@ -117,10 +176,10 @@ class _QuickMessagesSheetState extends State<QuickMessagesSheet> {
                   horizontal: Responsive.w(20),
                   vertical: Responsive.h(10),
                 ),
-                itemCount: _templates!.length,
+                itemCount: _templates.length,
                 separatorBuilder: (_, __) => SizedBox(height: Responsive.h(8)),
                 itemBuilder: (_, index) {
-                  final t = _templates![index];
+                  final t = _templates[index];
                   return _buildTemplateItem(t, isDark);
                 },
               ),

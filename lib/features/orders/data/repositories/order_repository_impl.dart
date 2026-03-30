@@ -16,6 +16,10 @@ class OrderRepositoryImpl implements OrderRepository {
       _remote.createOrder(data);
 
   @override
+  Future<OrderModel> createRecurringOrder(Map<String, dynamic> data) =>
+      _remote.createRecurringOrder(data);
+
+  @override
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,
     int pageSize = 20,

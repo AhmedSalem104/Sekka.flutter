@@ -36,6 +36,27 @@ class OrderRemoteDataSource {
     }
   }
 
+  /// POST /orders/recurring — create a recurring order.
+  Future<OrderModel> createRecurringOrder(Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.ordersRecurring,
+        data: data,
+      );
+      final apiResponse = ApiResponse<OrderModel>.fromJson(
+        response.data!,
+        fromJsonT: (json) =>
+            OrderModel.fromJson(json as Map<String, dynamic>),
+      );
+      if (!apiResponse.isSuccess || apiResponse.data == null) {
+        throw ApiException(message: apiResponse.message ?? '');
+      }
+      return apiResponse.data!;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   /// GET /orders — paginated list with filters.
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,

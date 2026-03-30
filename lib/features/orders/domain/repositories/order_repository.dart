@@ -5,6 +5,7 @@ import '../../../../shared/network/api_response.dart';
 
 abstract class OrderRepository {
   Future<OrderModel> createOrder(Map<String, dynamic> data);
+  Future<OrderModel> createRecurringOrder(Map<String, dynamic> data);
 
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,

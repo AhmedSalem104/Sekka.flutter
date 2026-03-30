@@ -106,6 +106,8 @@ class OrderModel {
     String? pickupAddress,
     String? description,
     String? notes,
+    OrderStatus? status,
+    DateTime? deliveredAt,
   }) {
     return OrderModel(
       id: id,
@@ -118,7 +120,7 @@ class OrderModel {
       amount: amount,
       commissionAmount: commissionAmount,
       paymentMethod: paymentMethod,
-      status: status,
+      status: status ?? this.status,
       priority: priority,
       pickupAddress: pickupAddress ?? this.pickupAddress,
       pickupLatitude: pickupLatitude,
@@ -135,7 +137,7 @@ class OrderModel {
       timeWindowEnd: timeWindowEnd,
       scheduledDate: scheduledDate,
       createdAt: createdAt,
-      deliveredAt: deliveredAt,
+      deliveredAt: deliveredAt ?? this.deliveredAt,
     );
   }
 

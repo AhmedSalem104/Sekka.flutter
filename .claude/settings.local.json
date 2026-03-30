@@ -96,7 +96,27 @@
       "Bash(tee /tmp/flutter_run.log)",
       "Bash(grep -E \"\\\\.dart$\")",
       "Bash(find /c/Users/B-SMART/Documents/GitHub/Sekka.flutter -type f -path */notifications/*)",
-      "Bash(grep -r \"quiet\\\\|focus\\\\|settings.*notification\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features --include=*.dart -l)"
+      "Bash(grep -r \"quiet\\\\|focus\\\\|settings.*notification\" /c/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features --include=*.dart -l)",
+      "Bash(git push:*)",
+      "Bash(find C:UsersB-SMARTDocumentsGitHubSekka.flutterlibfeaturesmessages -type f -name *.dart)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJlNmU2MWU1Ni01MDRhLTRkMmQtODE4ZC05YmUwY2FkZDFiNTUiLCJleHAiOjE3NzQ5MTQ4MzEsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.kMpngI5A6J2ldZ5oOcojBTGm1wVLjy79nDoXqbm2iW8\")",
+      "Bash(__NEW_LINE_fa34fc29ab5f4e3e__ curl -s -w \"\\\\n\\\\nHTTP_STATUS: %{http_code}\" -X POST \"https://sekka.runasp.net/api/v1/orders/calculate-price\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer $TOKEN\" -d '{:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJiNTI2M2U1ZS0wNmVlLTQxMmEtODkyZS0wNWE0ODViYWZjZjUiLCJleHAiOjE3NzQ5MTUzNjQsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.T-YXM8Oefowsd3QZp1xD8d7_GuYlRObftSwi8qySUMA\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJiMjgzMWMyMS01MDI5LTRhY2MtOWRkMS1kOThmMjMwY2U2ZTQiLCJleHAiOjE3NzQ5MTk4ODEsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.NnJ4P62NZK1Y-PlLua8gfb4ggQtoXLNa-pQpAdWQVnQ\")",
+      "Bash(AUTH=\"Authorization: Bearer $TOKEN\")",
+      "Bash(CT=\"Content-Type: application/json\")",
+      "Bash(ORDER1_ID=\"76d7b5b4-d8d8-4371-4f66-08de8de5624a\")",
+      "Bash(__NEW_LINE_0a53414e6160430d__ echo:*)",
+      "Bash(WAIT_ID=\"e73bee65-a2c8-4c11-4f6b-08de8de5624a\")",
+      "Bash(__NEW_LINE_d03ee35847d921dc__ echo:*)",
+      "Bash(__NEW_LINE_47ef973c7830f57d__ echo:*)",
+      "Bash(find /c/Users/B-SMART/Documents/GitHub/Sekka.flutter -type d -name *test* -o -name *mock*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiJlOTViNThmNy04NDUwLTRmMzEtYWE2Yi03MWU3MDk4NmJmMmIiLCJleHAiOjE3NzQ5MjA2OTksImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.xo0_HKyA4mXJMtqhkeCWzraHEMcD3qH8RBaIMAngU04\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjVhMzdkYWEyLTcwOWEtNDJmYS03MjUxLTA4ZGU4YmIzNWI3NiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2Ycg2YHZiti12YQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiI5OTljNjhhZS01NDdhLTQ3ZWMtODZjNS03NGUwYTgzZGE2OWUiLCJleHAiOjE3NzQ5MjA4MDMsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.BFkSd7xuai1W6UzY9brYmQCy241sJ8obZTZ5GAy7NG8\")",
+      "Bash(__NEW_LINE_db370ebfd0087259__ echo:*)",
+      "Bash(__NEW_LINE_9619e2a894d8d060__ echo:*)",
+      "Bash(\"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe\" devices:*)",
+      "Bash(export PATH=\"$PATH:$LOCALAPPDATA/Android/Sdk/platform-tools\")"
     ]
   }
 }

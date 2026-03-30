@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
@@ -18,6 +20,7 @@ import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
+import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../../core/widgets/sekka_swipe_action.dart';
 import '../../../../core/widgets/status_badge.dart' as badge;
@@ -297,17 +300,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   void _blocListener(BuildContext context, OrdersState state) {
     if (state is OrdersLoaded && state.actionMessage != null) {
+      final msg = state.actionMessage!;
+      final isTerminalAction = msg == AppStrings.orderDeliveredSuccess ||
+          msg == AppStrings.orderCancelledSuccess ||
+          msg == AppStrings.orderDeletedSuccess ||
+          msg == AppStrings.partialDeliverySuccess;
+
+      final isSuccess = isTerminalAction ||
+          msg == AppStrings.orderStatusUpdatedSuccess ||
+          msg == AppStrings.addressSwappedSuccess ||
+          msg == AppStrings.waitingStarted ||
+          msg == AppStrings.waitingStopped ||
+          msg == AppStrings.photoUploadedSuccess;
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
           SnackBar(
             content: Directionality(
               textDirection: TextDirection.rtl,
-              child: Text(state.actionMessage!),
+              child: Text(msg),
             ),
-            backgroundColor: AppColors.success,
+            backgroundColor: isSuccess ? AppColors.success : AppColors.error,
           ),
         );
+
+      // لو تسليم/إلغاء/حذف → ارجع للقائمة
+      if (isTerminalAction && mounted) {
+        Navigator.of(context).pop();
+      }
     }
     if (state is OrdersError) {
       SekkaMessageDialog.show(
@@ -362,17 +383,22 @@ class _StatusHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _statusColor(order.status);
+    // لو عنده deliveredAt يبقى اتسلّم فعلاً بغض النظر عن الـ status number
+    final isActuallyDelivered = order.deliveredAt != null;
+    final effectiveStatus =
+        isActuallyDelivered ? OrderStatus.delivered : order.status;
+    final color = _statusColor(effectiveStatus);
+
     return SekkaCard(
       child: Column(
         children: [
           Row(
             children: [
-              badge.StatusBadge(status: _mapToBadgeStatus(order.status)),
+              badge.StatusBadge(status: _mapToBadgeStatus(effectiveStatus)),
               SizedBox(width: AppSizes.sm),
               Expanded(
                 child: Text(
-                  order.status.arabic,
+                  effectiveStatus.arabic,
                   style: AppTypography.titleLarge.copyWith(color: color),
                 ),
               ),
@@ -412,7 +438,7 @@ class _StatusHeaderCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  2. CUSTOMER & ADDRESSES CARD
+//  2a. CUSTOMER & MESSAGING CARD
 // ═══════════════════════════════════════════════════════════════════════════
 class _CustomerAddressCard extends StatelessWidget {
   const _CustomerAddressCard({required this.order});
@@ -420,99 +446,205 @@ class _CustomerAddressCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SekkaCard(
-      child: Column(
-        children: [
-          // Customer name
-          if (order.customerName != null && order.customerName!.isNotEmpty)
-            _row(
-              context,
-              IconsaxPlusLinear.user,
-              order.customerName!,
-            ),
-          // Phone + Quick Message
-          if (order.customerPhone != null && order.customerPhone!.isNotEmpty) ...[
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _callPhone(order.customerPhone!),
-              onLongPress: () => _copyPhone(context, order.customerPhone!),
-              child: _row(
-                context,
-                IconsaxPlusLinear.call,
-                order.customerPhone!,
-                valueColor: AppColors.primary,
-              ),
-            ),
-          ],
-          // Quick Message Button
-          SizedBox(height: AppSizes.sm),
-          GestureDetector(
-            onTap: () => _showQuickMessages(context, order.customerPhone),
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: Responsive.w(12),
-                vertical: Responsive.h(10),
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                border: Border.all(
-                  color: AppColors.primary.withValues(alpha: 0.2),
+    return Column(
+      children: [
+        // ── سيكشن العميل والمراسلة ──
+        SekkaCard(
+          child: Column(
+            children: [
+              // Customer name
+              if (order.customerName != null &&
+                  order.customerName!.isNotEmpty)
+                _row(
+                  context,
+                  IconsaxPlusLinear.user,
+                  order.customerName!,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    IconsaxPlusBold.message_text,
-                    size: AppSizes.iconMd,
-                    color: AppColors.primary,
+              // Phone
+              if (order.customerPhone != null &&
+                  order.customerPhone!.isNotEmpty) ...[
+                SizedBox(height: AppSizes.md),
+                GestureDetector(
+                  onTap: () => _callPhone(order.customerPhone!),
+                  onLongPress: () =>
+                      _copyPhone(context, order.customerPhone!),
+                  child: _row(
+                    context,
+                    IconsaxPlusLinear.call,
+                    order.customerPhone!,
+                    valueColor: AppColors.primary,
                   ),
-                  SizedBox(width: AppSizes.sm),
-                  Text(
-                    AppStrings.quickMessages,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                ),
+              ],
+              // Quick Messages + WhatsApp row
+              SizedBox(height: AppSizes.md),
+              Row(
+                children: [
+                  // رسائل سريعة
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _showQuickMessages(
+                        context,
+                        order.customerPhone,
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.w(12),
+                          vertical: Responsive.h(12),
+                        ),
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm),
+                          border: Border.all(
+                            color: AppColors.primary
+                                .withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              IconsaxPlusBold.message_text,
+                              size: AppSizes.iconMd,
+                              color: AppColors.primary,
+                            ),
+                            SizedBox(width: AppSizes.xs),
+                            Flexible(
+                              child: Text(
+                                AppStrings.quickMessages,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
+                  SizedBox(width: AppSizes.sm),
+                  // واتساب
+                  if (order.customerPhone != null &&
+                      order.customerPhone!.isNotEmpty)
+                    GestureDetector(
+                      onTap: () =>
+                          _sendWhatsApp(order.customerPhone!, 'السلام عليكم، معاك سائق سِكّة'),
+                      child: Container(
+                        padding: EdgeInsets.all(Responsive.r(12)),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF25D366)
+                              .withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm),
+                          border: Border.all(
+                            color: const Color(0xFF25D366)
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          IconsaxPlusBold.message,
+                          size: AppSizes.iconMd,
+                          color: const Color(0xFF25D366),
+                        ),
+                      ),
+                    ),
+                  SizedBox(width: AppSizes.sm),
+                  // اتصال
+                  if (order.customerPhone != null &&
+                      order.customerPhone!.isNotEmpty)
+                    GestureDetector(
+                      onTap: () => _callPhone(order.customerPhone!),
+                      child: Container(
+                        padding: EdgeInsets.all(Responsive.r(12)),
+                        decoration: BoxDecoration(
+                          color:
+                              AppColors.success.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm),
+                          border: Border.all(
+                            color: AppColors.success
+                                .withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          IconsaxPlusBold.call,
+                          size: AppSizes.iconMd,
+                          color: AppColors.success,
+                        ),
+                      ),
+                    ),
                 ],
               ),
-            ),
+            ],
           ),
-          // Delivery address
-          SizedBox(height: AppSizes.sm),
-          _row(
-            context,
-            IconsaxPlusLinear.location,
-            order.deliveryAddress,
+        ),
+
+        SizedBox(height: AppSizes.md),
+
+        // ── سيكشن العناوين ──
+        SekkaCard(
+          child: Column(
+            children: [
+              // Delivery address
+              _row(
+                context,
+                IconsaxPlusLinear.location,
+                order.deliveryAddress,
+                label: 'هيتوصّل فين',
+              ),
+              // Pickup address
+              if (order.pickupAddress != null &&
+                  order.pickupAddress!.isNotEmpty) ...[
+                SizedBox(height: AppSizes.md),
+                _row(
+                  context,
+                  IconsaxPlusLinear.location_tick,
+                  order.pickupAddress!,
+                  label: 'هيتستلم منين',
+                ),
+              ],
+            ],
           ),
-          // Pickup address
-          if (order.pickupAddress != null && order.pickupAddress!.isNotEmpty) ...[
-            SizedBox(height: AppSizes.sm),
-            _row(
-              context,
-              IconsaxPlusLinear.location_tick,
-              order.pickupAddress!,
-            ),
-          ],
-        ],
-      ),
+        ),
+      ],
     );
   }
 
-  Widget _row(BuildContext context, IconData icon, String text,
-      {Color? valueColor,}) {
+  Widget _row(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    Color? valueColor,
+    String? label,
+  }) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Icon(icon, size: AppSizes.iconMd, color: AppColors.textCaption),
         SizedBox(width: AppSizes.sm),
         Expanded(
-          child: Text(
-            text,
-            style: AppTypography.bodyMedium.copyWith(
-              color: valueColor,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (label != null)
+                Text(
+                  label,
+                  style: AppTypography.captionSmall.copyWith(
+                    color: AppColors.textCaption,
+                  ),
+                ),
+              Text(
+                text,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: valueColor,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -749,46 +881,153 @@ class _DetailsCard extends StatelessWidget {
 // ═══════════════════════════════════════════════════════════════════════════
 //  5. WAITING TIMER SECTION
 // ═══════════════════════════════════════════════════════════════════════════
-class _WaitingTimerSection extends StatelessWidget {
+class _WaitingTimerSection extends StatefulWidget {
   const _WaitingTimerSection({required this.orderId});
   final String orderId;
 
   @override
+  State<_WaitingTimerSection> createState() => _WaitingTimerSectionState();
+}
+
+class _WaitingTimerSectionState extends State<_WaitingTimerSection> {
+  bool _isRunning = false;
+  int _elapsedSeconds = 0;
+  late final Stopwatch _stopwatch;
+  Stream<int>? _timerStream;
+  late StreamSubscription<int>? _timerSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _stopwatch = Stopwatch();
+    _timerSub = null;
+  }
+
+  @override
+  void dispose() {
+    _timerSub?.cancel();
+    _stopwatch.stop();
+    super.dispose();
+  }
+
+  void _start() {
+    context.read<OrdersBloc>().add(
+          OrderWaitingStartRequested(orderId: widget.orderId),
+        );
+
+    _stopwatch.reset();
+    _stopwatch.start();
+    _timerStream =
+        Stream.periodic(const Duration(seconds: 1), (i) => i + 1);
+    _timerSub = _timerStream!.listen((_) {
+      if (mounted) {
+        setState(() => _elapsedSeconds = _stopwatch.elapsed.inSeconds);
+      }
+    });
+    setState(() => _isRunning = true);
+  }
+
+  void _stop() {
+    context.read<OrdersBloc>().add(
+          OrderWaitingStopRequested(orderId: widget.orderId),
+        );
+
+    _stopwatch.stop();
+    _timerSub?.cancel();
+    setState(() => _isRunning = false);
+  }
+
+  String _formatElapsed(int totalSeconds) {
+    final minutes = (totalSeconds ~/ 60).toString().padLeft(2, '0');
+    final seconds = (totalSeconds % 60).toString().padLeft(2, '0');
+    return '$minutes:$seconds';
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SekkaCard(
       child: Column(
         children: [
-          Text('مؤقت الانتظار', style: AppTypography.titleLarge),
-          SizedBox(height: AppSizes.md),
+          // العنوان
           Row(
             children: [
-              Expanded(
-                child: SekkaButton(
-                  label: 'ابدأ المؤقت',
-                  type: SekkaButtonType.primary,
-                  icon: IconsaxPlusLinear.timer_1,
-                  onPressed: () {
-                    context.read<OrdersBloc>().add(
-                          OrderWaitingStartRequested(orderId: orderId),
-                        );
-                  },
-                ),
+              Icon(
+                IconsaxPlusBold.timer_1,
+                size: AppSizes.iconMd,
+                color: _isRunning ? AppColors.warning : AppColors.textCaption,
               ),
-              SizedBox(width: AppSizes.md),
-              Expanded(
-                child: SekkaButton(
+              SizedBox(width: AppSizes.sm),
+              Text('مؤقت الانتظار', style: AppTypography.titleMedium),
+            ],
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // الساعة
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: AppSizes.xl),
+            decoration: BoxDecoration(
+              color: _isRunning
+                  ? AppColors.warning.withValues(alpha: 0.08)
+                  : isDark
+                      ? AppColors.backgroundDark
+                      : AppColors.background,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(
+                color: _isRunning
+                    ? AppColors.warning.withValues(alpha: 0.3)
+                    : isDark
+                        ? AppColors.borderDark
+                        : AppColors.border,
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  _formatElapsed(_elapsedSeconds),
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: Responsive.sp(48),
+                    fontWeight: FontWeight.w700,
+                    color: _isRunning
+                        ? AppColors.warning
+                        : isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                    letterSpacing: 4,
+                  ),
+                ),
+                SizedBox(height: AppSizes.xs),
+                Text(
+                  _isRunning ? 'المؤقت شغال...' : 'المؤقت واقف',
+                  style: AppTypography.caption.copyWith(
+                    color: _isRunning
+                        ? AppColors.warning
+                        : isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // الأزرار
+          _isRunning
+              ? SekkaButton(
                   label: 'وقّف المؤقت',
                   type: SekkaButtonType.secondary,
                   icon: IconsaxPlusLinear.timer_pause,
-                  onPressed: () {
-                    context.read<OrdersBloc>().add(
-                          OrderWaitingStopRequested(orderId: orderId),
-                        );
-                  },
+                  onPressed: _stop,
+                )
+              : SekkaButton(
+                  label: 'ابدأ المؤقت',
+                  icon: IconsaxPlusLinear.timer_1,
+                  onPressed: _start,
                 ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -813,12 +1052,18 @@ class _ActionArea extends StatelessWidget {
   Widget build(BuildContext context) {
     final status = order.status;
 
-    // Terminal states with no actions
+    // Terminal states — show status banner
+    // لو عنده deliveredAt يعني اتسلّم حتى لو الـ status رقم مختلف
+    final isActuallyDelivered = order.deliveredAt != null;
+
     if (status == OrderStatus.delivered ||
         status == OrderStatus.cancelled ||
         status == OrderStatus.returned ||
-        status == OrderStatus.partiallyDelivered) {
-      return const SizedBox.shrink();
+        status == OrderStatus.partiallyDelivered ||
+        isActuallyDelivered) {
+      final effectiveStatus =
+          isActuallyDelivered ? OrderStatus.delivered : status;
+      return _buildTerminalBanner(context, effectiveStatus);
     }
 
     return Container(
@@ -842,6 +1087,65 @@ class _ActionArea extends StatelessWidget {
     );
   }
 
+  Widget _buildTerminalBanner(BuildContext context, OrderStatus status) {
+    final (icon, label, color) = switch (status) {
+      OrderStatus.delivered => (
+          IconsaxPlusBold.tick_circle,
+          'الطلب اتسلّم بنجاح',
+          AppColors.success,
+        ),
+      OrderStatus.partiallyDelivered => (
+          IconsaxPlusBold.box_tick,
+          'اتسلّم جزء من الطلب',
+          AppColors.warning,
+        ),
+      OrderStatus.cancelled => (
+          IconsaxPlusBold.close_circle,
+          'الطلب ده اتلغى',
+          AppColors.error,
+        ),
+      OrderStatus.returned => (
+          IconsaxPlusBold.box_remove,
+          'الطلب رجع تاني',
+          AppColors.error,
+        ),
+      _ => (
+          IconsaxPlusBold.info_circle,
+          status.arabic,
+          AppColors.textCaption,
+        ),
+    };
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        AppSizes.pagePadding,
+        AppSizes.lg,
+        AppSizes.pagePadding,
+        AppSizes.lg + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        border: Border(
+          top: BorderSide(color: color.withValues(alpha: 0.2), width: 2),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: AppSizes.iconLg, color: color),
+          SizedBox(width: AppSizes.md),
+          Text(
+            label,
+            style: AppTypography.titleMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildActions(BuildContext context, OrderStatus status) {
     return switch (status) {
       OrderStatus.pending || OrderStatus.retryPending => SekkaButton(
@@ -862,32 +1166,39 @@ class _ActionArea extends StatelessWidget {
       OrderStatus.inTransit || OrderStatus.arrivedAtDestination => Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // زرار التسليم الرئيسي (swipe)
             SekkaSwipeAction(
               label: AppStrings.swipeToDeliver,
               onCompleted: () => _showDeliverSheet(context),
             ),
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AppSizes.md),
+            // الأزرار الثانوية — صف أول
             Row(
               children: [
                 Expanded(
-                  child: SekkaButton(
+                  child: _ActionChip(
                     label: 'تسليم جزئي',
-                    type: SekkaButtonType.text,
-                    onPressed: () => _showPartialSheet(context),
+                    icon: IconsaxPlusLinear.box_tick,
+                    color: AppColors.warning,
+                    onTap: () => _showPartialSheet(context),
                   ),
                 ),
+                SizedBox(width: AppSizes.sm),
                 Expanded(
-                  child: SekkaButton(
-                    label: AppStrings.failDelivery,
-                    type: SekkaButtonType.text,
-                    onPressed: () => _showFailSheet(context),
+                  child: _ActionChip(
+                    label: 'معرفتش أسلّم',
+                    icon: IconsaxPlusLinear.close_circle,
+                    color: AppColors.error,
+                    onTap: () => _showFailSheet(context),
                   ),
                 ),
+                SizedBox(width: AppSizes.sm),
                 Expanded(
-                  child: SekkaButton(
-                    label: 'ألغي',
-                    type: SekkaButtonType.text,
-                    onPressed: () => _showCancelSheet(context),
+                  child: _ActionChip(
+                    label: 'ألغي الطلب',
+                    icon: IconsaxPlusLinear.trash,
+                    color: AppColors.textCaption,
+                    onTap: () => _showCancelSheet(context),
                   ),
                 ),
               ],
@@ -997,6 +1308,57 @@ Widget _buildHandle() {
   );
 }
 
+// ───────────────── ACTION CHIP ─────────────────
+
+class _ActionChip extends StatelessWidget {
+  const _ActionChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.xs,
+          vertical: Responsive.h(10),
+        ),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: AppSizes.iconMd, color: color),
+            SizedBox(height: AppSizes.xs),
+            Text(
+              label,
+              style: AppTypography.captionSmall.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  BOTTOM SHEET 1: DELIVER
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1017,6 +1379,8 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
   late final TextEditingController _amountCtrl;
   final _notesCtrl = TextEditingController();
   int _rating = 5;
+  double? _lat;
+  double? _lng;
 
   @override
   void initState() {
@@ -1024,6 +1388,26 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
     _amountCtrl = TextEditingController(
       text: widget.currentAmount.toStringAsFixed(0),
     );
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          _lat = position.latitude;
+          _lng = position.longitude;
+        });
+      }
+    } catch (_) {
+      // موقع مش متاح — مش مشكلة، optional
+    }
   }
 
   @override
@@ -1059,7 +1443,7 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
                 ),
                 SizedBox(height: AppSizes.md),
                 // Star rating
-                Text('تقييم التسليم', style: AppTypography.titleMedium),
+                Text('قيّم العميل', style: AppTypography.titleMedium),
                 SizedBox(height: AppSizes.sm),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1094,6 +1478,8 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
                           OrderDeliverRequested(
                             orderId: widget.orderId,
                             actualAmount: amount,
+                            latitude: _lat,
+                            longitude: _lng,
                             notes: _notesCtrl.text.isEmpty
                                 ? null
                                 : _notesCtrl.text,
@@ -1515,7 +1901,9 @@ class _SwapAddressBottomSheet extends StatefulWidget {
 class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
   final _addressCtrl = TextEditingController();
   final _reasonCtrl = TextEditingController();
-  bool _canSubmit = false;
+  double? _newLat;
+  double? _newLng;
+  bool get _canSubmit => _addressCtrl.text.trim().isNotEmpty;
 
   @override
   void dispose() {
@@ -1524,13 +1912,30 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
     super.dispose();
   }
 
-  void _onAddressChanged(String value) {
-    final canNow = value.trim().isNotEmpty;
-    if (canNow != _canSubmit) setState(() => _canSubmit = canNow);
+  Future<void> _openMapPicker() async {
+    final result = await SekkaMapPicker.show(
+      context,
+      title: 'حدد العنوان الجديد',
+    );
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _newLat = result.latitude;
+      _newLng = result.longitude;
+      _addressCtrl.text = result.address ??
+          '${result.latitude.toStringAsFixed(5)}, ${result.longitude.toStringAsFixed(5)}';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
+    final hasCoords = _newLat != null && _newLng != null;
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Padding(
@@ -1547,12 +1952,63 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
                 SizedBox(height: AppSizes.lg),
                 Text('غيّر العنوان', style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
-                SekkaInputField(
-                  controller: _addressCtrl,
-                  hint: 'العنوان الجديد',
-                  prefixIcon: IconsaxPlusLinear.location,
-                  maxLines: 2,
-                  onChanged: _onAddressChanged,
+                // Address field — tap to open map
+                GestureDetector(
+                  onTap: _openMapPicker,
+                  child: Container(
+                    constraints:
+                        BoxConstraints(minHeight: AppSizes.inputHeight),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.lg,
+                      vertical: AppSizes.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.inputRadius),
+                      border: Border.all(
+                        color: hasCoords ? AppColors.success : borderColor,
+                        width: hasCoords ? 2 : 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          IconsaxPlusLinear.location,
+                          size: AppSizes.iconLg,
+                          color:
+                              hasCoords ? AppColors.success : captionColor,
+                        ),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _addressCtrl.text.isNotEmpty
+                                ? _addressCtrl.text
+                                : 'اضغط عشان تحدد العنوان الجديد',
+                            style: _addressCtrl.text.isNotEmpty
+                                ? AppTypography.bodyMedium
+                                : AppTypography.bodyMedium
+                                    .copyWith(color: captionColor),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        SizedBox(width: AppSizes.sm),
+                        if (hasCoords)
+                          Icon(
+                            Icons.check_circle,
+                            size: AppSizes.iconMd,
+                            color: AppColors.success,
+                          )
+                        else
+                          Icon(
+                            IconsaxPlusLinear.map,
+                            size: AppSizes.iconMd,
+                            color: AppColors.primary,
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
