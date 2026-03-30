@@ -55,6 +55,15 @@ final class OrderCreateRequested extends OrdersEvent {
   List<Object?> get props => [data];
 }
 
+final class RecurringOrderCreateRequested extends OrdersEvent {
+  const RecurringOrderCreateRequested({required this.data});
+
+  final Map<String, dynamic> data;
+
+  @override
+  List<Object?> get props => [data];
+}
+
 final class OrderDetailLoadRequested extends OrdersEvent {
   const OrderDetailLoadRequested({required this.orderId});
 
@@ -105,17 +114,21 @@ final class OrderDeliverRequested extends OrdersEvent {
   const OrderDeliverRequested({
     required this.orderId,
     this.actualAmount,
+    this.latitude,
+    this.longitude,
     this.notes,
     this.rating,
   });
 
   final String orderId;
   final double? actualAmount;
+  final double? latitude;
+  final double? longitude;
   final String? notes;
   final int? rating;
 
   @override
-  List<Object?> get props => [orderId, actualAmount, notes, rating];
+  List<Object?> get props => [orderId, actualAmount, latitude, longitude, notes, rating];
 }
 
 final class OrderFailRequested extends OrdersEvent {

@@ -209,6 +209,50 @@ abstract final class AppStrings {
   static const String importOrders = 'يلا نستورد!';
   static const String separator = 'الفاصل';
 
+  // Order — Create Steps
+  static const String stepCustomerInfo = 'العميل';
+  static const String stepAddresses = 'العناوين';
+  static const String stepDetails = 'التفاصيل';
+  static const String previousStep = 'السابق';
+  static const String nextStep = 'التالي';
+  static const String shipmentDescription = 'وصف الشحنة';
+  static const String expectedChange = 'مبلغ الفكة';
+  static const String selectPartner = 'هتستلم من مين؟';
+  static const String noPartner = 'من غير شريك';
+  static const String useCurrentLocation = 'حدد موقعي';
+  static const String orderTypeLabel = 'نوع الطلب';
+  static const String orderTypeNormal = 'طلب عادي';
+  static const String orderTypeRecurring = 'طلب متكرر';
+  static const String recurringOrder = 'الطلب ده بيتكرر؟';
+  static const String recurrencePatternLabel = 'بيتكرر إزاي؟';
+  static const String recurrenceDaily = 'كل يوم';
+  static const String recurrenceWeekly = 'كل أسبوع';
+  static const String recurrenceMonthly = 'كل شهر';
+  static const String recurrenceStartDate = 'تاريخ البداية';
+  static const String recurrenceEndDate = 'تاريخ النهاية (اختياري)';
+  static const String recurrenceStartDateRequired = 'لازم تحدد تاريخ بداية التكرار';
+  static const String timeWindowLabel = 'عايز توصّل من إمتى لإمتى؟';
+  static const String timeWindowFrom = 'من الساعة';
+  static const String timeWindowTo = 'لحد الساعة';
+  static const String locationPermissionDenied = 'لازم تسمحلنا نوصل للموقع عشان نحدده';
+  static const String fetchingLocation = 'ثانية بنحدد موقعك...';
+  static const String customerPhoneRequired = 'اكتب رقم موبايل العميل';
+  static const String selectPickupPoint = 'اختار نقطة الاستلام';
+  static const String loadingPickupPoints = 'بنجيب نقاط الاستلام...';
+  static const String noPickupPoints = 'الشريك ده مسجلش نقاط استلام';
+  static const String pickOnMap = 'حدد ع الخريطة';
+  static const String pickLocationOnMap = 'حدد الموقع على الخريطة';
+  static const String manualEntry = 'إضافة يدوي';
+  static const String bulkImport = 'استيراد';
+  static const String availableSlots = 'المواعيد اللي متاحة';
+  static const String loadSlots = 'حمّل المواعيد';
+  static const String loadSlotsHint = 'اضغط "حمّل المواعيد" عشان تشوف المتاح';
+  static const String slotLabel = 'موعد';
+  static const String suggestedDeliveryPrice = 'سعر التوصيل المتوقع';
+  static const String calculatePrice = 'احسب السعر';
+  static const String suggestedPrice = 'السعر المتوقع';
+  static const String calculatePriceHint = 'اكتب العنوان واضغط "احسب السعر"';
+
   // Order Detail Actions
   static const String acceptOrder = 'اقبل الطلب';
   static const String pickedUpOrder = 'استلمت الشحنة';

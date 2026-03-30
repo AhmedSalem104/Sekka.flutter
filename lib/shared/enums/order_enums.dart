@@ -1,16 +1,21 @@
 // Order-related enums matching the API specification.
 
+enum OrderType {
+  normal,
+  recurring,
+}
+
 enum OrderStatus {
-  pending(0, 'في الانتظار'),
-  accepted(1, 'مقبول'),
-  pickedUp(2, 'تم الاستلام'),
-  inTransit(3, 'في الطريق'),
-  arrivedAtDestination(4, 'وصل للوجهة'),
-  delivered(5, 'تم التسليم'),
-  failed(6, 'فشل التسليم'),
+  pending(0, 'مستني'),
+  accepted(1, 'اتقبل'),
+  pickedUp(2, 'استلمت الشحنة'),
+  inTransit(3, 'في السكة'),
+  arrivedAtDestination(4, 'وصلت'),
+  delivered(5, 'اتسلّم'),
+  failed(6, 'معرفتش أسلّم'),
   cancelled(7, 'ملغي'),
   partiallyDelivered(8, 'تسليم جزئي'),
-  retryPending(9, 'إعادة محاولة'),
+  retryPending(9, 'هجرب تاني'),
   returned(10, 'مرتجع');
 
   const OrderStatus(this.value, this.arabic);
@@ -39,7 +44,7 @@ enum OrderStatus {
 enum PaymentMethod {
   cash(0, 'كاش'),
   visa(1, 'فيزا'),
-  wallet(2, 'محفظة إلكترونية'),
+  wallet(2, 'محفظة'),
   partnerCredit(3, 'حساب الشريك');
 
   const PaymentMethod(this.value, this.arabic);
@@ -64,16 +69,16 @@ enum OrderPriority {
 }
 
 enum DeliveryFailReason {
-  customerNotAvailable(0, 'العميل غير متواجد'),
-  customerRefused(1, 'العميل رفض الاستلام'),
-  wrongAddress(2, 'عنوان خاطئ'),
-  phoneUnreachable(3, 'الهاتف مغلق/لا يرد'),
-  accessDenied(4, 'لا يمكن الوصول للمكان'),
-  damagedPackage(5, 'الشحنة تالفة'),
-  insufficientPayment(6, 'المبلغ غير كافي'),
+  customerNotAvailable(0, 'العميل مش موجود'),
+  customerRefused(1, 'العميل رفض يستلم'),
+  wrongAddress(2, 'العنوان غلط'),
+  phoneUnreachable(3, 'التليفون مقفول أو مبيردش'),
+  accessDenied(4, 'مقدرتش أوصل للمكان'),
+  damagedPackage(5, 'الشحنة باظت'),
+  insufficientPayment(6, 'الفلوس مش كفاية'),
   securityIssue(7, 'مشكلة أمنية'),
-  weatherConditions(8, 'ظروف جوية'),
-  other(9, 'أخرى');
+  weatherConditions(8, 'الجو وحش'),
+  other(9, 'حاجة تانية');
 
   const DeliveryFailReason(this.value, this.arabic);
   final int value;
@@ -84,14 +89,14 @@ enum DeliveryFailReason {
 }
 
 enum CancellationReason {
-  customerRequest(0, 'بطلب من العميل'),
-  driverRequest(1, 'بطلب من السائق'),
-  partnerRequest(2, 'بطلب من الشريك'),
+  customerRequest(0, 'العميل طلب كده'),
+  driverRequest(1, 'أنا اللي لغيته'),
+  partnerRequest(2, 'الشريك طلب كده'),
   duplicateOrder(3, 'طلب مكرر'),
-  fraudSuspicion(4, 'اشتباه احتيال'),
-  systemError(5, 'خطأ في النظام'),
-  outOfServiceArea(6, 'خارج نطاق الخدمة'),
-  other(7, 'أخرى');
+  fraudSuspicion(4, 'حاسس إنه نصب'),
+  systemError(5, 'مشكلة في السيستم'),
+  outOfServiceArea(6, 'برا نطاق الخدمة'),
+  other(7, 'حاجة تانية');
 
   const CancellationReason(this.value, this.arabic);
   final int value;
@@ -102,12 +107,12 @@ enum CancellationReason {
 }
 
 enum PhotoType {
-  proofOfDelivery(0, 'إثبات تسليم'),
+  proofOfDelivery(0, 'إثبات التسليم'),
   packagePhoto(1, 'صورة الشحنة'),
   damagePhoto(2, 'صورة التلف'),
   invoicePhoto(3, 'صورة الفاتورة'),
   signaturePhoto(4, 'التوقيع'),
-  locationPhoto(5, 'صورة الموقع');
+  locationPhoto(5, 'صورة المكان');
 
   const PhotoType(this.value, this.arabic);
   final int value;

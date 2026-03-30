@@ -3,6 +3,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_card.dart';
@@ -96,7 +97,9 @@ class OrderCard extends StatelessWidget {
           ),
         ),
         SizedBox(width: AppSizes.sm),
-        _buildStatusChip(order.status),
+        _buildStatusChip(
+          order.deliveredAt != null ? OrderStatus.delivered : order.status,
+        ),
       ],
     );
   }
@@ -222,23 +225,23 @@ class OrderCard extends StatelessWidget {
   }
 
   static (Color, String) _statusInfo(OrderStatus status) => switch (status) {
-        OrderStatus.pending => (AppColors.statusNew, status.arabic),
+        OrderStatus.pending => (AppColors.statusNew, AppStrings.statusNew),
         OrderStatus.accepted => (AppColors.statusNew, status.arabic),
         OrderStatus.pickedUp => (AppColors.statusOnTheWay, status.arabic),
-        OrderStatus.inTransit => (AppColors.statusOnTheWay, status.arabic),
+        OrderStatus.inTransit => (AppColors.statusOnTheWay, AppStrings.statusOnTheWay),
         OrderStatus.arrivedAtDestination => (
           AppColors.statusArrived,
-          status.arabic,
+          AppStrings.statusArrived,
         ),
-        OrderStatus.delivered => (AppColors.statusDelivered, status.arabic),
-        OrderStatus.failed => (AppColors.statusFailed, status.arabic),
-        OrderStatus.cancelled => (AppColors.statusCancelled, status.arabic),
+        OrderStatus.delivered => (AppColors.statusDelivered, AppStrings.statusDelivered),
+        OrderStatus.failed => (AppColors.statusFailed, AppStrings.statusFailed),
+        OrderStatus.cancelled => (AppColors.statusCancelled, AppStrings.statusCancelled),
         OrderStatus.partiallyDelivered => (
           AppColors.statusReturned,
           status.arabic,
         ),
-        OrderStatus.retryPending => (AppColors.statusPostponed, status.arabic),
-        OrderStatus.returned => (AppColors.statusReturned, status.arabic),
+        OrderStatus.retryPending => (AppColors.statusPostponed, AppStrings.statusPostponed),
+        OrderStatus.returned => (AppColors.statusReturned, AppStrings.statusReturned),
       };
 
   static Color? _parsePartnerColor(String? hex) {

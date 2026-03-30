@@ -37,13 +37,17 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   /// null statusValue means "all orders".
   static const _statusFilters = <(String, int?)>[
     ('الكل', null),
-    ('جديد', 0),
+    ('مستني', 0),
     ('اتقبل', 1),
     ('اتستلم', 2),
     ('في السكة', 3),
-    ('وصل', 5),
-    ('فشل', 6),
+    ('وصلت', 4),
+    ('اتسلّم', 5),
+    ('معرفتش أسلّم', 6),
     ('ملغي', 7),
+    ('تسليم جزئي', 8),
+    ('هجرب تاني', 9),
+    ('مرتجع', 10),
   ];
 
   @override
@@ -168,8 +172,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                       description: _selectedStatusFilter != null
                           ? 'مفيش طلبات بالحالة دي'
                           : null,
-                      actionLabel: AppStrings.addOrder,
-                      onAction: _navigateToCreateOrder,
                     ),
                   OrdersLoaded(:final orders, :final isLoadingMore) =>
                     _buildOrdersList(orders, isLoadingMore, isDark),
@@ -209,12 +211,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SizedBox(
-        height: Responsive.h(40),
+        height: Responsive.h(44),
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
         itemCount: _statusFilters.length,
-        separatorBuilder: (_, __) => SizedBox(width: AppSizes.sm),
+        separatorBuilder: (_, __) => SizedBox(width: Responsive.w(8)),
         itemBuilder: (context, index) {
           final (label, statusValue) = _statusFilters[index];
           final isSelected = _selectedStatusFilter == statusValue;

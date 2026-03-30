@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../shared/enums/order_enums.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/order_model.dart';
 import '../../domain/repositories/order_repository.dart';
 import 'orders_event.dart';
 import 'orders_state.dart';
@@ -15,6 +17,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<OrdersFilterChanged>(_onFilterChanged);
     on<OrdersSearchChanged>(_onSearchChanged);
     on<OrderCreateRequested>(_onCreate);
+    on<RecurringOrderCreateRequested>(_onCreateRecurring);
     on<OrderDetailLoadRequested>(_onDetailLoad);
     on<OrderUpdateRequested>(_onUpdate);
     on<OrderDeleteRequested>(_onDelete);
@@ -43,6 +46,20 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
   final OrderRepository _repository;
 
+  /// IDs بتاع الطلبات اللي اتسلّمت محلياً (عشان الـ list API مش بيحدث الـ status)
+  final Set<String> _deliveredOrderIds = {};
+
+  /// صلّح الـ status للطلبات اللي اتسلّمت محلياً بس الـ API لسه بيرجعها بـ status قديم
+  List<OrderModel> _fixDeliveredStatuses(List<OrderModel> orders) {
+    if (_deliveredOrderIds.isEmpty) return orders;
+    return orders.map((o) {
+      if (_deliveredOrderIds.contains(o.id) && o.status != OrderStatus.delivered) {
+        return o.copyWith(status: OrderStatus.delivered);
+      }
+      return o;
+    }).toList();
+  }
+
   // ── Load / Refresh ──────────────────────────────────────────────────
 
   Future<void> _onLoad(
@@ -67,7 +84,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       );
 
       emit(OrdersLoaded(
-        orders: result.items,
+        orders: _fixDeliveredStatuses(result.items),
         statusFilter: statusFilter,
         searchTerm: searchTerm ?? '',
         hasMore: result.hasNextPage,
@@ -102,7 +119,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       );
 
       emit(current.copyWith(
-        orders: [...current.orders, ...result.items],
+        orders: [...current.orders, ..._fixDeliveredStatuses(result.items)],
         hasMore: result.hasNextPage,
         currentPage: nextPage,
         isLoadingMore: false,
@@ -137,7 +154,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       );
 
       emit(current.copyWith(
-        orders: result.items,
+        orders: _fixDeliveredStatuses(result.items),
         statusFilter: () => event.status,
         hasMore: result.hasNextPage,
         currentPage: 1,
@@ -176,7 +193,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       );
 
       emit(current.copyWith(
-        orders: result.items,
+        orders: _fixDeliveredStatuses(result.items),
         searchTerm: event.searchTerm,
         hasMore: result.hasNextPage,
         currentPage: 1,
@@ -234,6 +251,47 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     }
   }
 
+  // ── Create Recurring ─────────────────────────────────────────────────
+
+  Future<void> _onCreateRecurring(
+    RecurringOrderCreateRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    final loaded = current is OrdersLoaded
+        ? current
+        : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
+
+    emit(loaded.copyWith(isActionInProgress: true));
+
+    try {
+      var newOrder = await _repository.createRecurringOrder(event.data);
+
+      newOrder = newOrder.copyWith(
+        customerName: newOrder.customerName ?? event.data['customerName'] as String?,
+        customerPhone: newOrder.customerPhone ?? event.data['customerPhone'] as String?,
+        pickupAddress: newOrder.pickupAddress ?? event.data['pickupAddress'] as String?,
+        notes: newOrder.notes ?? event.data['notes'] as String?,
+      );
+
+      emit(loaded.copyWith(
+        orders: [newOrder, ...loaded.orders],
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.orderCreatedSuccess,
+      ));
+    } on ApiException catch (e) {
+      emit(loaded.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => e.message,
+      ));
+    } catch (_) {
+      emit(loaded.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.unknownError,
+      ));
+    }
+  }
+
   // ── Detail ──────────────────────────────────────────────────────────
 
   Future<void> _onDetailLoad(
@@ -259,7 +317,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         );
       }
 
+      // لو الـ API رجع deliveredAt بس الـ status مش delivered — نصلحه محلياً
+      if (order.deliveredAt != null && order.status != OrderStatus.delivered) {
+        _deliveredOrderIds.add(order.id);
+        order = order.copyWith(status: OrderStatus.delivered);
+      }
+
+      // حدّث الكارت في الليست كمان عشان يتزامن مع التفاصيل
+      final updatedList = current.orders.map((o) {
+        return o.id == event.orderId ? order : o;
+      }).toList();
+
       emit(current.copyWith(
+        orders: updatedList,
         selectedOrder: () => order,
         isActionInProgress: false,
       ));
@@ -408,11 +478,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     try {
       await _repository.deliverOrder(event.orderId, {
         if (event.actualAmount != null) 'actualCollectedAmount': event.actualAmount,
+        if (event.latitude != null) 'latitude': event.latitude,
+        if (event.longitude != null) 'longitude': event.longitude,
         if (event.notes != null) 'notes': event.notes,
         if (event.rating != null) 'ratingValue': event.rating,
       });
 
-      final detail = await _repository.getOrderDetail(event.orderId);
+      var detail = await _repository.getOrderDetail(event.orderId);
+
+      // لو الـ API رجع deliveredAt بس الـ status مش delivered — نصلحه محلياً
+      _deliveredOrderIds.add(event.orderId);
+      if (detail.status != OrderStatus.delivered) {
+        detail = detail.copyWith(status: OrderStatus.delivered);
+      }
 
       final updatedList = current.orders.map((o) {
         return o.id == event.orderId ? detail : o;
