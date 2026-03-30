@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../bloc/wallet_bloc.dart';
@@ -53,8 +54,9 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title: Text(AppStrings.walletTitle, style: AppTypography.headlineSmall),
+      appBar: SekkaAppBar(
+        title: AppStrings.walletTitle,
+        showBack: false,
       ),
       body: BlocConsumer<WalletBloc, WalletState>(
         listener: (context, state) {

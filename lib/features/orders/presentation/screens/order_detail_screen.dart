@@ -667,7 +667,7 @@ class _CustomerAddressCard extends StatelessWidget {
             ScaffoldMessenger.of(context)
               ..hideCurrentSnackBar()
               ..showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Directionality(
                     textDirection: TextDirection.rtl,
                     child: Text(AppStrings.messageCopied),
@@ -708,7 +708,7 @@ class _CustomerAddressCard extends StatelessWidget {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Directionality(
             textDirection: TextDirection.rtl,
             child: Text(AppStrings.phoneCopied),

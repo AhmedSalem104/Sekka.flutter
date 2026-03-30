@@ -29,3 +29,35 @@ final class SettingsToggled extends SettingsEvent {
   @override
   List<Object?> get props => [key, value];
 }
+
+final class SettingsErrorCleared extends SettingsEvent {
+  const SettingsErrorCleared();
+}
+
+final class SettingsHomeLocationSet extends SettingsEvent {
+  const SettingsHomeLocationSet({
+    required this.latitude,
+    required this.longitude,
+    required this.address,
+  });
+
+  final double latitude;
+  final double longitude;
+  final String address;
+
+  @override
+  List<Object?> get props => [latitude, longitude, address];
+}
+
+final class SettingsQuietHoursUpdated extends SettingsEvent {
+  const SettingsQuietHoursUpdated({
+    required this.start,
+    required this.end,
+  });
+
+  final String start;
+  final String end;
+
+  @override
+  List<Object?> get props => [start, end];
+}

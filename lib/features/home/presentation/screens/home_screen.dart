@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/extensions/date_extensions.dart';
@@ -421,26 +423,29 @@ class HomeScreen extends StatelessWidget {
 
         return Column(
           children: [
-            Row(
-              children: [
-                _buildStatCard(
-                  value: orders,
-                  label: AppStrings.orders,
-                  isDark: isDark,
-                ),
-                SizedBox(width: Responsive.w(12)),
-                _buildStatCard(
-                  value: earnings,
-                  label: AppStrings.currency,
-                  isDark: isDark,
-                ),
-                SizedBox(width: Responsive.w(12)),
-                _buildStatCard(
-                  value: distance,
-                  label: AppStrings.km,
-                  isDark: isDark,
-                ),
-              ],
+            GestureDetector(
+              onTap: () => context.push(RouteNames.detailedStats),
+              child: Row(
+                children: [
+                  _buildStatCard(
+                    value: orders,
+                    label: AppStrings.orders,
+                    isDark: isDark,
+                  ),
+                  SizedBox(width: Responsive.w(12)),
+                  _buildStatCard(
+                    value: earnings,
+                    label: AppStrings.currency,
+                    isDark: isDark,
+                  ),
+                  SizedBox(width: Responsive.w(12)),
+                  _buildStatCard(
+                    value: distance,
+                    label: AppStrings.km,
+                    isDark: isDark,
+                  ),
+                ],
+              ),
             ),
             if (state is DailyStatsLoading)
               Padding(

@@ -29,10 +29,11 @@ class SekkaSearchBar extends StatelessWidget {
     return Container(
       height: Responsive.h(48),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+        color: isDark ? AppColors.backgroundDark : AppColors.background,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
         border: Border.all(
           color: isDark ? AppColors.borderDark : AppColors.border,
+          width: 1.5,
         ),
       ),
       child: TextField(

@@ -51,11 +51,22 @@ class SettingsRemoteDataSource {
     }
   }
 
+  /// PUT /settings/focus-mode
+  /// API expects: { autoTrigger: bool, speedThreshold: int }
   Future<void> updateFocusMode(Map<String, dynamic> data) async {
     try {
+      // Map from entity keys to API keys
+      final apiData = <String, dynamic>{};
+      if (data.containsKey('focusModeAutoTrigger')) {
+        apiData['autoTrigger'] = data['focusModeAutoTrigger'];
+      }
+      if (data.containsKey('focusModeSpeedThreshold')) {
+        apiData['speedThreshold'] = data['focusModeSpeedThreshold'];
+      }
+
       final response = await _dio.put<Map<String, dynamic>>(
         ApiConstants.settingsFocusMode,
-        data: data,
+        data: apiData,
       );
       final json = response.data!;
       if (json['isSuccess'] != true) {
@@ -66,11 +77,23 @@ class SettingsRemoteDataSource {
     }
   }
 
+  /// PUT /settings/quiet-hours
+  /// API expects: { enabled: bool, startTime: "HH:mm:ss", endTime: "HH:mm:ss" }
   Future<void> updateQuietHours(Map<String, dynamic> data) async {
     try {
+      final start = data['quietHoursStart'] as String?;
+      final end = data['quietHoursEnd'] as String?;
+      final enabled = start != null && end != null;
+
+      final apiData = {
+        'enabled': enabled,
+        'startTime': start != null ? '$start:00' : '00:00:00',
+        'endTime': end != null ? '$end:00' : '23:59:59',
+      };
+
       final response = await _dio.put<Map<String, dynamic>>(
         ApiConstants.settingsQuietHours,
-        data: data,
+        data: apiData,
       );
       final json = response.data!;
       if (json['isSuccess'] != true) {
@@ -81,6 +104,8 @@ class SettingsRemoteDataSource {
     }
   }
 
+  /// PUT /settings/notifications
+  /// API expects same key names as entity
   Future<void> updateNotifications(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put<Map<String, dynamic>>(
@@ -96,11 +121,19 @@ class SettingsRemoteDataSource {
     }
   }
 
+  /// POST /settings/home-location
+  /// API expects: { homeLatitude: double, homeLongitude: double, homeAddress: string }
   Future<void> setHomeLocation(Map<String, dynamic> data) async {
     try {
+      final apiData = {
+        'homeLatitude': data['latitude'],
+        'homeLongitude': data['longitude'],
+        'homeAddress': data['address'],
+      };
+
       final response = await _dio.post<Map<String, dynamic>>(
         ApiConstants.settingsHomeLocation,
-        data: data,
+        data: apiData,
       );
       final json = response.data!;
       if (json['isSuccess'] != true) {

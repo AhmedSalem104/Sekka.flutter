@@ -18,11 +18,21 @@ class ProfileCompletionCard extends StatelessWidget {
   final ProfileCompletionEntity completion;
   final ValueChanged<String>? onStepTap;
 
+  IconData _stepIcon(String stepKey) => switch (stepKey) {
+        'vehicle_type' => IconsaxPlusLinear.car,
+        'license_image' => IconsaxPlusLinear.card,
+        'profile_photo' => IconsaxPlusLinear.camera,
+        'email' => IconsaxPlusLinear.sms,
+        'region' => IconsaxPlusLinear.location,
+        _ => IconsaxPlusLinear.add_circle,
+      };
+
   @override
   Widget build(BuildContext context) {
     if (completion.isProfileComplete) return const SizedBox.shrink();
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final percentage = completion.completionPercentage;
 
     return Container(
       width: double.infinity,
@@ -32,87 +42,143 @@ class ProfileCompletionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.3),
-          width: 1,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header with percentage
           Row(
             children: [
-              Icon(
-                IconsaxPlusLinear.info_circle,
-                size: AppSizes.iconMd,
-                color: AppColors.primary,
+              Expanded(
+                child: Text(
+                  AppStrings.profileIncomplete,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
               ),
-              SizedBox(width: AppSizes.sm),
-              Text(
-                AppStrings.profileIncomplete,
-                style: AppTypography.titleMedium.copyWith(
-                  color: isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline,
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
+                  '$percentage%',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
           ),
           SizedBox(height: AppSizes.md),
-          SekkaProgressBar(percentage: completion.completionPercentage),
-          SizedBox(height: AppSizes.md),
-          Wrap(
-            spacing: AppSizes.sm,
-            runSpacing: AppSizes.sm,
-            children: completion.pendingSteps.map((step) {
-              return GestureDetector(
-                onTap: () => onStepTap?.call(step.stepKey),
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: AppSizes.md,
-                    vertical: AppSizes.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? AppColors.backgroundDark
-                        : AppColors.background,
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusPill),
-                    border: Border.all(
-                      color: step.isRequired
-                          ? AppColors.primary.withValues(alpha: 0.5)
-                          : isDark
-                              ? AppColors.borderDark
-                              : AppColors.border,
-                    ),
-                  ),
+
+          // Progress bar
+          SekkaProgressBar(percentage: percentage),
+          SizedBox(height: AppSizes.lg),
+
+          // Completed steps
+          if (completion.completedSteps.isNotEmpty) ...[
+            ...completion.completedSteps.map((step) => Padding(
+                  padding: EdgeInsets.only(bottom: AppSizes.sm),
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        IconsaxPlusLinear.add_circle,
+                        IconsaxPlusLinear.tick_circle,
                         size: AppSizes.iconSm,
-                        color: step.isRequired
-                            ? AppColors.primary
-                            : isDark
-                                ? AppColors.textCaptionDark
-                                : AppColors.textCaption,
+                        color: AppColors.success,
                       ),
-                      SizedBox(width: AppSizes.xs),
+                      SizedBox(width: AppSizes.sm),
                       Text(
-                        step.stepName,
-                        style: AppTypography.captionSmall.copyWith(
-                          color: step.isRequired
-                              ? AppColors.primary
-                              : isDark
-                                  ? AppColors.textBodyDark
-                                  : AppColors.textBody,
+                        step,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.success,
+                          decoration: TextDecoration.lineThrough,
                         ),
                       ),
                     ],
                   ),
+                )),
+            SizedBox(height: AppSizes.sm),
+          ],
+
+          // Pending steps
+          ...completion.pendingSteps.map((step) => Padding(
+                padding: EdgeInsets.only(bottom: AppSizes.sm),
+                child: GestureDetector(
+                  onTap: () => onStepTap?.call(step.stepKey),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.md,
+                      vertical: AppSizes.md,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.backgroundDark
+                          : AppColors.background,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                      border: Border.all(
+                        color: step.isRequired
+                            ? AppColors.primary.withValues(alpha: 0.4)
+                            : isDark
+                                ? AppColors.borderDark
+                                : AppColors.border,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _stepIcon(step.stepKey),
+                          size: AppSizes.iconMd,
+                          color: step.isRequired
+                              ? AppColors.primary
+                              : isDark
+                                  ? AppColors.textCaptionDark
+                                  : AppColors.textCaption,
+                        ),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                step.stepName,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: isDark
+                                      ? AppColors.textHeadlineDark
+                                      : AppColors.textHeadline,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (step.isRequired)
+                                Text(
+                                  AppStrings.requiredStep,
+                                  style: AppTypography.captionSmall.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          IconsaxPlusLinear.arrow_left_2,
+                          size: AppSizes.iconSm,
+                          color: isDark
+                              ? AppColors.textCaptionDark
+                              : AppColors.textCaption,
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            }).toList(),
-          ),
+              )),
         ],
       ),
     );

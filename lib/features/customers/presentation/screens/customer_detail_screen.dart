@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
@@ -82,27 +83,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        backgroundColor:
-            isDark ? AppColors.backgroundDark : AppColors.background,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          AppStrings.customerDetails,
-          style: AppTypography.titleLarge.copyWith(
-            color:
-                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
-        leading: IconButton(
-          icon: Icon(
-            IconsaxPlusLinear.arrow_right_3,
-            color:
-                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.customerDetails),
       body: BlocConsumer<CustomerDetailBloc, CustomerDetailState>(
         bloc: _bloc,
         listener: (context, state) {

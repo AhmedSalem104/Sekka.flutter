@@ -4,6 +4,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
@@ -191,24 +192,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-        elevation: 0,
-        title: Text(
-          AppStrings.chatTitle,
-          style: AppTypography.headlineSmall.copyWith(
-            color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            IconsaxPlusLinear.arrow_right_3,
-            color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.chatTitle),
       floatingActionButton: FloatingActionButton(
         onPressed: _createConversation,
         backgroundColor: AppColors.primary,
@@ -235,7 +219,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     }
 
     if (_data == null || _data!.items.isEmpty) {
-      return const SekkaEmptyState(
+      return SekkaEmptyState(
         icon: IconsaxPlusLinear.message,
         title: AppStrings.chatNoConversations,
         description: AppStrings.chatNoConversationsDesc,

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
@@ -62,13 +64,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          AppStrings.emergencyContacts,
-          style: AppTypography.headlineSmall,
-        ),
-        leading: const SekkaBackButton(),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.emergencyContacts),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
         backgroundColor: AppColors.primary,
@@ -215,76 +211,110 @@ class _ContactCard extends StatelessWidget {
   final bool isDark;
   final VoidCallback onDelete;
 
+  Future<void> _callContact(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: contact.phone));
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${AppStrings.phoneCopied} ${contact.phone}',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textOnPrimary,
+            ),
+            textDirection: TextDirection.rtl,
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+    final uri = Uri(scheme: 'tel', path: contact.phone);
+    await launchUrl(uri);
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(AppSizes.lg),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.border,
-          width: 0.5,
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: AppSizes.avatarMd,
-            height: AppSizes.avatarMd,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              IconsaxPlusLinear.user,
-              size: AppSizes.iconMd,
-              color: AppColors.primary,
-            ),
+    return GestureDetector(
+      onTap: () => _callContact(context),
+      child: Container(
+        padding: EdgeInsets.all(AppSizes.lg),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          border: Border.all(
+            color: isDark ? AppColors.borderDark : AppColors.border,
+            width: 0.5,
           ),
-          SizedBox(width: AppSizes.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  contact.name,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: isDark
-                        ? AppColors.textHeadlineDark
-                        : AppColors.textHeadline,
-                  ),
-                ),
-                SizedBox(height: AppSizes.xs),
-                Text(
-                  contact.phone,
-                  style: AppTypography.bodySmall.copyWith(
-                    color:
-                        isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                  ),
-                  textDirection: TextDirection.ltr,
-                ),
-                if (contact.relation != null) ...[
-                  SizedBox(height: AppSizes.xs),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: AppSizes.avatarMd,
+              height: AppSizes.avatarMd,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                IconsaxPlusLinear.user,
+                size: AppSizes.iconMd,
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(width: AppSizes.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    contact.relation!,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.primary,
+                    contact.name,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
                     ),
                   ),
+                  SizedBox(height: AppSizes.xs),
+                  Text(
+                    contact.phone,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                    textDirection: TextDirection.ltr,
+                  ),
+                  if (contact.relation != null) ...[
+                    SizedBox(height: AppSizes.xs),
+                    Text(
+                      contact.relation!,
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-          ),
-          IconButton(
-            onPressed: onDelete,
-            icon: Icon(
-              IconsaxPlusLinear.trash,
-              size: AppSizes.iconMd,
-              color: AppColors.error,
+            IconButton(
+              onPressed: () => _callContact(context),
+              icon: Icon(
+                IconsaxPlusLinear.call,
+                size: AppSizes.iconMd,
+                color: AppColors.success,
+              ),
             ),
-          ),
-        ],
+            IconButton(
+              onPressed: onDelete,
+              icon: Icon(
+                IconsaxPlusLinear.trash,
+                size: AppSizes.iconMd,
+                color: AppColors.error,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

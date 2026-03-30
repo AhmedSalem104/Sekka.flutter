@@ -93,7 +93,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     } on ApiException catch (e) {
       emit(OrdersError(e.message));
     } catch (_) {
-      emit(const OrdersError(AppStrings.unknownError));
+      emit(OrdersError(AppStrings.unknownError));
     }
   }
 

@@ -4,144 +4,37 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../shared/network/api_exception.dart';
+import '../../../../shared/network/api_result.dart';
+import '../../../partners/data/models/create_partner_model.dart';
+import '../../../partners/data/models/partner_model.dart';
+import '../../../partners/data/repositories/partner_repository.dart';
 import '../../domain/entities/daily_settlement_summary_entity.dart';
+import '../../domain/entities/partner_balance_entity.dart';
 import '../../domain/entities/settlement_entity.dart';
 import '../../domain/repositories/settlement_repository.dart';
 
-// ── Events ──
-
-sealed class SettlementEvent extends Equatable {
-  const SettlementEvent();
-  @override
-  List<Object?> get props => [];
-}
-
-final class SettlementsLoadRequested extends SettlementEvent {
-  const SettlementsLoadRequested();
-}
-
-final class SettlementsNextPage extends SettlementEvent {
-  const SettlementsNextPage();
-}
-
-final class SettlementCreateRequested extends SettlementEvent {
-  const SettlementCreateRequested({
-    required this.partnerId,
-    required this.amount,
-    required this.settlementType,
-    this.notes,
-    required this.sendWhatsApp,
-  });
-
-  final String partnerId;
-  final double amount;
-  final int settlementType;
-  final String? notes;
-  final bool sendWhatsApp;
-
-  @override
-  List<Object?> get props =>
-      [partnerId, amount, settlementType, notes, sendWhatsApp];
-}
-
-final class SettlementReceiptUpload extends SettlementEvent {
-  const SettlementReceiptUpload({
-    required this.settlementId,
-    required this.file,
-  });
-
-  final String settlementId;
-  final File file;
-
-  @override
-  List<Object?> get props => [settlementId, file];
-}
-
-// ── States ──
-
-sealed class SettlementState extends Equatable {
-  const SettlementState();
-  @override
-  List<Object?> get props => [];
-}
-
-final class SettlementInitial extends SettlementState {
-  const SettlementInitial();
-}
-
-final class SettlementLoading extends SettlementState {
-  const SettlementLoading();
-}
-
-final class SettlementListLoaded extends SettlementState {
-  const SettlementListLoaded({
-    required this.settlements,
-    required this.summary,
-    this.hasMore = true,
-    this.currentPage = 1,
-    this.isLoadingMore = false,
-  });
-
-  final List<SettlementEntity> settlements;
-  final DailySettlementSummaryEntity summary;
-  final bool hasMore;
-  final int currentPage;
-  final bool isLoadingMore;
-
-  SettlementListLoaded copyWith({
-    List<SettlementEntity>? settlements,
-    DailySettlementSummaryEntity? summary,
-    bool? hasMore,
-    int? currentPage,
-    bool? isLoadingMore,
-  }) {
-    return SettlementListLoaded(
-      settlements: settlements ?? this.settlements,
-      summary: summary ?? this.summary,
-      hasMore: hasMore ?? this.hasMore,
-      currentPage: currentPage ?? this.currentPage,
-      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
-    );
-  }
-
-  @override
-  List<Object?> get props =>
-      [settlements, summary, hasMore, currentPage, isLoadingMore];
-}
-
-final class SettlementCreating extends SettlementState {
-  const SettlementCreating();
-}
-
-final class SettlementCreated extends SettlementState {
-  const SettlementCreated(this.settlement);
-  final SettlementEntity settlement;
-
-  @override
-  List<Object?> get props => [settlement];
-}
-
-final class SettlementError extends SettlementState {
-  const SettlementError(this.message);
-  final String message;
-
-  @override
-  List<Object?> get props => [message];
-}
-
-// ── BLoC ──
+part 'settlement_event.dart';
+part 'settlement_state.dart';
 
 class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
-  SettlementBloc({required SettlementRepository repository})
-      : _repository = repository,
+  SettlementBloc({
+    required SettlementRepository repository,
+    required PartnerRepository partnerRepository,
+  })  : _repository = repository,
+        _partnerRepository = partnerRepository,
         super(const SettlementInitial()) {
     on<SettlementsLoadRequested>(_onLoad);
     on<SettlementsNextPage>(_onNextPage);
+    on<SettlementRefreshRequested>(_onRefresh);
     on<SettlementCreateRequested>(_onCreate);
     on<SettlementReceiptUpload>(_onUploadReceipt);
+    on<SettlementFilterChanged>(_onFilterChanged);
+    on<PartnerBalanceRequested>(_onPartnerBalance);
+    on<PartnerCreateRequested>(_onCreatePartner);
   }
 
   final SettlementRepository _repository;
+  final PartnerRepository _partnerRepository;
 
   Future<void> _onLoad(
     SettlementsLoadRequested event,
@@ -149,13 +42,24 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
   ) async {
     emit(const SettlementLoading());
     try {
-      final summary = await _repository.getDailySummary();
-      final page = await _repository.getSettlements(pageNumber: 1);
+      final results = await Future.wait([
+        _repository.getDailySummary(),
+        _repository.getSettlements(page: 1),
+        _partnerRepository.getPartners(),
+      ]);
 
-      emit(SettlementListLoaded(
-        settlements: page.items.cast<SettlementEntity>(),
+      final summary = results[0] as DailySettlementSummaryEntity;
+      final settlements = results[1] as List<SettlementEntity>;
+      final partnersResult = results[2];
+
+      // Extract partner list from ApiResult
+      final partners = _extractPartners(partnersResult);
+
+      emit(SettlementLoaded(
         summary: summary,
-        hasMore: page.hasNextPage,
+        settlements: settlements,
+        partners: partners,
+        hasMore: settlements.length >= 20,
         currentPage: 1,
       ));
     } on ApiException catch (e) {
@@ -168,26 +72,74 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
     Emitter<SettlementState> emit,
   ) async {
     final current = state;
-    if (current is! SettlementListLoaded ||
+    if (current is! SettlementLoaded ||
         !current.hasMore ||
-        current.isLoadingMore) return;
+        current.isLoadingMore) {
+      return;
+    }
 
     emit(current.copyWith(isLoadingMore: true));
     try {
       final nextPage = current.currentPage + 1;
-      final page = await _repository.getSettlements(pageNumber: nextPage);
+      final settlements = await _repository.getSettlements(
+        page: nextPage,
+        partnerId: current.filterPartnerId,
+        settlementType: current.filterType,
+        dateFrom: current.filterDateFrom,
+        dateTo: current.filterDateTo,
+      );
 
       emit(current.copyWith(
-        settlements: [
-          ...current.settlements,
-          ...page.items.cast<SettlementEntity>(),
-        ],
-        hasMore: page.hasNextPage,
+        settlements: [...current.settlements, ...settlements],
+        hasMore: settlements.length >= 20,
         currentPage: nextPage,
         isLoadingMore: false,
       ));
     } on ApiException {
       emit(current.copyWith(isLoadingMore: false));
+    }
+  }
+
+  Future<void> _onRefresh(
+    SettlementRefreshRequested event,
+    Emitter<SettlementState> emit,
+  ) async {
+    try {
+      final current = state;
+      final partnerId =
+          current is SettlementLoaded ? current.filterPartnerId : null;
+      final type = current is SettlementLoaded ? current.filterType : null;
+
+      final results = await Future.wait([
+        _repository.getDailySummary(),
+        _repository.getSettlements(
+          page: 1,
+          partnerId: partnerId,
+          settlementType: type,
+        ),
+        _partnerRepository.getPartners(),
+      ]);
+
+      final summary = results[0] as DailySettlementSummaryEntity;
+      final settlements = results[1] as List<SettlementEntity>;
+      final partners = _extractPartners(results[2]);
+
+      final balances = current is SettlementLoaded
+          ? current.partnerBalances
+          : <String, PartnerBalanceEntity>{};
+
+      emit(SettlementLoaded(
+        summary: summary,
+        settlements: settlements,
+        partners: partners,
+        partnerBalances: balances,
+        hasMore: settlements.length >= 20,
+        currentPage: 1,
+        filterPartnerId: partnerId,
+        filterType: type,
+      ));
+    } on ApiException catch (e) {
+      emit(SettlementError(e.message));
     }
   }
 
@@ -201,8 +153,8 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
         partnerId: event.partnerId,
         amount: event.amount,
         settlementType: event.settlementType,
+        orderCount: event.orderCount,
         notes: event.notes,
-        sendWhatsApp: event.sendWhatsApp,
       );
       emit(SettlementCreated(settlement));
     } on ApiException catch (e) {
@@ -219,5 +171,98 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
     } on ApiException catch (e) {
       emit(SettlementError(e.message));
     }
+  }
+
+  Future<void> _onFilterChanged(
+    SettlementFilterChanged event,
+    Emitter<SettlementState> emit,
+  ) async {
+    final current = state;
+    if (current is! SettlementLoaded) return;
+
+    emit(const SettlementLoading());
+    try {
+      final settlements = await _repository.getSettlements(
+        page: 1,
+        partnerId: event.partnerId,
+        settlementType: event.settlementType,
+        dateFrom: event.dateFrom,
+        dateTo: event.dateTo,
+      );
+
+      final summary = await _repository.getDailySummary();
+
+      emit(current.copyWith(
+        summary: summary,
+        settlements: settlements,
+        hasMore: settlements.length >= 20,
+        currentPage: 1,
+        filterPartnerId: event.partnerId,
+        filterType: event.settlementType,
+        filterDateFrom: event.dateFrom,
+        filterDateTo: event.dateTo,
+      ));
+    } on ApiException catch (e) {
+      emit(SettlementError(e.message));
+    }
+  }
+
+  Future<void> _onPartnerBalance(
+    PartnerBalanceRequested event,
+    Emitter<SettlementState> emit,
+  ) async {
+    final current = state;
+    if (current is! SettlementLoaded) return;
+
+    try {
+      final balance =
+          await _repository.getPartnerBalance(event.partnerId);
+
+      emit(current.copyWith(
+        partnerBalances: {
+          ...current.partnerBalances,
+          event.partnerId: balance,
+        },
+      ));
+    } on ApiException {
+      // Silently fail — balance will show as unavailable
+    }
+  }
+
+  Future<void> _onCreatePartner(
+    PartnerCreateRequested event,
+    Emitter<SettlementState> emit,
+  ) async {
+    try {
+      final data = CreatePartnerModel(
+        name: event.name,
+        partnerType: 0,
+        phone: event.phone,
+        address: event.address,
+        commissionType: 0,
+        commissionValue: 0,
+        defaultPaymentMethod: 0,
+      );
+      final result = await _partnerRepository.createPartner(data: data);
+      if (result is ApiSuccess<PartnerModel>) {
+        emit(const PartnerCreated());
+        // Refresh to include the new partner
+        add(const SettlementRefreshRequested());
+      } else if (result is ApiFailure<PartnerModel>) {
+        emit(SettlementError(
+          (result as ApiFailure<PartnerModel>).error.arabicMessage,
+        ));
+      }
+    } on ApiException catch (e) {
+      emit(SettlementError(e.message));
+    }
+  }
+
+  /// Extract partners list from the ApiResult returned by PartnerRepository.
+  List<PartnerModel> _extractPartners(dynamic result) {
+    if (result is ApiSuccess<List<PartnerModel>>) {
+      return result.data;
+    }
+    return [];
   }
 }

@@ -14,6 +14,7 @@ import 'features/home/presentation/bloc/daily_stats_bloc.dart';
 import 'features/orders/data/datasources/order_remote_datasource.dart';
 import 'features/orders/data/repositories/order_repository_impl.dart';
 import 'features/orders/presentation/bloc/orders_bloc.dart';
+import 'features/partners/data/repositories/partner_repository.dart';
 import 'features/settlements/data/datasources/settlement_remote_datasource.dart';
 import 'features/settlements/data/repositories/settlement_repository_impl.dart';
 import 'features/settlements/presentation/bloc/settlement_bloc.dart';
@@ -58,6 +59,10 @@ void main() async {
   // Auth status notifier for GoRouter
   final authStatusNotifier = ValueNotifier<bool>(false);
 
+  // Theme & locale notifiers for Settings
+  final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
+  final localeNotifier = ValueNotifier<Locale>(const Locale('ar'));
+
   // Late-init AuthBloc reference for the interceptor callback
   late final AuthBloc authBloc;
 
@@ -94,6 +99,9 @@ void main() async {
   final settlementDataSource = SettlementRemoteDataSource(dioClient);
   final settlementRepository =
       SettlementRepositoryImpl(remoteDataSource: settlementDataSource);
+
+  // Partners
+  final partnerRepository = PartnerRepository(dioClient.dio);
 
   // Wallet
   final walletDataSource = WalletRemoteDataSource(dioClient);
@@ -139,7 +147,10 @@ void main() async {
               ..add(const DailyStatsLoadRequested()),
           ),
           BlocProvider(
-            create: (_) => SettlementBloc(repository: settlementRepository),
+            create: (_) => SettlementBloc(
+              repository: settlementRepository,
+              partnerRepository: partnerRepository,
+            ),
           ),
           BlocProvider(
             create: (_) => ProfileBloc(repository: profileRepository),
@@ -148,10 +159,18 @@ void main() async {
             create: (_) => OrdersBloc(repository: orderRepository),
           ),
           BlocProvider(
-            create: (_) => SettingsBloc(repository: settingsRepository),
+            create: (_) => SettingsBloc(
+              repository: settingsRepository,
+              themeModeNotifier: themeModeNotifier,
+              localeNotifier: localeNotifier,
+            ),
           ),
         ],
-        child: SekkaApp(router: router),
+        child: SekkaApp(
+          router: router,
+          themeModeNotifier: themeModeNotifier,
+          localeNotifier: localeNotifier,
+        ),
       ),
     ),
   );

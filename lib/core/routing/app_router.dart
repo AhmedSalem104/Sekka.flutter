@@ -15,6 +15,13 @@ import '../../features/customers/presentation/screens/customer_detail_screen.dar
 import '../../features/partners/presentation/screens/partners_list_screen.dart';
 import '../../features/partners/presentation/screens/partner_detail_screen.dart';
 import '../../features/partners/data/models/partner_model.dart';
+import '../../features/settlements/presentation/screens/settlements_screen.dart';
+import '../../features/settlements/presentation/screens/create_settlement_screen.dart';
+import '../../features/settlements/presentation/screens/partner_settlement_detail_screen.dart';
+import '../../features/statistics/data/datasources/statistics_remote_datasource.dart';
+import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
+import '../../features/statistics/presentation/bloc/statistics_bloc.dart';
+import '../../features/statistics/presentation/screens/statistics_screen.dart';
 import '../../features/home/presentation/screens/main_shell.dart';
 import '../../features/orders/presentation/screens/create_order_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
@@ -139,15 +146,36 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       // Financial routes
       GoRoute(
         path: RouteNames.settlements,
-        builder: (_, __) => const _PlaceholderScreen(name: 'التسويات'),
+        builder: (_, __) => const SettlementsScreen(),
       ),
       GoRoute(
         path: RouteNames.createSettlement,
-        builder: (_, __) => const _PlaceholderScreen(name: 'تسوية جديدة'),
+        builder: (_, state) {
+          final partner = state.extra as PartnerModel?;
+          return CreateSettlementScreen(preselectedPartner: partner);
+        },
+      ),
+      GoRoute(
+        path: RouteNames.partnerSettlementDetail,
+        builder: (_, state) {
+          final partner = state.extra! as PartnerModel;
+          return PartnerSettlementDetailScreen(partner: partner);
+        },
       ),
       GoRoute(
         path: RouteNames.detailedStats,
-        builder: (_, __) => const _PlaceholderScreen(name: 'الإحصائيات'),
+        builder: (context, __) {
+          final dioClient = context.read<DioClient>();
+          final dataSource = StatisticsRemoteDataSource(dioClient);
+          final repository = StatisticsRepositoryImpl(
+            remoteDataSource: dataSource,
+          );
+          return BlocProvider(
+            create: (_) => StatisticsBloc(repository: repository)
+              ..add(const StatisticsTabChanged(StatisticsTab.weekly)),
+            child: const StatisticsScreen(),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.paymentRequests,

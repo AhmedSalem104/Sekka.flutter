@@ -6,6 +6,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
@@ -105,26 +106,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        backgroundColor:
-            isDark ? AppColors.backgroundDark : AppColors.background,
-        elevation: 0,
-        title: Text(
-          AppStrings.notificationsTitle,
-          style: AppTypography.headlineSmall.copyWith(
-            color: isDark
-                ? AppColors.textHeadlineDark
-                : AppColors.textHeadline,
-          ),
-        ),
-        centerTitle: true,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: Icon(
-            IconsaxPlusLinear.arrow_right_3,
-            color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
+      appBar: SekkaAppBar(
+        title: AppStrings.notificationsTitle,
         actions: [
           if (_data != null && _data!.items.any((n) => !n.isRead))
             TextButton(
@@ -158,7 +141,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     if (_data == null || _data!.items.isEmpty) {
-      return const SekkaEmptyState(
+      return SekkaEmptyState(
         icon: IconsaxPlusLinear.notification,
         title: AppStrings.noNotifications,
         description: AppStrings.noNotificationsDesc,

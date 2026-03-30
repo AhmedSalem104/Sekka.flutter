@@ -93,7 +93,7 @@ class ProfileHeaderCard extends StatelessWidget {
                 IconsaxPlusLinear.edit_2,
                 size: AppSizes.iconSm,
               ),
-              label: const Text(AppStrings.editProfile),
+              label: Text(AppStrings.editProfile),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: const BorderSide(color: AppColors.primary),

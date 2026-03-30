@@ -105,7 +105,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(height: AppSizes.xxl),
-                        const AuthHeader(
+                        AuthHeader(
                           title: AppStrings.resetPassword,
                           showLogo: false,
                         ),

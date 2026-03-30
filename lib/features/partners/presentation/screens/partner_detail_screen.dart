@@ -4,8 +4,10 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/utils/phone_launcher.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
@@ -54,22 +56,7 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
       child: Scaffold(
         backgroundColor:
             isDark ? AppColors.backgroundDark : AppColors.background,
-        appBar: AppBar(
-          title: Text(
-            widget.partner.name,
-            style: AppTypography.titleLarge.copyWith(
-              color: isDark
-                  ? AppColors.textHeadlineDark
-                  : AppColors.textHeadline,
-            ),
-          ),
-          backgroundColor:
-              isDark ? AppColors.backgroundDark : AppColors.background,
-          elevation: 0,
-          iconTheme: IconThemeData(
-            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-          ),
-        ),
+        appBar: SekkaAppBar(title: widget.partner.name),
         body: SingleChildScrollView(
           padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
           child: Column(
@@ -244,21 +231,29 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
 
           if (partner.phone != null) ...[
             SizedBox(height: Responsive.h(14)),
-            Row(
-              children: [
-                Icon(
-                  IconsaxPlusBold.call,
-                  size: Responsive.r(16),
-                  color: AppColors.textOnPrimary.withValues(alpha: 0.8),
-                ),
-                SizedBox(width: Responsive.w(8)),
-                Text(
-                  partner.phone!,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textOnPrimary.withValues(alpha: 0.9),
+            GestureDetector(
+              onTap: () => PhoneLauncher.showOptions(
+                context,
+                partner.phone!,
+                contactName: partner.name,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    IconsaxPlusBold.call,
+                    size: Responsive.r(16),
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                   ),
-                ),
-              ],
+                  SizedBox(width: Responsive.w(8)),
+                  Text(
+                    partner.phone!,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.9),
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],

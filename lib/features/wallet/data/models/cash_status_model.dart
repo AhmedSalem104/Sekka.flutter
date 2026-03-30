@@ -2,20 +2,26 @@ import '../../domain/entities/cash_status_entity.dart';
 
 class CashStatusModel extends CashStatusEntity {
   const CashStatusModel({
+    required super.driverId,
     required super.cashOnHand,
-    required super.threshold,
-    required super.percentage,
-    required super.alertLevel,
-    required super.suggestedAction,
+    required super.cashAlertThreshold,
+    required super.isOverThreshold,
+    super.lastSettlementAt,
+    required super.hoursSinceLastSettlement,
   });
 
   factory CashStatusModel.fromJson(Map<String, dynamic> json) {
     return CashStatusModel(
+      driverId: json['driverId'] as String? ?? '',
       cashOnHand: (json['cashOnHand'] as num?)?.toDouble() ?? 0,
-      threshold: (json['threshold'] as num?)?.toDouble() ?? 0,
-      percentage: (json['percentage'] as num?)?.toDouble() ?? 0,
-      alertLevel: json['alertLevel'] as String? ?? 'safe',
-      suggestedAction: json['suggestedAction'] as String? ?? '',
+      cashAlertThreshold:
+          (json['cashAlertThreshold'] as num?)?.toDouble() ?? 0,
+      isOverThreshold: json['isOverThreshold'] as bool? ?? false,
+      lastSettlementAt: json['lastSettlementAt'] != null
+          ? DateTime.parse(json['lastSettlementAt'] as String)
+          : null,
+      hoursSinceLastSettlement:
+          json['hoursSinceLastSettlement'] as int? ?? 0,
     );
   }
 }

@@ -128,7 +128,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   child: Column(
                     children: [
                       SizedBox(height: AppSizes.lg),
-                      const AuthHeader(
+                      AuthHeader(
                         title: AppStrings.completeProfile,
                         subtitle: AppStrings.completeProfileSubtitle,
                         showLogo: false,

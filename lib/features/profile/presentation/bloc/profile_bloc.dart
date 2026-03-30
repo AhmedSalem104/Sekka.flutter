@@ -42,7 +42,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     } on ApiException catch (e) {
       emit(ProfileError(e.message));
     } catch (_) {
-      emit(const ProfileError(AppStrings.unknownError));
+      emit(ProfileError(AppStrings.unknownError));
     }
   }
 
@@ -65,7 +65,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     } on ApiException catch (e) {
       emit(ProfileError(e.message));
     } catch (_) {
-      emit(const ProfileError(AppStrings.unknownError));
+      emit(ProfileError(AppStrings.unknownError));
     }
   }
 

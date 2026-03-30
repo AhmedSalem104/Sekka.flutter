@@ -16,7 +16,11 @@ void main() {
         ),
       ],
     );
-    await tester.pumpWidget(SekkaApp(router: router));
+    await tester.pumpWidget(SekkaApp(
+      router: router,
+      themeModeNotifier: ValueNotifier(ThemeMode.light),
+      localeNotifier: ValueNotifier(const Locale('ar')),
+    ));
     expect(find.text('Test'), findsOneWidget);
   });
 }

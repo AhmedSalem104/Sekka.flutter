@@ -61,6 +61,92 @@ class SettingsEntity extends Equatable {
   final bool backToBaseAlertEnabled;
   final double backToBaseRadiusKm;
 
+  SettingsEntity copyWith({
+    int? theme,
+    String? language,
+    int? numberFormat,
+    bool? focusModeAutoTrigger,
+    int? focusModeSpeedThreshold,
+    bool? textToSpeechEnabled,
+    bool? hapticFeedback,
+    bool? highContrastMode,
+    bool? notifyNewOrder,
+    bool? notifyCashAlert,
+    bool? notifyBreakReminder,
+    bool? notifyMaintenance,
+    bool? notifySettlement,
+    bool? notifyAchievement,
+    bool? notifySound,
+    bool? notifyVibration,
+    String? quietHoursStart,
+    String? quietHoursEnd,
+    int? preferredMapApp,
+    int? maxOrdersPerShift,
+    bool? autoSendReceipt,
+    int? locationTrackingInterval,
+    int? offlineSyncInterval,
+    double? homeLatitude,
+    double? homeLongitude,
+    String? homeAddress,
+    bool? backToBaseAlertEnabled,
+    double? backToBaseRadiusKm,
+  }) {
+    return SettingsEntity(
+      theme: theme ?? this.theme,
+      language: language ?? this.language,
+      numberFormat: numberFormat ?? this.numberFormat,
+      focusModeAutoTrigger: focusModeAutoTrigger ?? this.focusModeAutoTrigger,
+      focusModeSpeedThreshold:
+          focusModeSpeedThreshold ?? this.focusModeSpeedThreshold,
+      textToSpeechEnabled: textToSpeechEnabled ?? this.textToSpeechEnabled,
+      hapticFeedback: hapticFeedback ?? this.hapticFeedback,
+      highContrastMode: highContrastMode ?? this.highContrastMode,
+      notifyNewOrder: notifyNewOrder ?? this.notifyNewOrder,
+      notifyCashAlert: notifyCashAlert ?? this.notifyCashAlert,
+      notifyBreakReminder: notifyBreakReminder ?? this.notifyBreakReminder,
+      notifyMaintenance: notifyMaintenance ?? this.notifyMaintenance,
+      notifySettlement: notifySettlement ?? this.notifySettlement,
+      notifyAchievement: notifyAchievement ?? this.notifyAchievement,
+      notifySound: notifySound ?? this.notifySound,
+      notifyVibration: notifyVibration ?? this.notifyVibration,
+      quietHoursStart: quietHoursStart ?? this.quietHoursStart,
+      quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
+      preferredMapApp: preferredMapApp ?? this.preferredMapApp,
+      maxOrdersPerShift: maxOrdersPerShift ?? this.maxOrdersPerShift,
+      autoSendReceipt: autoSendReceipt ?? this.autoSendReceipt,
+      locationTrackingInterval:
+          locationTrackingInterval ?? this.locationTrackingInterval,
+      offlineSyncInterval: offlineSyncInterval ?? this.offlineSyncInterval,
+      homeLatitude: homeLatitude ?? this.homeLatitude,
+      homeLongitude: homeLongitude ?? this.homeLongitude,
+      homeAddress: homeAddress ?? this.homeAddress,
+      backToBaseAlertEnabled:
+          backToBaseAlertEnabled ?? this.backToBaseAlertEnabled,
+      backToBaseRadiusKm: backToBaseRadiusKm ?? this.backToBaseRadiusKm,
+    );
+  }
+
+  /// Apply a dynamic key-value toggle to produce a new entity.
+  SettingsEntity applyToggle(String key, bool value) {
+    return switch (key) {
+      'focusModeAutoTrigger' => copyWith(focusModeAutoTrigger: value),
+      'textToSpeechEnabled' => copyWith(textToSpeechEnabled: value),
+      'hapticFeedback' => copyWith(hapticFeedback: value),
+      'highContrastMode' => copyWith(highContrastMode: value),
+      'notifyNewOrder' => copyWith(notifyNewOrder: value),
+      'notifyCashAlert' => copyWith(notifyCashAlert: value),
+      'notifyBreakReminder' => copyWith(notifyBreakReminder: value),
+      'notifyMaintenance' => copyWith(notifyMaintenance: value),
+      'notifySettlement' => copyWith(notifySettlement: value),
+      'notifyAchievement' => copyWith(notifyAchievement: value),
+      'notifySound' => copyWith(notifySound: value),
+      'notifyVibration' => copyWith(notifyVibration: value),
+      'autoSendReceipt' => copyWith(autoSendReceipt: value),
+      'backToBaseAlertEnabled' => copyWith(backToBaseAlertEnabled: value),
+      _ => this,
+    };
+  }
+
   @override
   List<Object?> get props => [
         theme,

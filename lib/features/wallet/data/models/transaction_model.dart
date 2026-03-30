@@ -16,9 +16,9 @@ class TransactionModel extends TransactionEntity {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as String,
-      type: json['type'] as int? ?? 0,
+      type: json['transactionType'] as int? ?? json['type'] as int? ?? 0,
       typeName: json['typeName'] as String? ?? '',
-      typeNameAr: json['typeNameAr'] as String? ?? '',
+      typeNameAr: json['typeNameAr'] as String? ?? json['description'] as String? ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       balanceAfter: (json['balanceAfter'] as num?)?.toDouble() ?? 0,
       description: json['description'] as String? ?? '',

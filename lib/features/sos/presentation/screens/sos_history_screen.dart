@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../shared/network/api_response.dart';
@@ -61,26 +61,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        backgroundColor:
-            isDark ? AppColors.backgroundDark : AppColors.background,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Icon(
-            IconsaxPlusLinear.arrow_right_3,
-            color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
-        title: Text(
-          AppStrings.sosHistory,
-          style: AppTypography.headlineSmall.copyWith(
-            color:
-                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-          ),
-        ),
-        centerTitle: true,
-      ),
+      appBar: SekkaAppBar(title: AppStrings.sosHistory),
       body: _buildBody(isDark),
     );
   }
@@ -100,7 +81,7 @@ class _SosHistoryScreenState extends State<SosHistoryScreen> {
     }
 
     if (_data == null || _data!.items.isEmpty) {
-      return const SekkaEmptyState(
+      return SekkaEmptyState(
         icon: IconsaxPlusBold.danger,
         title: AppStrings.sosNoHistory,
         description: AppStrings.sosNoHistoryDesc,

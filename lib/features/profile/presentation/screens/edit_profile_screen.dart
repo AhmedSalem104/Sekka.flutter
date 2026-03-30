@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -13,7 +14,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../shared/network/api_constants.dart';
 import '../../../../core/widgets/sekka_avatar.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
@@ -61,14 +62,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title: Text(AppStrings.editProfile, style: AppTypography.headlineSmall),
-        leading: const SekkaBackButton(),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.editProfile),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state is ProfileLoaded && !state.isUpdating) {
-            context.showSnackBar(AppStrings.profileUpdated);
+            SekkaMessageDialog.show(
+              context,
+              message: AppStrings.profileUpdated,
+              type: SekkaMessageType.success,
+            ).then((_) {
+              if (context.mounted) Navigator.of(context).maybePop();
+            });
           }
           if (state is ProfileError) {
             SekkaMessageDialog.show(context, message: state.message);
@@ -176,7 +180,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final email = _emailController.text.trim();
 
     if (name.isNotEmpty) updates['name'] = name;
-    if (email.isNotEmpty) updates['email'] = email;
+    updates['email'] = email.isEmpty ? null : email;
     if (_selectedVehicleType != null) {
       updates['vehicleType'] = _selectedVehicleType;
     }
@@ -221,7 +225,27 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final picked = await _picker.pickImage(source: source, maxWidth: 800);
     if (picked == null || !mounted) return;
 
-    final file = File(picked.path);
+    // Crop the image (circle for profile, free for license)
+    final cropped = await ImageCropper().cropImage(
+      sourcePath: picked.path,
+      compressQuality: 80,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: isProfile ? 'صورة البروفايل' : 'صورة الرخصة',
+          toolbarColor: AppColors.primary,
+          toolbarWidgetColor: AppColors.textOnPrimary,
+          activeControlsWidgetColor: AppColors.primary,
+          cropStyle: isProfile ? CropStyle.circle : CropStyle.rectangle,
+          lockAspectRatio: isProfile,
+          initAspectRatio: isProfile
+              ? CropAspectRatioPreset.square
+              : CropAspectRatioPreset.original,
+        ),
+      ],
+    );
+    if (cropped == null || !mounted) return;
+
+    final file = File(cropped.path);
     if (isProfile) {
       context.read<ProfileBloc>().add(ProfileImageUploadRequested(file));
     } else {

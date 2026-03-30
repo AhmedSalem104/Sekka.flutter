@@ -12,6 +12,7 @@ import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../settlements/presentation/widgets/add_partner_sheet.dart';
 import '../../../customers/data/models/customer_model.dart';
 import '../../../customers/data/repositories/customer_repository.dart';
 import '../../../customers/presentation/bloc/customers_bloc.dart';
@@ -78,6 +79,24 @@ class _ContactsScreenState extends State<ContactsScreen>
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
+      floatingActionButton: _tabController.index == 1
+          ? Padding(
+              padding: EdgeInsets.only(bottom: Responsive.h(72)),
+              child: FloatingActionButton.small(
+                onPressed: () => showAddPartnerSheet(
+                  context,
+                  onPartnerCreated: () {
+                    _partnersBloc.add(const PartnersLoadRequested());
+                  },
+                ),
+                backgroundColor: AppColors.primary,
+                child: const Icon(
+                  IconsaxPlusLinear.add,
+                  color: AppColors.textOnPrimary,
+                ),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +157,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                             size: Responsive.r(18),
                           ),
                           SizedBox(width: Responsive.w(6)),
-                          const Text(AppStrings.customers),
+                          Text(AppStrings.customers),
                         ],
                       ),
                     ),
@@ -151,7 +170,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                             size: Responsive.r(18),
                           ),
                           SizedBox(width: Responsive.w(6)),
-                          const Text(AppStrings.partners),
+                          Text(AppStrings.partners),
                         ],
                       ),
                     ),

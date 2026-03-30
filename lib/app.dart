@@ -9,42 +9,59 @@ class SekkaApp extends StatelessWidget {
   const SekkaApp({
     super.key,
     required this.router,
+    required this.themeModeNotifier,
+    required this.localeNotifier,
   });
 
   final GoRouter router;
+  final ValueNotifier<ThemeMode> themeModeNotifier;
+  final ValueNotifier<Locale> localeNotifier;
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'سِكّة',
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeModeNotifier,
+      builder: (context, themeMode, _) {
+        return ValueListenableBuilder<Locale>(
+          valueListenable: localeNotifier,
+          builder: (context, locale, _) {
+            final isRtl = locale.languageCode == 'ar';
 
-      // Themes (Light + Dark ready)
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.light,
+            return MaterialApp.router(
+              title: 'سِكّة',
+              debugShowCheckedModeBanner: false,
 
-      // Localizations
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      locale: const Locale('ar'),
-      supportedLocales: const [
-        Locale('ar'),
-        Locale('en'),
-      ],
+              // Themes
+              theme: AppTheme.light,
+              darkTheme: AppTheme.dark,
+              themeMode: themeMode,
 
-      // Router
-      routerConfig: router,
+              // Localizations
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              locale: locale,
+              supportedLocales: const [
+                Locale('ar'),
+                Locale('en'),
+              ],
 
-      // Initialize Responsive + force RTL
-      builder: (context, child) {
-        Responsive.init(context);
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child!,
+              // Router
+              routerConfig: router,
+
+              // Initialize Responsive + text direction
+              builder: (context, child) {
+                Responsive.init(context);
+                return Directionality(
+                  textDirection:
+                      isRtl ? TextDirection.rtl : TextDirection.ltr,
+                  child: child!,
+                );
+              },
+            );
+          },
         );
       },
     );

@@ -20,10 +20,11 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
   final WalletRepository _repository;
 
   /// Maps filter index to TransactionType filter for API.
+  /// API types: 0=orderEarning, 1=commission, 2=settlement
   int? _filterToType(int filterIndex) => switch (filterIndex) {
         1 => 0, // income = OrderEarning (type 0)
         2 => 1, // expense = Commission (type 1)
-        3 => 3, // settlement (type 3)
+        3 => 2, // settlement (type 2)
         _ => null, // all
       };
 
@@ -50,7 +51,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     } on ApiException catch (e) {
       emit(WalletError(e.message));
     } catch (_) {
-      emit(const WalletError(AppStrings.unknownError));
+      emit(WalletError(AppStrings.unknownError));
     }
   }
 
@@ -82,7 +83,7 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     } on ApiException catch (e) {
       emit(WalletError(e.message));
     } catch (_) {
-      emit(const WalletError(AppStrings.unknownError));
+      emit(WalletError(AppStrings.unknownError));
     }
   }
 

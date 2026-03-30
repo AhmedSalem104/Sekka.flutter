@@ -19,7 +19,7 @@ abstract final class AppTypography {
   // Headlines — Bold (700) — #1A202C
   static TextStyle get headlineLarge => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(24),
+        fontSize: Responsive.sp(26),
         fontWeight: FontWeight.w700,
         color: AppColors.textHeadline,
         height: _lineHeight,
@@ -27,7 +27,7 @@ abstract final class AppTypography {
 
   static TextStyle get headlineMedium => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(20),
+        fontSize: Responsive.sp(22),
         fontWeight: FontWeight.w700,
         color: AppColors.textHeadline,
         height: _lineHeight,
@@ -35,7 +35,7 @@ abstract final class AppTypography {
 
   static TextStyle get headlineSmall => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(18),
+        fontSize: Responsive.sp(20),
         fontWeight: FontWeight.w700,
         color: AppColors.textHeadline,
         height: _lineHeight,
@@ -44,7 +44,7 @@ abstract final class AppTypography {
   // Titles — SemiBold (600) — #1A202C
   static TextStyle get titleLarge => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(16),
+        fontSize: Responsive.sp(18),
         fontWeight: FontWeight.w600,
         color: AppColors.textHeadline,
         height: _lineHeight,
@@ -52,7 +52,7 @@ abstract final class AppTypography {
 
   static TextStyle get titleMedium => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(14),
+        fontSize: Responsive.sp(16),
         fontWeight: FontWeight.w600,
         color: AppColors.textHeadline,
         height: _lineHeight,
@@ -61,7 +61,7 @@ abstract final class AppTypography {
   // Body — Medium (500) — #4A5568
   static TextStyle get bodyLarge => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(16),
+        fontSize: Responsive.sp(18),
         fontWeight: FontWeight.w500,
         color: AppColors.textBody,
         height: _lineHeight,
@@ -69,7 +69,7 @@ abstract final class AppTypography {
 
   static TextStyle get bodyMedium => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(14),
+        fontSize: Responsive.sp(16),
         fontWeight: FontWeight.w500,
         color: AppColors.textBody,
         height: _lineHeight,
@@ -77,7 +77,7 @@ abstract final class AppTypography {
 
   static TextStyle get bodySmall => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(12),
+        fontSize: Responsive.sp(14),
         fontWeight: FontWeight.w500,
         color: AppColors.textBody,
         height: _lineHeight,
@@ -86,7 +86,7 @@ abstract final class AppTypography {
   // Captions — Light (300) — #718096
   static TextStyle get caption => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(12),
+        fontSize: Responsive.sp(14),
         fontWeight: FontWeight.w300,
         color: AppColors.textCaption,
         height: _lineHeight,
@@ -94,7 +94,7 @@ abstract final class AppTypography {
 
   static TextStyle get captionSmall => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(10),
+        fontSize: Responsive.sp(12),
         fontWeight: FontWeight.w300,
         color: AppColors.textCaption,
         height: _lineHeight,
@@ -103,7 +103,7 @@ abstract final class AppTypography {
   // Button Text
   static TextStyle get button => TextStyle(
         fontFamily: fontFamily,
-        fontSize: Responsive.sp(16),
+        fontSize: Responsive.sp(18),
         fontWeight: FontWeight.w700,
         color: AppColors.textOnPrimary,
         height: _lineHeight,
@@ -113,7 +113,7 @@ abstract final class AppTypography {
 
   static const TextStyle headlineLargeBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: FontWeight.w700,
     color: AppColors.textHeadline,
     height: _lineHeight,
@@ -121,7 +121,7 @@ abstract final class AppTypography {
 
   static const TextStyle headlineMediumBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: FontWeight.w700,
     color: AppColors.textHeadline,
     height: _lineHeight,
@@ -129,7 +129,7 @@ abstract final class AppTypography {
 
   static const TextStyle headlineSmallBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: FontWeight.w700,
     color: AppColors.textHeadline,
     height: _lineHeight,
@@ -137,7 +137,7 @@ abstract final class AppTypography {
 
   static const TextStyle titleLargeBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.textHeadline,
     height: _lineHeight,
@@ -145,7 +145,7 @@ abstract final class AppTypography {
 
   static const TextStyle titleMediumBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
     color: AppColors.textHeadline,
     height: _lineHeight,
@@ -153,7 +153,7 @@ abstract final class AppTypography {
 
   static const TextStyle bodyLargeBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w500,
     color: AppColors.textBody,
     height: _lineHeight,
@@ -161,7 +161,7 @@ abstract final class AppTypography {
 
   static const TextStyle bodyMediumBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w500,
     color: AppColors.textBody,
     height: _lineHeight,
@@ -169,13 +169,21 @@ abstract final class AppTypography {
 
   static const TextStyle bodySmallBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: FontWeight.w500,
     color: AppColors.textBody,
     height: _lineHeight,
   );
 
   static const TextStyle captionBase = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w300,
+    color: AppColors.textCaption,
+    height: _lineHeight,
+  );
+
+  static const TextStyle captionSmallBase = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w300,
@@ -185,7 +193,7 @@ abstract final class AppTypography {
 
   static const TextStyle buttonBase = TextStyle(
     fontFamily: fontFamily,
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     color: AppColors.textOnPrimary,
     height: _lineHeight,

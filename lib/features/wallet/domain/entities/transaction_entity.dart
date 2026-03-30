@@ -24,8 +24,8 @@ class TransactionEntity extends Equatable {
   final DateTime createdAt;
 
   bool get isIncome => amount > 0;
-  bool get isExpense => amount < 0 && type != 3; // not settlement
-  bool get isSettlement => type == 3;
+  bool get isExpense => amount < 0 && type != 2; // not settlement
+  bool get isSettlement => type == 2;
 
   @override
   List<Object?> get props => [id, type, amount, createdAt];

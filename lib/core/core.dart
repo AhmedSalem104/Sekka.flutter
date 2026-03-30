@@ -40,6 +40,7 @@ export 'extensions/string_extensions.dart';
 export 'extensions/date_extensions.dart';
 
 // Utils
+export 'utils/phone_launcher.dart';
 export 'utils/responsive.dart';
 export 'utils/validators.dart';
 

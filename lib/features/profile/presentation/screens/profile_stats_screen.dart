@@ -7,7 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../domain/entities/profile_stats_entity.dart';
 import '../bloc/profile_bloc.dart';
@@ -22,11 +22,7 @@ class ProfileStatsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title:
-            Text(AppStrings.detailedStats, style: AppTypography.headlineSmall),
-        leading: const SekkaBackButton(),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.detailedStats),
       body: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
           if (state is! ProfileLoaded) return const SekkaLoading();

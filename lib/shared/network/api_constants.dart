@@ -29,8 +29,15 @@ abstract final class ApiConstants {
   static const String settlements = '$baseUrl/settlements';
   static const String settlementDailySummary = '$settlements/daily-summary';
   static String settlementPartnerBalance(String partnerId) =>
-      '$settlements/partner-balance/$partnerId';
+      '$settlements/partner/$partnerId/balance';
   static String settlementReceipt(String id) => '$settlements/$id/receipt';
+
+  // Partner endpoints
+  static const String partners = '$baseUrl/partners';
+  static String partnerDetail(String id) => '$partners/$id';
+  static String partnerOrders(String id) => '$partners/$id/orders';
+  static String partnerPickupPoints(String id) => '$partners/$id/pickup-points';
+  static String partnerVerification(String id) => '$partners/$id/verification';
 
   // Statistics endpoints
   static const String _statistics = '$baseUrl/statistics';

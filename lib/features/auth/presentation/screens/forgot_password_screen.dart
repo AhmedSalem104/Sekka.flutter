@@ -84,7 +84,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(height: AppSizes.xxl),
-                        const AuthHeader(
+                        AuthHeader(
                           title: AppStrings.forgotPassword,
                           subtitle: AppStrings.forgotPasswordSubtitle,
                           showLogo: false,

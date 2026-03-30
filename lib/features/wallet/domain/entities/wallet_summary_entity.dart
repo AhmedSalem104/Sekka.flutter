@@ -2,32 +2,28 @@ import 'package:equatable/equatable.dart';
 
 class WalletSummaryEntity extends Equatable {
   const WalletSummaryEntity({
-    required this.totalIncome,
+    required this.totalEarnings,
     required this.totalExpenses,
-    required this.totalCommissions,
     required this.totalSettlements,
-    required this.netProfit,
+    required this.netBalance,
     required this.transactionCount,
-    required this.dateFrom,
-    required this.dateTo,
   });
 
-  final double totalIncome;
+  final double totalEarnings;
   final double totalExpenses;
-  final double totalCommissions;
   final double totalSettlements;
-  final double netProfit;
+  final double netBalance;
   final int transactionCount;
-  final String dateFrom;
-  final String dateTo;
+
+  /// Alias used by UI widgets.
+  double get totalIncome => totalEarnings;
 
   @override
   List<Object?> get props => [
-        totalIncome,
+        totalEarnings,
         totalExpenses,
-        totalCommissions,
         totalSettlements,
-        netProfit,
+        netBalance,
         transactionCount,
       ];
 }

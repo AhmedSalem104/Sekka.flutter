@@ -74,6 +74,13 @@ abstract final class AppColors {
   static const Color sosDismissed = Color(0xFF718096);
   static const Color sosExpired = Color(0xFFA0AEC0);
 
+  // Settlement Type
+  static const Color settlementCash = Color(0xFF38A169);   // green — cash
+  static const Color settlementBank = Color(0xFF3182CE);   // blue — bank
+  static const Color settlementVodafone = Color(0xFFE53E3E); // red — vodafone
+  static const Color settlementInstapay = Color(0xFF805AD5); // purple — instapay
+  static const Color settlementFawry = Color(0xFFECC94B);  // yellow — fawry
+
   // Logo colors (extracted from the logo)
   static const Color logoOrange = Color(0xFFFC5D01);
   static const Color logoNavy = Color(0xFF2D3748);

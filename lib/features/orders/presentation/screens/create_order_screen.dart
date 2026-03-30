@@ -9,7 +9,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/string_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
@@ -486,15 +486,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
           return Scaffold(
             backgroundColor:
                 isDark ? AppColors.backgroundDark : AppColors.background,
-            appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              leading: const SekkaBackButton(),
-              centerTitle: true,
-              title: Text(
-                _isEditMode ? AppStrings.editOrder : AppStrings.addOrder,
-                style: AppTypography.headlineSmall,
-              ),
+            appBar: SekkaAppBar(
+              title: _isEditMode ? AppStrings.editOrder : AppStrings.addOrder,
             ),
             body: _isEditMode
                 ? _buildSteppedForm(state, isLoading, isDark)

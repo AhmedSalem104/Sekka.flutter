@@ -125,13 +125,13 @@ class _AuthScreenState extends State<AuthScreen> {
                 return Column(
                   children: [
                     SizedBox(height: AppSizes.xxl),
-                    const AuthHeader(
+                    AuthHeader(
                       title: AppStrings.welcome,
                       subtitle: AppStrings.welcomeSubtitle,
                     ),
                     SizedBox(height: AppSizes.xxxl),
                     AuthTabBar(
-                      tabs: const [AppStrings.login, AppStrings.signUp],
+                      tabs: [AppStrings.login, AppStrings.signUp],
                       selectedIndex: formState.activeTab,
                       onTabChanged: (index) {
                         context

@@ -1,91 +1,147 @@
 abstract final class AppStrings {
+  static String _lang = 'ar';
+  static void setLocale(String lang) => _lang = lang;
+  static bool get _isAr => _lang == 'ar';
+  static String get currentLang => _lang;
+
   // App
-  static const String appName = 'سِكّة';
-  static const String appTagline = 'شريك شغلك في الديليفري';
+  static String get appName => 'سِكّة'; // Brand name — always Arabic
+  static String get appTagline =>
+      _isAr ? 'شريك شغلك في الديليفري' : 'Your delivery work partner';
 
   // Auth — General
-  static const String welcome = 'أهلاً بيك!';
-  static const String welcomeSubtitle = 'سجّل دخولك أو افتح حساب جديد';
-  static const String login = 'دخول';
-  static const String signUp = 'حساب جديد';
-  static const String tryWithoutRegister = 'جرّب التطبيق من غير تسجيل';
+  static String get welcome => _isAr ? 'أهلاً بيك!' : 'Welcome!';
+  static String get welcomeSubtitle =>
+      _isAr ? 'سجّل دخولك أو افتح حساب جديد' : 'Log in or create a new account';
+  static String get login => _isAr ? 'دخول' : 'Log In';
+  static String get signUp => _isAr ? 'حساب جديد' : 'Sign Up';
+  static String get tryWithoutRegister =>
+      _isAr ? 'جرّب التطبيق من غير تسجيل' : 'Try the app without signing up';
 
   // Auth — Login
-  static const String enterPhone = 'رقم الموبايل';
-  static const String enterPhoneHint = 'مثال: ٠١٠١٢٣٤٥٦٧٨';
-  static const String enterPassword = 'كلمة السر';
-  static const String forgotPassword = 'نسيت كلمة السر؟';
+  static String get enterPhone => _isAr ? 'رقم الموبايل' : 'Phone number';
+  static String get enterPhoneHint =>
+      _isAr ? 'مثال: ٠١٠١٢٣٤٥٦٧٨' : 'e.g. 01012345678';
+  static String get enterPassword => _isAr ? 'كلمة السر' : 'Password';
+  static String get forgotPassword =>
+      _isAr ? 'نسيت كلمة السر؟' : 'Forgot password?';
 
   // Auth — OTP
-  static const String otpVerification = 'كود التحقق';
-  static const String otpSentTo = 'بعتنالك كود على الرقم';
-  static const String enterOtpCode = 'أدخل الكود';
-  static const String resendOtp = 'ابعتلي الكود تاني';
-  static const String resendIn = 'إعادة الإرسال بعد';
-  static const String seconds = 'ثانية';
-  static const String sendVerificationCode = 'ابعتلي الكود';
-  static const String verify = 'تأكيد';
+  static String get otpVerification =>
+      _isAr ? 'كود التحقق' : 'Verification Code';
+  static String get otpSentTo =>
+      _isAr ? 'بعتنالك كود على الرقم' : 'We sent a code to';
+  static String get enterOtpCode => _isAr ? 'أدخل الكود' : 'Enter the code';
+  static String get resendOtp =>
+      _isAr ? 'ابعتلي الكود تاني' : 'Resend the code';
+  static String get resendIn => _isAr ? 'إعادة الإرسال بعد' : 'Resend in';
+  static String get seconds => _isAr ? 'ثانية' : 'seconds';
+  static String get sendVerificationCode =>
+      _isAr ? 'ابعتلي الكود' : 'Send code';
+  static String get verify => _isAr ? 'تأكيد' : 'Verify';
 
   // Auth — Register
-  static const String completeProfile = 'كمّل بياناتك';
-  static const String completeProfileSubtitle = 'عايزين نعرفك أكتر';
-  static const String driverName = 'اسمك إيه؟';
-  static const String password = 'كلمة السر';
-  static const String passwordHint = '٦ حروف أو أرقام على الأقل';
-  static const String confirmPassword = 'كلمة السر تاني';
-  static const String vehicleType = 'بتوصّل بإيه؟';
-  static const String emailOptional = 'الإيميل (مش لازم)';
-  static const String createAccount = 'يلا نسجّل!';
+  static String get completeProfile =>
+      _isAr ? 'كمّل بياناتك' : 'Complete your profile';
+  static String get completeProfileSubtitle =>
+      _isAr ? 'عايزين نعرفك أكتر' : 'We need a bit more info';
+  static String get driverName => _isAr ? 'اسمك إيه؟' : 'Your name';
+  static String get password => _isAr ? 'كلمة السر' : 'Password';
+  static String get passwordHint =>
+      _isAr ? '٦ حروف أو أرقام على الأقل' : 'At least 6 characters';
+  static String get confirmPassword =>
+      _isAr ? 'كلمة السر تاني' : 'Confirm password';
+  static String get vehicleType =>
+      _isAr ? 'بتوصّل بإيه؟' : 'Vehicle type';
+  static String get emailOptional =>
+      _isAr ? 'الإيميل (مش لازم)' : 'Email (optional)';
+  static String get createAccount =>
+      _isAr ? 'يلا نسجّل!' : 'Create Account';
 
   // Auth — Forgot / Reset Password
-  static const String resetPassword = 'كلمة سر جديدة';
-  static const String forgotPasswordSubtitle = 'اكتب رقم موبايلك وهنبعتلك كود';
-  static const String newPassword = 'كلمة السر الجديدة';
-  static const String confirmNewPassword = 'كلمة السر الجديدة تاني';
-  static const String passwordResetSuccess = 'تمام! كلمة السر اتغيّرت';
+  static String get resetPassword =>
+      _isAr ? 'كلمة سر جديدة' : 'New Password';
+  static String get forgotPasswordSubtitle =>
+      _isAr
+          ? 'اكتب رقم موبايلك وهنبعتلك كود'
+          : 'Enter your phone number and we\'ll send you a code';
+  static String get newPassword =>
+      _isAr ? 'كلمة السر الجديدة' : 'New password';
+  static String get confirmNewPassword =>
+      _isAr ? 'كلمة السر الجديدة تاني' : 'Confirm new password';
+  static String get passwordResetSuccess =>
+      _isAr ? 'تمام! كلمة السر اتغيّرت' : 'Password changed successfully!';
 
   // Auth — Change Password
-  static const String changePassword = 'غيّر كلمة السر';
-  static const String currentPassword = 'كلمة السر الحالية';
+  static String get changePassword =>
+      _isAr ? 'غيّر كلمة السر' : 'Change Password';
+  static String get currentPassword =>
+      _isAr ? 'كلمة السر الحالية' : 'Current password';
 
   // Auth — Success
-  static const String accountCreated = 'حسابك جاهز!';
-  static const String welcomeToSekka = 'أهلاً بيك في سِكّة\nيلا نبدأ شغل';
-  static const String startNow = 'يلا بينا!';
+  static String get accountCreated =>
+      _isAr ? 'حسابك جاهز!' : 'Account created!';
+  static String get welcomeToSekka =>
+      _isAr ? 'أهلاً بيك في سِكّة\nيلا نبدأ شغل' : 'Welcome to Sekka\nLet\'s get to work';
+  static String get startNow => _isAr ? 'يلا بينا!' : 'Let\'s Go!';
 
   // Auth — Sessions
-  static const String activeSessions = 'الأجهزة النشطة';
-  static const String logoutAll = 'اطلع من كل الأجهزة';
-  static const String terminateSession = 'اقفل الجلسة دي';
+  static String get activeSessions =>
+      _isAr ? 'الأجهزة النشطة' : 'Active Sessions';
+  static String get logoutAll =>
+      _isAr ? 'اطلع من كل الأجهزة' : 'Log out all devices';
+  static String get terminateSession =>
+      _isAr ? 'اقفل الجلسة دي' : 'End this session';
 
   // Auth — Delete Account
-  static const String deleteAccount = 'حذف الحساب';
-  static const String deleteAccountWarning = 'متأكد؟ مفيش رجوع بعد كدا!';
-  static const String deleteReason = 'قولنا السبب (اختياري)';
-  static const String confirmDeletion = 'أيوا امسح';
+  static String get deleteAccount =>
+      _isAr ? 'حذف الحساب' : 'Delete Account';
+  static String get deleteAccountWarning =>
+      _isAr ? 'متأكد؟ مفيش رجوع بعد كدا!' : 'Are you sure? This cannot be undone!';
+  static String get deleteReason =>
+      _isAr ? 'قولنا السبب (اختياري)' : 'Reason (optional)';
+  static String get confirmDeletion =>
+      _isAr ? 'أيوا امسح' : 'Yes, delete';
 
   // Errors
-  static const String networkError = 'النت فصل عندك، شيّك على الاتصال';
-  static const String unknownError = 'حصلت مشكلة، جرّب تاني';
-  static const String sessionExpired = 'الجلسة خلصت، سجّل دخولك تاني';
-  static const String serverError = 'السيرفر تعبان، جرّب بعد شوية';
-  static const String timeoutError = 'النت بطيء عندك، جرّب تاني';
+  static String get networkError =>
+      _isAr ? 'النت فصل عندك، شيّك على الاتصال' : 'No internet connection. Check your network.';
+  static String get unknownError =>
+      _isAr ? 'حصلت مشكلة، جرّب تاني' : 'Something went wrong. Try again.';
+  static String get sessionExpired =>
+      _isAr ? 'الجلسة خلصت، سجّل دخولك تاني' : 'Session expired. Please log in again.';
+  static String get serverError =>
+      _isAr ? 'السيرفر تعبان، جرّب بعد شوية' : 'Server error. Try again later.';
+  static String get timeoutError =>
+      _isAr ? 'النت بطيء عندك، جرّب تاني' : 'Connection timed out. Try again.';
 
   // Validation — friendly
-  static const String phoneRequired = 'اكتب رقم الموبايل';
-  static const String phoneInvalid = 'الرقم ده مش صح، لازم يكون ١١ رقم مصري';
-  static const String passwordRequired = 'اكتب كلمة السر';
-  static const String passwordTooShort = 'كلمة السر قصيرة، لازم ٦ حروف على الأقل';
-  static const String passwordMismatch = 'كلمتين السر مش زي بعض!';
-  static const String otpRequired = 'اكتب الكود اللي وصلك';
-  static const String otpInvalid = 'الكود لازم يكون ٤ أرقام';
-  static const String nameRequired = 'قولنا اسمك إيه';
-  static const String nameTooShort = 'الاسم قصير أوي، حرفين على الأقل';
-  static const String emailInvalid = 'الإيميل ده مش صح';
-  static const String vehicleTypeRequired = 'اختار بتوصّل بإيه';
-  static const String confirmPasswordRequired = 'اكتب كلمة السر تاني';
+  static String get phoneRequired =>
+      _isAr ? 'اكتب رقم الموبايل' : 'Phone number is required';
+  static String get phoneInvalid =>
+      _isAr ? 'الرقم ده مش صح، لازم يكون ١١ رقم مصري' : 'Invalid number. Must be 11 digits.';
+  static String get passwordRequired =>
+      _isAr ? 'اكتب كلمة السر' : 'Password is required';
+  static String get passwordTooShort =>
+      _isAr ? 'كلمة السر قصيرة، لازم ٦ حروف على الأقل' : 'Password too short. At least 6 characters.';
+  static String get passwordMismatch =>
+      _isAr ? 'كلمتين السر مش زي بعض!' : 'Passwords don\'t match!';
+  static String get otpRequired =>
+      _isAr ? 'اكتب الكود اللي وصلك' : 'Enter the code you received';
+  static String get otpInvalid =>
+      _isAr ? 'الكود لازم يكون ٤ أرقام' : 'Code must be 4 digits';
+  static String get nameRequired =>
+      _isAr ? 'قولنا اسمك إيه' : 'Name is required';
+  static String get nameTooShort =>
+      _isAr ? 'الاسم قصير أوي، حرفين على الأقل' : 'Name too short. At least 2 characters.';
+  static String get emailInvalid =>
+      _isAr ? 'الإيميل ده مش صح' : 'Invalid email address';
+  static String get vehicleTypeRequired =>
+      _isAr ? 'اختار بتوصّل بإيه' : 'Select a vehicle type';
+  static String get confirmPasswordRequired =>
+      _isAr ? 'اكتب كلمة السر تاني' : 'Confirm your password';
 
-  // Vehicle Types (Arabic mapping)
+  // Vehicle Types
   static const Map<String, String> vehicleTypesArabic = {
     'Motorcycle': 'موتوسيكل',
     'Car': 'عربية',
@@ -94,120 +150,284 @@ abstract final class AppStrings {
     'Bicycle': 'عجلة',
   };
 
+  static Map<String, String> get vehicleTypes => _isAr
+      ? vehicleTypesArabic
+      : const {
+          'Motorcycle': 'Motorcycle',
+          'Car': 'Car',
+          'Van': 'Van',
+          'Truck': 'Truck',
+          'Bicycle': 'Bicycle',
+        };
+
   // Dialog
-  static const String ok = 'تمام';
-  static const String errorTitle = 'أوبس!';
-  static const String successTitle = 'تمام!';
+  static String get ok => _isAr ? 'تمام' : 'OK';
+  static String get errorTitle => _isAr ? 'أوبس!' : 'Oops!';
+  static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static const String walletTitle = 'المحفظة';
-  static const String currentBalance = 'رصيدك الحالي';
-  static const String cashOnHand = 'كاش في إيدك';
-  static const String pendingAmount = 'معلّق';
-  static const String todayCollected = 'تحصيل اليوم';
-  static const String todayCommissions = 'عمولات اليوم';
-  static const String availableBalance = 'المتاح للسحب';
-  static const String newSettlement = 'تسوية جديدة';
-  static const String allTransactions = 'الكل';
-  static const String incomeFilter = 'دخل';
-  static const String expenseFilter = 'مصاريف';
-  static const String settlementsFilter = 'تسويات';
-  static const String noTransactions = 'مفيش معاملات لسه';
-  static const String cashStatusSafe = 'كاشك تمام';
-  static const String cashStatusWarning = 'فكّر تسوّي قريب';
-  static const String cashStatusDanger = 'سوّي في أقرب وقت';
-  static const String cashStatusCritical = 'لازم تسوّي دلوقتي!';
+  static String get walletTitle => _isAr ? 'المحفظة' : 'Wallet';
+  static String get currentBalance =>
+      _isAr ? 'رصيدك الحالي' : 'Current balance';
+  static String get cashOnHand => _isAr ? 'كاش في إيدك' : 'Cash on hand';
+  static String get pendingAmount => _isAr ? 'معلّق' : 'Pending';
+  static String get todayCollected =>
+      _isAr ? 'تحصيل اليوم' : 'Collected today';
+  static String get todayCommissions =>
+      _isAr ? 'عمولات اليوم' : 'Today\'s commissions';
+  static String get availableBalance =>
+      _isAr ? 'المتاح للسحب' : 'Available for withdrawal';
+  static String get newSettlement =>
+      _isAr ? 'تسوية جديدة' : 'New Settlement';
+  static String get allTransactions => _isAr ? 'الكل' : 'All';
+  static String get incomeFilter => _isAr ? 'دخل' : 'Income';
+  static String get expenseFilter => _isAr ? 'مصاريف' : 'Expenses';
+  static String get settlementsFilter => _isAr ? 'تسويات' : 'Settlements';
+  static String get noTransactions =>
+      _isAr ? 'مفيش معاملات لسه' : 'No transactions yet';
+  static String get cashStatusSafe => _isAr ? 'كاشك تمام' : 'Cash is good';
+  static String get cashStatusWarning =>
+      _isAr ? 'فكّر تسوّي قريب' : 'Consider settling soon';
+  static String get cashStatusDanger =>
+      _isAr ? 'سوّي في أقرب وقت' : 'Settle as soon as possible';
+  static String get cashStatusCritical =>
+      _isAr ? 'لازم تسوّي دلوقتي!' : 'You must settle now!';
 
-  // Settlements
-  static const String settlementsTitle = 'التسويات';
-  static const String createSettlement = 'تسوية جديدة';
-  static const String settlementAmount = 'المبلغ';
-  static const String settlementType = 'طريقة التسوية';
-  static const String settlementPartner = 'الشريك';
-  static const String settlementNotes = 'ملاحظات';
-  static const String sendWhatsApp = 'ابعت واتساب للشريك';
-  static const String uploadReceipt = 'ارفع الإيصال';
-  static const String todaySettlements = 'تسويات اليوم';
-  static const String noSettlements = 'مفيش تسويات';
-  static const String settlementCashToPartner = 'نقدي للشريك';
-  static const String settlementBankTransfer = 'تحويل بنكي';
-  static const String settlementVodafoneCash = 'فودافون كاش';
-  static const String settlementInstapay = 'انستاباي';
-  static const String settlementFawry = 'فوري';
+  // Account Handover (Settlement)
+  static String get accountHandover =>
+      _isAr ? 'تسليم الحساب' : 'Account Handover';
+  static String get accountHandoverSubtitle =>
+      _isAr ? 'سلّم حساب شركائك بسهولة' : 'Hand over partner accounts easily';
+  static String get settlementsTitle =>
+      _isAr ? 'التسويات' : 'Settlements';
+  static String get createSettlement =>
+      _isAr ? 'تسوية جديدة' : 'New Settlement';
+  static String get newHandover =>
+      _isAr ? 'تسليم جديد' : 'New Handover';
+  static String get settlementAmount => _isAr ? 'المبلغ' : 'Amount';
+  static String get settlementType =>
+      _isAr ? 'طريقة التسوية' : 'Settlement method';
+  static String get settlementPartner => _isAr ? 'الشريك' : 'Partner';
+  static String get settlementNotes => _isAr ? 'ملاحظات' : 'Notes';
+  static String get orderCount => _isAr ? 'عدد الطلبات' : 'Order count';
+  static String get sendWhatsApp =>
+      _isAr ? 'ابعت واتساب للشريك' : 'Send WhatsApp to partner';
+  static String get callNow => _isAr ? 'اتصل دلوقتي' : 'Call now';
+  static String get copyNumber => _isAr ? 'نسخ الرقم' : 'Copy number';
+  static String get uploadReceipt =>
+      _isAr ? 'ارفع الإيصال' : 'Upload receipt';
+  static String get todaySettlements =>
+      _isAr ? 'تسويات اليوم' : 'Today\'s settlements';
+  static String get noSettlements =>
+      _isAr ? 'مفيش تسليمات لسه' : 'No handovers yet';
+  static String get settlementCashToPartner =>
+      _isAr ? 'نقدي للشريك' : 'Cash to partner';
+  static String get settlementBankTransfer =>
+      _isAr ? 'تحويل بنكي' : 'Bank transfer';
+  static String get settlementVodafoneCash =>
+      _isAr ? 'فودافون كاش' : 'Vodafone Cash';
+  static String get settlementInstapay =>
+      _isAr ? 'انستاباي' : 'InstaPay';
+  static String get settlementFawry => _isAr ? 'فوري' : 'Fawry';
+
+  // Account Handover — Summary
+  static String get dailySummary =>
+      _isAr ? 'ملخص اليوم' : 'Daily Summary';
+  static String get totalCollectedToday =>
+      _isAr ? 'إجمالي المحصّل' : 'Total collected';
+  static String get totalSettledToday =>
+      _isAr ? 'إجمالي المسلّم' : 'Total settled';
+  static String get remainingBalance =>
+      _isAr ? 'الرصيد المتبقي' : 'Remaining balance';
+  static String get pendingPartnersCount =>
+      _isAr ? 'شركاء في الانتظار' : 'Partners pending';
+  static String get settlementCountToday =>
+      _isAr ? 'عدد التسليمات' : 'Handover count';
+
+  // Account Handover — Partner Balance
+  static String get partnerBalance =>
+      _isAr ? 'رصيد الشريك' : 'Partner balance';
+  static String get pendingOrderCount =>
+      _isAr ? 'طلبات معلقة' : 'Pending orders';
+  static String get pendingBalance =>
+      _isAr ? 'رصيد معلق' : 'Pending balance';
+  static String get noPartnerBalances =>
+      _isAr ? 'مفيش شركاء عندهم رصيد' : 'No partners with balance';
+
+  // Account Handover — Actions
+  static String get selectPartner =>
+      _isAr ? 'اختار الشريك' : 'Select partner';
+  static String get swipeToConfirmHandover =>
+      _isAr ? 'اسحب عشان تأكد التسليم' : 'Swipe to confirm handover';
+  static String get handoverSuccess =>
+      _isAr ? 'تم تسليم الحساب بنجاح!' : 'Handover completed successfully!';
+  static String get handoverHistory =>
+      _isAr ? 'سجل التسليمات' : 'Handover history';
+
+  // Account Handover — Filters
+  static String get filterByPartner =>
+      _isAr ? 'فلتر بالشريك' : 'Filter by partner';
+  static String get filterByType =>
+      _isAr ? 'فلتر بالنوع' : 'Filter by type';
+  static String get filterByDate =>
+      _isAr ? 'فلتر بالتاريخ' : 'Filter by date';
+  static String get allPartners => _isAr ? 'كل الشركاء' : 'All partners';
+  static String get allTypes => _isAr ? 'كل الأنواع' : 'All types';
+
+  // Account Handover — Onboarding
+  static String get onboardingHandoverTitle =>
+      _isAr ? 'ايه هو تسليم الحساب؟' : 'What is Account Handover?';
+  static String get onboardingHandoverDesc =>
+      _isAr
+          ? 'من هنا تقدر تسلّم فلوس كل شريك بعد ما تخلص توصيلاته'
+          : 'Here you can hand over each partner\'s money after completing their deliveries';
+  static String get onboardingStep1 =>
+      _isAr ? 'اختار الشريك اللي عايز تسلّمه' : 'Select the partner to hand over to';
+  static String get onboardingStep2 =>
+      _isAr ? 'اكتب المبلغ وعدد الطلبات' : 'Enter the amount and order count';
+  static String get onboardingStep3 =>
+      _isAr ? 'اسحب عشان تأكد التسليم' : 'Swipe to confirm the handover';
+  static String get gotIt => _isAr ? 'فهمت!' : 'Got it!';
 
   // Statistics
-  static const String statsTitle = 'الإحصائيات';
-  static const String dailyStats = 'يومي';
-  static const String weeklyStats = 'أسبوعي';
-  static const String monthlyStats = 'شهري';
-  static const String totalOrders = 'إجمالي الطلبات';
-  static const String totalEarningsLabel = 'إجمالي الأرباح';
-  static const String totalDistance = 'المسافة';
-  static const String successRate = 'نسبة النجاح';
-  static const String avgOrderValue = 'متوسط الطلب';
-  static const String moreDetails = 'تفاصيل أكتر';
-  static const String exportReport = 'تصدير تقرير';
+  static String get statsTitle => _isAr ? 'الإحصائيات' : 'Statistics';
+  static String get dailyStats => _isAr ? 'يومي' : 'Daily';
+  static String get weeklyStats => _isAr ? 'أسبوعي' : 'Weekly';
+  static String get monthlyStats => _isAr ? 'شهري' : 'Monthly';
+  static String get totalOrders =>
+      _isAr ? 'إجمالي الطلبات' : 'Total orders';
+  static String get totalEarningsLabel =>
+      _isAr ? 'إجمالي الأرباح' : 'Total earnings';
+  static String get totalDistance => _isAr ? 'المسافة' : 'Distance';
+  static String get successRate =>
+      _isAr ? 'نسبة النجاح' : 'Success rate';
+  static String get avgOrderValue =>
+      _isAr ? 'متوسط الطلب' : 'Avg. order value';
+  static String get moreDetails =>
+      _isAr ? 'تفاصيل أكتر' : 'More details';
+  static String get exportReport =>
+      _isAr ? 'تصدير تقرير' : 'Export report';
+  static String get myStats =>
+      _isAr ? 'إحصائياتي' : 'My Statistics';
+  static String get commissions =>
+      _isAr ? 'العمولات' : 'Commissions';
+  static String get expensesLabel =>
+      _isAr ? 'المصاريف' : 'Expenses';
+  static String get timeWorked =>
+      _isAr ? 'وقت الشغل' : 'Time worked';
+  static String get cashCollected =>
+      _isAr ? 'كاش متحصّل' : 'Cash collected';
+  static String get bestRegion =>
+      _isAr ? 'أحسن منطقة' : 'Best region';
+  static String get bestTimeSlot =>
+      _isAr ? 'أحسن وقت' : 'Best time';
+  static String get noStatsYet =>
+      _isAr ? 'مفيش إحصائيات لسه' : 'No statistics yet';
+  static String get noStatsHint =>
+      _isAr ? 'لما تبدأ توصّل طلبات هتلاقي إحصائياتك هنا' : 'Your statistics will appear here once you start delivering';
+  static String get hours => _isAr ? 'ساعة' : 'h';
+  static String get minutes => _isAr ? 'دقيقة' : 'min';
+  static String get peakHour =>
+      _isAr ? 'ساعة الذروة' : 'Peak hour';
+  static String get ordersLabel =>
+      _isAr ? 'طلب' : 'orders';
+  static String get successful =>
+      _isAr ? 'ناجح' : 'Successful';
+  static String get failed => _isAr ? 'فشل' : 'Failed';
+  static String get cancelled => _isAr ? 'ملغي' : 'Cancelled';
+  static String get avgDailyOrders =>
+      _isAr ? 'متوسط يومي' : 'Daily average';
+  static String get avgDailyEarnings =>
+      _isAr ? 'متوسط أرباح يومي' : 'Daily avg. earnings';
+  static String get comparedToLast =>
+      _isAr ? 'مقارنة بالسابق' : 'Compared to previous';
 
   // Payment Requests
-  static const String paymentRequestsTitle = 'طلبات الدفع';
-  static const String createPaymentRequest = 'طلب دفع جديد';
-  static const String uploadProof = 'ارفع إثبات التحويل';
-  static const String cancelRequest = 'إلغاء الطلب';
-  static const String noPaymentRequests = 'مفيش طلبات دفع';
-  static const String paymentPending = 'قيد الانتظار';
-  static const String paymentUnderReview = 'قيد المراجعة';
-  static const String paymentApproved = 'مقبول';
-  static const String paymentRejected = 'مرفوض';
-  static const String paymentCancelled = 'ملغي';
+  static String get paymentRequestsTitle =>
+      _isAr ? 'طلبات الدفع' : 'Payment Requests';
+  static String get createPaymentRequest =>
+      _isAr ? 'طلب دفع جديد' : 'New payment request';
+  static String get uploadProof =>
+      _isAr ? 'ارفع إثبات التحويل' : 'Upload transfer proof';
+  static String get cancelRequest =>
+      _isAr ? 'إلغاء الطلب' : 'Cancel request';
+  static String get noPaymentRequests =>
+      _isAr ? 'مفيش طلبات دفع' : 'No payment requests';
+  static String get paymentPending => _isAr ? 'قيد الانتظار' : 'Pending';
+  static String get paymentUnderReview =>
+      _isAr ? 'قيد المراجعة' : 'Under review';
+  static String get paymentApproved => _isAr ? 'مقبول' : 'Approved';
+  static String get paymentRejected => _isAr ? 'مرفوض' : 'Rejected';
+  static String get paymentCancelled => _isAr ? 'ملغي' : 'Cancelled';
 
   // Invoices
-  static const String invoicesTitle = 'الفواتير';
-  static const String invoiceDetail = 'تفاصيل الفاتورة';
-  static const String downloadPdf = 'تحميل PDF';
-  static const String noInvoices = 'مفيش فواتير';
-  static const String invoicePending = 'معلقة';
-  static const String invoicePaid = 'مدفوعة';
-  static const String invoiceOverdue = 'متأخرة';
-  static const String invoiceVoided = 'ملغاة';
+  static String get invoicesTitle => _isAr ? 'الفواتير' : 'Invoices';
+  static String get invoiceDetail =>
+      _isAr ? 'تفاصيل الفاتورة' : 'Invoice details';
+  static String get downloadPdf => _isAr ? 'تحميل PDF' : 'Download PDF';
+  static String get noInvoices => _isAr ? 'مفيش فواتير' : 'No invoices';
+  static String get invoicePending => _isAr ? 'معلقة' : 'Pending';
+  static String get invoicePaid => _isAr ? 'مدفوعة' : 'Paid';
+  static String get invoiceOverdue => _isAr ? 'متأخرة' : 'Overdue';
+  static String get invoiceVoided => _isAr ? 'ملغاة' : 'Voided';
 
   // Home
-  static const String goodMorning = 'صباح الخير';
-  static const String goodEvening = 'مساء الخير';
-  static const String todayOrders = 'طلبات اليوم';
-  static const String startTrip = 'يلا نبدأ!';
-  static const String noOrders = 'مفيش طلبات — أضف طلباتك';
+  static String get goodMorning => _isAr ? 'صباح الخير' : 'Good morning';
+  static String get goodEvening => _isAr ? 'مساء الخير' : 'Good evening';
+  static String get todayOrders => _isAr ? 'طلبات اليوم' : 'Today\'s orders';
+  static String get startTrip => _isAr ? 'يلا نبدأ!' : 'Let\'s go!';
+  static String get noOrders =>
+      _isAr ? 'مفيش طلبات — أضف طلباتك' : 'No orders — add your orders';
 
   // Orders
-  static const String orders = 'الطلبات';
-  static const String addOrder = 'أضف طلب';
-  static const String orderDetails = 'تفاصيل الطلب';
-  static const String clientName = 'اسم العميل';
-  static const String phone = 'رقم الموبايل';
-  static const String address = 'العنوان';
-  static const String amount = 'المبلغ';
-  static const String note = 'ملاحظة';
-  static const String confirmAdd = 'يلا أضيف!';
-  static const String pickupAddress = 'هتستلم منين؟';
-  static const String deliveryAddress = 'هتوصّل فين؟';
-  static const String paymentMethodLabel = 'طريقة الدفع';
-  static const String priorityLabel = 'الأولوية';
-  static const String itemCount = 'كام قطعة؟';
-  static const String scheduledDate = 'هتوصّل إمتى؟';
-  static const String notScheduled = 'مش محدد';
-  static const String deliveryAddressRequired = 'لازم تكتب عنوان التسليم';
-  static const String amountRequired = 'لازم تكتب المبلغ';
-  static const String amountInvalid = 'المبلغ لازم يكون أكبر من صفر';
-  static const String swipeToDeliver = 'اسحب عشان تسلّم';
-  static const String delivered = 'اتسلّم!';
-  static const String saveChanges = 'حفظ التعديلات';
-  static const String duplicateWarning = 'الطلب ده ممكن يكون مكرر، عايز تكمل؟';
-  static const String yesContinue = 'أيوا كمّل';
-  static const String bulkImportTitle = 'استيراد طلبات';
-  static const String pasteOrdersHere = 'الصق الطلبات هنا...';
-  static const String bulkImportHint =
-      'انسخ الطلبات من واتساب أو أي مكان والصقها هنا.\nكل سطر = طلب واحد';
-  static const String importOrders = 'يلا نستورد!';
-  static const String separator = 'الفاصل';
+  static String get orders => _isAr ? 'الطلبات' : 'Orders';
+  static String get addOrder => _isAr ? 'أضف طلب' : 'Add Order';
+  static String get orderDetails =>
+      _isAr ? 'تفاصيل الطلب' : 'Order Details';
+  static String get clientName => _isAr ? 'اسم العميل' : 'Client name';
+  static String get phone => _isAr ? 'رقم الموبايل' : 'Phone number';
+  static String get address => _isAr ? 'العنوان' : 'Address';
+  static String get amount => _isAr ? 'المبلغ' : 'Amount';
+  static String get note => _isAr ? 'ملاحظة' : 'Note';
+  static String get confirmAdd => _isAr ? 'يلا أضيف!' : 'Add';
+  static String get pickupAddress =>
+      _isAr ? 'هتستلم منين؟' : 'Pickup address';
+  static String get deliveryAddress =>
+      _isAr ? 'هتوصّل فين؟' : 'Delivery address';
+  static String get paymentMethodLabel =>
+      _isAr ? 'طريقة الدفع' : 'Payment method';
+  static String get priorityLabel => _isAr ? 'الأولوية' : 'Priority';
+  static String get itemCount => _isAr ? 'كام قطعة؟' : 'Item count';
+  static String get scheduledDate =>
+      _isAr ? 'هتوصّل إمتى؟' : 'Delivery date';
+  static String get notScheduled => _isAr ? 'مش محدد' : 'Not scheduled';
+  static String get deliveryAddressRequired =>
+      _isAr ? 'لازم تكتب عنوان التسليم' : 'Delivery address is required';
+  static String get amountRequired =>
+      _isAr ? 'لازم تكتب المبلغ' : 'Amount is required';
+  static String get amountInvalid =>
+      _isAr ? 'المبلغ لازم يكون أكبر من صفر' : 'Amount must be greater than zero';
+  static String get swipeToDeliver =>
+      _isAr ? 'اسحب عشان تسلّم' : 'Swipe to deliver';
+  static String get delivered => _isAr ? 'اتسلّم!' : 'Delivered!';
+  static String get saveChanges =>
+      _isAr ? 'حفظ التعديلات' : 'Save Changes';
+  static String get duplicateWarning =>
+      _isAr
+          ? 'الطلب ده ممكن يكون مكرر، عايز تكمل؟'
+          : 'This order might be a duplicate. Continue?';
+  static String get yesContinue => _isAr ? 'أيوا كمّل' : 'Yes, continue';
+  static String get bulkImportTitle =>
+      _isAr ? 'استيراد طلبات' : 'Import Orders';
+  static String get pasteOrdersHere =>
+      _isAr ? 'الصق الطلبات هنا...' : 'Paste orders here...';
+  static String get bulkImportHint =>
+      _isAr
+          ? 'انسخ الطلبات من واتساب أو أي مكان والصقها هنا.\nكل سطر = طلب واحد'
+          : 'Copy orders from WhatsApp or anywhere and paste here.\nOne order per line';
+  static String get importOrders =>
+      _isAr ? 'يلا نستورد!' : 'Import';
+  static String get separator => _isAr ? 'الفاصل' : 'Separator';
 
   // Order — Create Steps
   static const String stepCustomerInfo = 'العميل';
@@ -254,307 +474,523 @@ abstract final class AppStrings {
   static const String calculatePriceHint = 'اكتب العنوان واضغط "احسب السعر"';
 
   // Order Detail Actions
-  static const String acceptOrder = 'اقبل الطلب';
-  static const String pickedUpOrder = 'استلمت الشحنة';
-  static const String startDelivery = 'يلا نوصّل!';
-  static const String failDelivery = 'معرفتش أسلّم';
-  static const String cancelOrder = 'ألغي الطلب';
-  static const String retryDelivery = 'جرّب تاني';
-  static const String confirmDelivery = 'أكّد التسليم';
-  static const String collectedAmount = 'حصّلت كام؟';
-  static const String failReason = 'إيه السبب؟';
-  static const String cancelReason = 'ليه بتلغي؟';
-  static const String orderNumberLabel = 'رقم الطلب';
-  static const String distance = 'المسافة';
-  static const String additionalNotes = 'عايز تضيف حاجة؟';
-  static const String notes = 'ملاحظات';
-  static const String editOrder = 'عدّل الطلب';
-  static const String deleteOrder = 'امسح الطلب';
-  static const String deleteOrderConfirm = 'متأكد إنك عايز تمسح الطلب ده؟';
-  static const String phoneCopied = 'الرقم اتنسخ';
-  static const String quickMessages = 'رسائل سريعة';
-  static const String messageCopied = 'الرسالة اتنسخت';
-  static const String createdAt = 'اتعمل إمتى';
-  static const String deliveredAt = 'اتسلّم إمتى';
+  static String get acceptOrder => _isAr ? 'اقبل الطلب' : 'Accept Order';
+  static String get pickedUpOrder =>
+      _isAr ? 'استلمت الشحنة' : 'Picked Up';
+  static String get startDelivery =>
+      _isAr ? 'يلا نوصّل!' : 'Start Delivery';
+  static String get failDelivery =>
+      _isAr ? 'معرفتش أسلّم' : 'Delivery Failed';
+  static String get cancelOrder => _isAr ? 'ألغي الطلب' : 'Cancel Order';
+  static String get retryDelivery =>
+      _isAr ? 'جرّب تاني' : 'Retry Delivery';
+  static String get confirmDelivery =>
+      _isAr ? 'أكّد التسليم' : 'Confirm Delivery';
+  static String get collectedAmount =>
+      _isAr ? 'حصّلت كام؟' : 'Amount collected';
+  static String get failReason => _isAr ? 'إيه السبب؟' : 'Reason';
+  static String get cancelReason =>
+      _isAr ? 'ليه بتلغي؟' : 'Cancellation reason';
+  static String get orderNumberLabel =>
+      _isAr ? 'رقم الطلب' : 'Order number';
+  static String get distance => _isAr ? 'المسافة' : 'Distance';
+  static String get additionalNotes =>
+      _isAr ? 'عايز تضيف حاجة؟' : 'Additional notes';
+  static String get notes => _isAr ? 'ملاحظات' : 'Notes';
+  static String get editOrder => _isAr ? 'عدّل الطلب' : 'Edit Order';
+  static String get deleteOrder => _isAr ? 'امسح الطلب' : 'Delete Order';
+  static String get deleteOrderConfirm =>
+      _isAr ? 'متأكد إنك عايز تمسح الطلب ده؟' : 'Are you sure you want to delete this order?';
+  static String get phoneCopied =>
+      _isAr ? 'الرقم اتنسخ' : 'Number copied';
+  static String get quickMessages =>
+      _isAr ? 'رسائل سريعة' : 'Quick messages';
+  static String get messageCopied =>
+      _isAr ? 'الرسالة اتنسخت' : 'Message copied';
+  static String get createdAt => _isAr ? 'اتعمل إمتى' : 'Created at';
+  static String get deliveredAt =>
+      _isAr ? 'اتسلّم إمتى' : 'Delivered at';
 
   // Order Actions — Success Messages
-  static const String orderCreatedSuccess = 'تمام! الطلب اتضاف';
-  static const String orderUpdatedSuccess = 'تمام! الطلب اتعدّل';
-  static const String orderDeletedSuccess = 'تمام! الطلب اتمسح';
-  static const String orderStatusUpdatedSuccess = 'تمام! الحالة اتغيّرت';
-  static const String orderDeliveredSuccess = 'برافو! الطلب اتسلّم';
-  static const String orderFailedSuccess = 'تم تسجيل المحاولة';
-  static const String orderCancelledSuccess = 'الطلب اتلغى';
-  static const String photoUploadedSuccess = 'تمام! الصورة اترفعت';
-  static const String addressSwappedSuccess = 'تمام! العنوان اتغيّر';
-  static const String bulkImportSuccess = 'تمام! الطلبات اتضافت';
-  static const String transferSuccess = 'تمام! الطلب اتحوّل';
-  static const String partialDeliverySuccess = 'تمام! التسليم الجزئي اتسجّل';
-  static const String waitingStarted = 'المؤقت شغال';
-  static const String waitingStopped = 'المؤقت وقف';
-  static const String disclaimerAdded = 'تمام! إخلاء المسؤولية اتضاف';
-  static const String disputeCreated = 'تمام! النزاع اتفتح';
-  static const String refundRequested = 'تمام! طلب الاسترداد اتبعت';
-  static const String slotBooked = 'تمام! الموعد اتحجز';
+  static String get orderCreatedSuccess =>
+      _isAr ? 'تمام! الطلب اتضاف' : 'Order added!';
+  static String get orderUpdatedSuccess =>
+      _isAr ? 'تمام! الطلب اتعدّل' : 'Order updated!';
+  static String get orderDeletedSuccess =>
+      _isAr ? 'تمام! الطلب اتمسح' : 'Order deleted!';
+  static String get orderStatusUpdatedSuccess =>
+      _isAr ? 'تمام! الحالة اتغيّرت' : 'Status updated!';
+  static String get orderDeliveredSuccess =>
+      _isAr ? 'برافو! الطلب اتسلّم' : 'Order delivered!';
+  static String get orderFailedSuccess =>
+      _isAr ? 'تم تسجيل المحاولة' : 'Attempt recorded';
+  static String get orderCancelledSuccess =>
+      _isAr ? 'الطلب اتلغى' : 'Order cancelled';
+  static String get photoUploadedSuccess =>
+      _isAr ? 'تمام! الصورة اترفعت' : 'Photo uploaded!';
+  static String get addressSwappedSuccess =>
+      _isAr ? 'تمام! العنوان اتغيّر' : 'Address swapped!';
+  static String get bulkImportSuccess =>
+      _isAr ? 'تمام! الطلبات اتضافت' : 'Orders imported!';
+  static String get transferSuccess =>
+      _isAr ? 'تمام! الطلب اتحوّل' : 'Order transferred!';
+  static String get partialDeliverySuccess =>
+      _isAr ? 'تمام! التسليم الجزئي اتسجّل' : 'Partial delivery recorded!';
+  static String get waitingStarted =>
+      _isAr ? 'المؤقت شغال' : 'Timer started';
+  static String get waitingStopped =>
+      _isAr ? 'المؤقت وقف' : 'Timer stopped';
+  static String get disclaimerAdded =>
+      _isAr ? 'تمام! إخلاء المسؤولية اتضاف' : 'Disclaimer added!';
+  static String get disputeCreated =>
+      _isAr ? 'تمام! النزاع اتفتح' : 'Dispute created!';
+  static String get refundRequested =>
+      _isAr ? 'تمام! طلب الاسترداد اتبعت' : 'Refund requested!';
+  static String get slotBooked =>
+      _isAr ? 'تمام! الموعد اتحجز' : 'Slot booked!';
 
   // Order Status
-  static const String statusNew = 'جديد';
-  static const String statusOnTheWay = 'في الطريق';
-  static const String statusArrived = 'وصلت';
-  static const String statusDelivered = 'تم التسليم';
-  static const String statusFailed = 'فشل';
-  static const String statusCancelled = 'ملغي';
-  static const String statusReturned = 'مرتجع';
-  static const String statusPostponed = 'مؤجّل';
+  static String get statusNew => _isAr ? 'جديد' : 'New';
+  static String get statusOnTheWay =>
+      _isAr ? 'في الطريق' : 'On the way';
+  static String get statusArrived => _isAr ? 'وصلت' : 'Arrived';
+  static String get statusDelivered =>
+      _isAr ? 'تم التسليم' : 'Delivered';
+  static String get statusFailed => _isAr ? 'فشل' : 'Failed';
+  static String get statusCancelled => _isAr ? 'ملغي' : 'Cancelled';
+  static String get statusReturned => _isAr ? 'مرتجع' : 'Returned';
+  static String get statusPostponed => _isAr ? 'مؤجّل' : 'Postponed';
 
   // Wallet
-  static const String wallet = 'المحفظة';
-  static const String todayEarnings = 'أرباح اليوم';
-  static const String totalCollected = 'إجمالي التحصيل';
-  static const String netProfit = 'صافي الربح';
+  static String get wallet => _isAr ? 'المحفظة' : 'Wallet';
+  static String get todayEarnings =>
+      _isAr ? 'أرباح اليوم' : 'Today\'s earnings';
+  static String get totalCollected =>
+      _isAr ? 'إجمالي التحصيل' : 'Total collected';
+  static String get netProfit => _isAr ? 'صافي الربح' : 'Net profit';
 
   // Profile
-  static const String profileTitle = 'البروفايل';
-  static const String editProfile = 'تعديل البيانات';
-  static const String profileCompletion = 'اكتمال الملف';
-  static const String profileComplete = 'ملفك مكتمل!';
-  static const String profileIncomplete = 'كمّل ملفك';
-  static const String level = 'المستوى';
-  static const String points = 'نقطة';
-  static const String memberSince = 'عضو من';
-  static const String online = 'متاح';
-  static const String offline = 'غير متاح';
-  static const String referralCode = 'كود الإحالة';
-  static const String copyCode = 'نسخ الكود';
-  static const String codeCopied = 'تم نسخ الكود!';
-  static const String detailedStats = 'الإحصائيات التفصيلية';
-  static const String emergencyContacts = 'جهات الطوارئ';
-  static const String addContact = 'إضافة جهة اتصال';
-  static const String noContacts = 'مفيش جهات طوارئ';
-  static const String contactName = 'اسم الشخص';
-  static const String contactPhone = 'رقم الموبايل';
-  static const String contactRelation = 'العلاقة';
-  static const String expenses = 'المصروفات';
-  static const String addExpense = 'إضافة مصروف';
-  static const String noExpenses = 'مفيش مصروفات';
-  static const String achievements = 'الإنجازات';
-  static const String challenges = 'التحديات';
-  static const String leaderboard = 'الترتيب';
-  static const String myRank = 'ترتيبي';
-  static const String topDrivers = 'أفضل السائقين';
-  static const String noAchievements = 'مفيش إنجازات لسه';
-  static const String noChallenges = 'مفيش تحديات لسه';
-  static const String totalFailed = 'فشل';
-  static const String totalCancelled = 'ملغي';
-  static const String avgDeliveryTime = 'متوسط وقت التسليم';
-  static const String bestDay = 'أفضل يوم';
-  static const String uploadPhoto = 'ارفع صورة';
-  static const String changePhoto = 'غيّر الصورة';
-  static const String removePhoto = 'امسح الصورة';
-  static const String uploadLicense = 'ارفع صورة الرخصة';
-  static const String profileUpdated = 'تم تحديث البيانات!';
-  static const String subscription = 'الاشتراك';
-  static const String noSubscription = 'مفيش اشتراك';
-  static const String profile = 'الملف الشخصي';
-  static const String logout = 'تسجيل الخروج';
-  static const String logoutConfirm = 'متأكد عايز تطلع؟';
-  static const String expenseCategory = 'النوع';
-  static const String expenseAmount = 'المبلغ';
-  static const String expenseNotes = 'ملاحظات';
+  static String get profileTitle => _isAr ? 'البروفايل' : 'Profile';
+  static String get editProfile =>
+      _isAr ? 'تعديل البيانات' : 'Edit Profile';
+  static String get profileCompletion =>
+      _isAr ? 'اكتمال الملف' : 'Profile completion';
+  static String get profileComplete =>
+      _isAr ? 'ملفك مكتمل!' : 'Profile complete!';
+  static String get profileIncomplete =>
+      _isAr ? 'كمّل ملفك عشان تبدأ شغل' : 'Complete your profile to start working';
+  static String get requiredStep => _isAr ? 'مطلوب' : 'Required';
+  static String get level => _isAr ? 'المستوى' : 'Level';
+  static String get points => _isAr ? 'نقطة' : 'points';
+  static String get memberSince => _isAr ? 'عضو من' : 'Member since';
+  static String get online => _isAr ? 'متاح' : 'Online';
+  static String get offline => _isAr ? 'غير متاح' : 'Offline';
+  static String get referralCode =>
+      _isAr ? 'كود الإحالة' : 'Referral code';
+  static String get copyCode => _isAr ? 'نسخ الكود' : 'Copy code';
+  static String get codeCopied =>
+      _isAr ? 'تم نسخ الكود!' : 'Code copied!';
+  static String get detailedStats =>
+      _isAr ? 'الإحصائيات التفصيلية' : 'Detailed statistics';
+  static String get emergencyContacts =>
+      _isAr ? 'جهات الطوارئ' : 'Emergency contacts';
+  static String get addContact =>
+      _isAr ? 'إضافة جهة اتصال' : 'Add contact';
+  static String get noContacts =>
+      _isAr ? 'مفيش جهات طوارئ' : 'No emergency contacts';
+  static String get contactName => _isAr ? 'اسم الشخص' : 'Contact name';
+  static String get contactPhone =>
+      _isAr ? 'رقم الموبايل' : 'Phone number';
+  static String get contactRelation => _isAr ? 'العلاقة' : 'Relationship';
+  static String get expenses => _isAr ? 'المصروفات' : 'Expenses';
+  static String get addExpense => _isAr ? 'إضافة مصروف' : 'Add expense';
+  static String get noExpenses => _isAr ? 'مفيش مصروفات' : 'No expenses';
+  static String get achievements => _isAr ? 'الإنجازات' : 'Achievements';
+  static String get challenges => _isAr ? 'التحديات' : 'Challenges';
+  static String get leaderboard => _isAr ? 'الترتيب' : 'Leaderboard';
+  static String get myRank => _isAr ? 'ترتيبي' : 'My rank';
+  static String get topDrivers =>
+      _isAr ? 'أفضل السائقين' : 'Top drivers';
+  static String get noAchievements =>
+      _isAr ? 'مفيش إنجازات لسه' : 'No achievements yet';
+  static String get noChallenges =>
+      _isAr ? 'مفيش تحديات لسه' : 'No challenges yet';
+  static String get totalFailed => _isAr ? 'فشل' : 'Failed';
+  static String get totalCancelled => _isAr ? 'ملغي' : 'Cancelled';
+  static String get avgDeliveryTime =>
+      _isAr ? 'متوسط وقت التسليم' : 'Avg. delivery time';
+  static String get bestDay => _isAr ? 'أفضل يوم' : 'Best day';
+  static String get uploadPhoto => _isAr ? 'ارفع صورة' : 'Upload photo';
+  static String get changePhoto => _isAr ? 'غيّر الصورة' : 'Change photo';
+  static String get removePhoto => _isAr ? 'امسح الصورة' : 'Remove photo';
+  static String get uploadLicense =>
+      _isAr ? 'ارفع صورة الرخصة' : 'Upload license photo';
+  static String get profileUpdated =>
+      _isAr ? 'تم تحديث البيانات!' : 'Profile updated!';
+  static String get subscription => _isAr ? 'الاشتراك' : 'Subscription';
+  static String get noSubscription =>
+      _isAr ? 'مفيش اشتراك' : 'No subscription';
+  static String get profile => _isAr ? 'الملف الشخصي' : 'Profile';
+  static String get logout => _isAr ? 'تسجيل الخروج' : 'Log Out';
+  static String get logoutConfirm =>
+      _isAr ? 'متأكد عايز تطلع؟' : 'Are you sure you want to log out?';
+  static String get expenseCategory => _isAr ? 'النوع' : 'Category';
+  static String get expenseAmount => _isAr ? 'المبلغ' : 'Amount';
+  static String get expenseNotes => _isAr ? 'ملاحظات' : 'Notes';
 
   // Settings
-  static const String settings = 'الإعدادات';
-  static const String appearance = 'المظهر';
-  static const String themeSystem = 'تلقائي';
-  static const String themeLight = 'فاتح';
-  static const String themeDark = 'غامق';
-  static const String languageLabel = 'اللغة';
-  static const String arabic = 'عربي';
-  static const String english = 'English';
-  static const String numberFormatLabel = 'شكل الأرقام';
-  static const String highContrast = 'تباين عالي';
-  static const String notifications = 'الإشعارات';
-  static const String notifyNewOrder = 'طلب جديد';
-  static const String notifyCashAlert = 'تنبيه الكاش';
-  static const String notifyBreakReminder = 'تذكير الاستراحة';
-  static const String notifyMaintenance = 'الصيانة';
-  static const String notifySettlement = 'التسويات';
-  static const String notifyAchievement = 'الإنجازات';
-  static const String notifySound = 'الصوت';
-  static const String notifyVibration = 'الاهتزاز';
-  static const String quietHours = 'ساعات الهدوء';
-  static const String quietHoursFrom = 'من';
-  static const String quietHoursTo = 'إلى';
-  static const String focusMode = 'وضع التركيز';
-  static const String focusModeAuto = 'تفعيل تلقائي';
-  static const String focusModeSpeed = 'حد السرعة (كم/س)';
-  static const String deliveryPreferences = 'تفضيلات التوصيل';
-  static const String preferredMap = 'تطبيق الخريطة';
-  static const String maxOrdersShift = 'أقصى عدد طلبات بالشفت';
-  static const String autoReceipt = 'إرسال إيصال تلقائي';
-  static const String locationSettings = 'الموقع';
-  static const String homeLocation = 'موقع البيت';
-  static const String setHomeLocation = 'حدد موقع البيت';
-  static const String backToBase = 'تنبيه الرجوع للبيت';
-  static const String backToBaseRadius = 'نطاق التنبيه (كم)';
-  static const String technicalSettings = 'إعدادات تقنية';
-  static const String locationInterval = 'فترة تتبع الموقع (ثانية)';
-  static const String syncInterval = 'فترة المزامنة (ثانية)';
-  static const String textToSpeech = 'القراءة الصوتية';
-  static const String hapticFeedback = 'الاهتزاز عند اللمس';
-  static const String settingsSaved = 'تم حفظ الإعدادات!';
+  static String get settings => _isAr ? 'الإعدادات' : 'Settings';
+  static String get appearance => _isAr ? 'المظهر' : 'Appearance';
+  static String get themeSystem => _isAr ? 'تلقائي' : 'System';
+  static String get themeLight => _isAr ? 'فاتح' : 'Light';
+  static String get themeDark => _isAr ? 'غامق' : 'Dark';
+  static String get languageLabel => _isAr ? 'اللغة' : 'Language';
+  static String get arabic => _isAr ? 'عربي' : 'Arabic';
+  static String get english => 'English';
+  static String get numberFormatLabel =>
+      _isAr ? 'شكل الأرقام' : 'Number format';
+  static String get highContrast =>
+      _isAr ? 'تباين عالي' : 'High contrast';
+  static String get notifications =>
+      _isAr ? 'الإشعارات' : 'Notifications';
+  static String get notifyNewOrder =>
+      _isAr ? 'طلب جديد' : 'New order';
+  static String get notifyCashAlert =>
+      _isAr ? 'تنبيه الكاش' : 'Cash alert';
+  static String get notifyBreakReminder =>
+      _isAr ? 'تذكير الاستراحة' : 'Break reminder';
+  static String get notifyMaintenance =>
+      _isAr ? 'الصيانة' : 'Maintenance';
+  static String get notifySettlement =>
+      _isAr ? 'التسويات' : 'Settlements';
+  static String get notifyAchievement =>
+      _isAr ? 'الإنجازات' : 'Achievements';
+  static String get notifySound => _isAr ? 'الصوت' : 'Sound';
+  static String get notifyVibration => _isAr ? 'الاهتزاز' : 'Vibration';
+  static String get quietHours =>
+      _isAr ? 'ساعات الهدوء' : 'Quiet hours';
+  static String get quietHoursFrom => _isAr ? 'من' : 'From';
+  static String get quietHoursTo => _isAr ? 'إلى' : 'To';
+  static String get focusMode =>
+      _isAr ? 'وضع التركيز' : 'Focus mode';
+  static String get focusModeAuto =>
+      _isAr ? 'تفعيل تلقائي' : 'Auto-enable';
+  static String get focusModeSpeed =>
+      _isAr ? 'حد السرعة (كم/س)' : 'Speed limit (km/h)';
+  static String get deliveryPreferences =>
+      _isAr ? 'تفضيلات التوصيل' : 'Delivery preferences';
+  static String get preferredMap =>
+      _isAr ? 'تطبيق الخريطة' : 'Map app';
+  static String get maxOrdersShift =>
+      _isAr ? 'أقصى عدد طلبات بالشفت' : 'Max orders per shift';
+  static String get autoReceipt =>
+      _isAr ? 'إرسال إيصال تلقائي' : 'Auto-send receipt';
+  static String get locationSettings => _isAr ? 'الموقع' : 'Location';
+  static String get homeLocation =>
+      _isAr ? 'موقع البيت' : 'Home location';
+  static String get setHomeLocation =>
+      _isAr ? 'حدد موقع البيت' : 'Set home location';
+  static String get backToBase =>
+      _isAr ? 'تنبيه الرجوع للبيت' : 'Return home alert';
+  static String get backToBaseRadius =>
+      _isAr ? 'نطاق التنبيه (كم)' : 'Alert radius (km)';
+  static String get technicalSettings =>
+      _isAr ? 'إعدادات تقنية' : 'Technical settings';
+  static String get locationInterval =>
+      _isAr ? 'فترة تتبع الموقع (ثانية)' : 'Location tracking interval (sec)';
+  static String get syncInterval =>
+      _isAr ? 'فترة المزامنة (ثانية)' : 'Sync interval (sec)';
+  static String get textToSpeech =>
+      _isAr ? 'القراءة الصوتية' : 'Text to speech';
+  static String get hapticFeedback =>
+      _isAr ? 'الاهتزاز عند اللمس' : 'Haptic feedback';
+  static String get settingsSaved =>
+      _isAr ? 'تم حفظ الإعدادات!' : 'Settings saved!';
+  static String get arabicNumerals =>
+      _isAr ? 'عربية (١٢٣)' : 'Arabic (١٢٣)';
+  static String get westernNumerals =>
+      _isAr ? 'غربية (123)' : 'Western (123)';
+  static String get googleMaps => 'Google Maps';
+  static String get waze => 'Waze';
+  static String get otherMapApp => _isAr ? 'أخرى' : 'Other';
+  static String get unlimited => _isAr ? 'بدون حد' : 'Unlimited';
+  static String get enterAddress =>
+      _isAr ? 'اكتب العنوان' : 'Enter address';
+  static String get notSet => _isAr ? 'غير محدد' : 'Not set';
+  static String get useCurrentLocation =>
+      _isAr ? 'استخدم موقعي الحالي' : 'Use my current location';
+  static String get detectingLocation =>
+      _isAr ? 'جاري تحديد الموقع...' : 'Detecting location...';
+  static String get locationDetected =>
+      _isAr ? 'تم تحديد الموقع' : 'Location detected';
+  static String get locationPermissionDenied =>
+      _isAr ? 'لازم تسمح بالوصول للموقع' : 'Location permission required';
+  static String get locationServiceDisabled =>
+      _isAr ? 'فعّل خدمة الموقع الأول' : 'Enable location services first';
 
   // Customers
-  static const String customers = 'العملاء';
-  static const String customerDetails = 'تفاصيل العميل';
-  static const String searchCustomer = 'بحث عن عميل';
-  static const String totalDeliveries = 'إجمالي التوصيلات';
-  static const String successfulDeliveries = 'توصيلات ناجحة';
-  static const String averageRating = 'متوسط التقييم';
-  static const String blocked = 'محظور';
-  static const String unblocked = 'غير محظور';
-  static const String rateCustomer = 'تقييم العميل';
-  static const String blockCustomer = 'حظر العميل';
-  static const String unblockCustomer = 'إلغاء حظر العميل';
-  static const String blockReason = 'سبب الحظر';
-  static const String reportToCommunity = 'إبلاغ المجتمع';
-  static const String customerBlocked = 'تم حظر العميل بنجاح';
-  static const String customerUnblocked = 'تم إلغاء حظر العميل بنجاح';
-  static const String voiceMemo = 'مذكرة صوتية';
-  static const String interests = 'الاهتمامات';
-  static const String engagement = 'مستوى التفاعل';
+  static String get customers => _isAr ? 'العملاء' : 'Customers';
+  static String get customerDetails =>
+      _isAr ? 'تفاصيل العميل' : 'Customer Details';
+  static String get searchCustomer =>
+      _isAr ? 'بحث عن عميل' : 'Search customer';
+  static String get totalDeliveries =>
+      _isAr ? 'إجمالي التوصيلات' : 'Total deliveries';
+  static String get successfulDeliveries =>
+      _isAr ? 'توصيلات ناجحة' : 'Successful deliveries';
+  static String get averageRating =>
+      _isAr ? 'متوسط التقييم' : 'Average rating';
+  static String get blocked => _isAr ? 'محظور' : 'Blocked';
+  static String get unblocked => _isAr ? 'غير محظور' : 'Unblocked';
+  static String get rateCustomer =>
+      _isAr ? 'تقييم العميل' : 'Rate customer';
+  static String get blockCustomer =>
+      _isAr ? 'حظر العميل' : 'Block customer';
+  static String get unblockCustomer =>
+      _isAr ? 'إلغاء حظر العميل' : 'Unblock customer';
+  static String get blockReason =>
+      _isAr ? 'سبب الحظر' : 'Block reason';
+  static String get reportToCommunity =>
+      _isAr ? 'إبلاغ المجتمع' : 'Report to community';
+  static String get customerBlocked =>
+      _isAr ? 'تم حظر العميل بنجاح' : 'Customer blocked successfully';
+  static String get customerUnblocked =>
+      _isAr ? 'تم إلغاء حظر العميل بنجاح' : 'Customer unblocked successfully';
+  static String get voiceMemo => _isAr ? 'مذكرة صوتية' : 'Voice memo';
+  static String get interests => _isAr ? 'الاهتمامات' : 'Interests';
+  static String get engagement =>
+      _isAr ? 'مستوى التفاعل' : 'Engagement level';
 
   // Rating Tags
-  static const String quickResponse = 'رد سريع';
-  static const String clearAddress = 'عنوان واضح';
-  static const String respectfulBehavior = 'تعامل محترم';
-  static const String easyPayment = 'دفع سهل';
-  static const String wrongAddress = 'عنوان غلط';
-  static const String noAnswer = 'مبيردش';
-  static const String delayedPickup = 'تأخير في الاستلام';
-  static const String paymentIssue = 'مشكلة في الدفع';
-  static const String ratingSuccess = 'تم تقييم العميل بنجاح';
+  static String get quickResponse => _isAr ? 'رد سريع' : 'Quick response';
+  static String get clearAddress =>
+      _isAr ? 'عنوان واضح' : 'Clear address';
+  static String get respectfulBehavior =>
+      _isAr ? 'تعامل محترم' : 'Respectful';
+  static String get easyPayment => _isAr ? 'دفع سهل' : 'Easy payment';
+  static String get wrongAddress =>
+      _isAr ? 'عنوان غلط' : 'Wrong address';
+  static String get noAnswer => _isAr ? 'مبيردش' : 'No answer';
+  static String get delayedPickup =>
+      _isAr ? 'تأخير في الاستلام' : 'Delayed pickup';
+  static String get paymentIssue =>
+      _isAr ? 'مشكلة في الدفع' : 'Payment issue';
+  static String get ratingSuccess =>
+      _isAr ? 'تم تقييم العميل بنجاح' : 'Customer rated successfully';
 
   // Partners
-  static const String partners = 'الشركاء';
-  static const String partnerDetails = 'تفاصيل الشريك';
-  static const String searchPartner = 'بحث عن شريك';
-  static const String commission = 'العمولة';
-  static const String pickupPoints = 'نقاط الاستلام';
-  static const String verification = 'التوثيق';
-  static const String submitDocument = 'رفع مستند';
+  static String get partners => _isAr ? 'الشركاء' : 'Partners';
+  static String get partnerDetails =>
+      _isAr ? 'تفاصيل الشريك' : 'Partner Details';
+  static String get searchPartner =>
+      _isAr ? 'بحث عن شريك' : 'Search partner';
+  static String get addPartner =>
+      _isAr ? 'إضافة شريك' : 'Add Partner';
+  static String get partnerName =>
+      _isAr ? 'اسم الشريك' : 'Partner name';
+  static String get partnerPhone =>
+      _isAr ? 'رقم التلفون' : 'Phone number';
+  static String get partnerAddress => _isAr ? 'العنوان' : 'Address';
+  static String get partnerType =>
+      _isAr ? 'نوع الشريك' : 'Partner type';
+  static String get commissionTypeLabel =>
+      _isAr ? 'نوع العمولة' : 'Commission type';
+  static String get commissionValue =>
+      _isAr ? 'قيمة العمولة' : 'Commission value';
+  static String get commissionFixed =>
+      _isAr ? 'ثابت لكل طلب' : 'Fixed per order';
+  static String get commissionPercentage =>
+      _isAr ? 'نسبة لكل طلب' : 'Percentage per order';
+  static String get commissionMonthly =>
+      _isAr ? 'شهري ثابت' : 'Monthly flat';
+  static String get defaultPaymentMethod =>
+      _isAr ? 'طريقة الدفع الافتراضية' : 'Default payment method';
+  static String get receiptHeader =>
+      _isAr ? 'عنوان الإيصال' : 'Receipt header';
+  static String get partnerColor =>
+      _isAr ? 'لون الشريك' : 'Partner color';
+  static String get partnerAddedSuccess =>
+      _isAr ? 'تم إضافة الشريك بنجاح!' : 'Partner added successfully!';
+  static String get commission => _isAr ? 'العمولة' : 'Commission';
+  static String get pickupPoints =>
+      _isAr ? 'نقاط الاستلام' : 'Pickup points';
+  static String get verification =>
+      _isAr ? 'التوثيق' : 'Verification';
+  static String get submitDocument =>
+      _isAr ? 'رفع مستند' : 'Submit document';
 
   // Partner Types
-  static const String restaurantType = 'مطعم';
-  static const String shopType = 'محل';
-  static const String pharmacyType = 'صيدلية';
-  static const String supermarketType = 'سوبرماركت';
-  static const String warehouseType = 'مخزن';
-  static const String eCommerceType = 'تجارة إلكترونية';
+  static String get restaurantType => _isAr ? 'مطعم' : 'Restaurant';
+  static String get shopType => _isAr ? 'محل' : 'Shop';
+  static String get pharmacyType => _isAr ? 'صيدلية' : 'Pharmacy';
+  static String get supermarketType =>
+      _isAr ? 'سوبرماركت' : 'Supermarket';
+  static String get warehouseType => _isAr ? 'مخزن' : 'Warehouse';
+  static String get eCommerceType =>
+      _isAr ? 'تجارة إلكترونية' : 'E-Commerce';
 
   // Verification Status
-  static const String statusPending = 'قيد المراجعة';
-  static const String statusVerified = 'موثّق';
-  static const String statusRejected = 'مرفوض';
-  static const String statusDocumentRequested = 'مطلوب مستند إضافي';
+  static String get statusPending =>
+      _isAr ? 'قيد المراجعة' : 'Under review';
+  static String get statusVerified => _isAr ? 'موثّق' : 'Verified';
+  static String get statusRejected => _isAr ? 'مرفوض' : 'Rejected';
+  static String get statusDocumentRequested =>
+      _isAr ? 'مطلوب مستند إضافي' : 'Additional document required';
 
   // Address Types
-  static const String addressHome = 'منزل';
-  static const String addressWork = 'عمل';
-  static const String addressShop = 'محل';
-  static const String addressRestaurant = 'مطعم';
-  static const String addressWarehouse = 'مخزن';
-  static const String addressOther = 'أخرى';
+  static String get addressHome => _isAr ? 'منزل' : 'Home';
+  static String get addressWork => _isAr ? 'عمل' : 'Work';
+  static String get addressShop => _isAr ? 'محل' : 'Shop';
+  static String get addressRestaurant => _isAr ? 'مطعم' : 'Restaurant';
+  static String get addressWarehouse => _isAr ? 'مخزن' : 'Warehouse';
+  static String get addressOther => _isAr ? 'أخرى' : 'Other';
 
   // Addresses
-  static const String addresses = 'العناوين';
-  static const String addAddress = 'إضافة عنوان';
-  static const String editAddress = 'تعديل العنوان';
-  static const String deleteAddressConfirm = 'هل تريد حذف هذا العنوان؟';
-  static const String landmarks = 'معالم قريبة';
-  static const String deliveryNotes = 'ملاحظات التوصيل';
-  static const String nearbyAddresses = 'عناوين قريبة';
+  static String get addresses => _isAr ? 'العناوين' : 'Addresses';
+  static String get addAddress => _isAr ? 'إضافة عنوان' : 'Add Address';
+  static String get editAddress =>
+      _isAr ? 'تعديل العنوان' : 'Edit Address';
+  static String get deleteAddressConfirm =>
+      _isAr ? 'هل تريد حذف هذا العنوان؟' : 'Delete this address?';
+  static String get landmarks => _isAr ? 'معالم قريبة' : 'Nearby landmarks';
+  static String get deliveryNotes =>
+      _isAr ? 'ملاحظات التوصيل' : 'Delivery notes';
+  static String get nearbyAddresses =>
+      _isAr ? 'عناوين قريبة' : 'Nearby addresses';
 
   // Caller ID
-  static const String callerId = 'معرّف المتصل';
-  static const String callerNote = 'ملاحظة عن المتصل';
+  static String get callerId => _isAr ? 'معرّف المتصل' : 'Caller ID';
+  static String get callerNote =>
+      _isAr ? 'ملاحظة عن المتصل' : 'Caller note';
 
   // Payment Methods
-  static const String paymentCash = 'كاش';
-  static const String paymentWallet = 'محفظة';
-  static const String paymentCard = 'بطاقة';
-  static const String paymentInstaPay = 'إنستاباي';
+  static String get paymentCash => _isAr ? 'كاش' : 'Cash';
+  static String get paymentWallet => _isAr ? 'محفظة' : 'Wallet';
+  static String get paymentCard => _isAr ? 'بطاقة' : 'Card';
+  static String get paymentInstaPay => _isAr ? 'إنستاباي' : 'InstaPay';
 
   // Commission Types
-  static const String fixedPerOrder = 'مبلغ ثابت لكل طلب';
-  static const String percentagePerOrder = 'نسبة من كل طلب';
-  static const String monthlyFlat = 'اشتراك شهري';
+  static String get fixedPerOrder =>
+      _isAr ? 'مبلغ ثابت لكل طلب' : 'Fixed amount per order';
+  static String get percentagePerOrder =>
+      _isAr ? 'نسبة من كل طلب' : 'Percentage per order';
+  static String get monthlyFlat =>
+      _isAr ? 'اشتراك شهري' : 'Monthly subscription';
 
   // Notifications
-  static const String notificationsTitle = 'الإشعارات';
-  static const String readAll = 'قراءة الكل';
-  static const String noNotifications = 'مفيش إشعارات';
-  static const String noNotificationsDesc = 'هيظهرلك هنا لما يكون فيه إشعارات جديدة';
+  static String get notificationsTitle =>
+      _isAr ? 'الإشعارات' : 'Notifications';
+  static String get readAll => _isAr ? 'قراءة الكل' : 'Read all';
+  static String get noNotifications =>
+      _isAr ? 'مفيش إشعارات' : 'No notifications';
+  static String get noNotificationsDesc =>
+      _isAr
+          ? 'هيظهرلك هنا لما يكون فيه إشعارات جديدة'
+          : 'New notifications will appear here';
 
   // Chat
-  static const String chatTitle = 'تواصل معنا';
-  static const String chatNoConversations = 'مفيش محادثات';
-  static const String chatNoConversationsDesc = 'ابدأ محادثة جديدة مع فريق الدعم';
-  static const String chatNewConversation = 'محادثة جديدة';
-  static const String chatInitialMessage = 'مرحبا، محتاج مساعدة';
-  static const String chatTypeSupport = 'دعم فني';
-  static const String chatTypeComplaint = 'شكوى';
-  static const String chatTypeSuggestion = 'اقتراح';
-  static const String chatTypeGeneral = 'عام';
-  static const String chatConversation = 'محادثة';
-  static const String chatStartConversation = 'ابدأ المحادثة...';
-  static const String chatMessageHint = 'اكتب رسالة...';
-  static const String chatCloseConversation = 'قفل المحادثة';
-  static const String chatCloseConfirm = 'متأكد عايز تقفل المحادثة دي؟';
-  static const String chatClosed = 'المحادثة مقفولة';
-  static const String chatClosedDesc = 'المحادثة دي اتقفلت. افتح محادثة جديدة لو محتاج مساعدة.';
+  static String get chatTitle => _isAr ? 'تواصل معنا' : 'Contact Us';
+  static String get chatNoConversations =>
+      _isAr ? 'مفيش محادثات' : 'No conversations';
+  static String get chatNoConversationsDesc =>
+      _isAr
+          ? 'ابدأ محادثة جديدة مع فريق الدعم'
+          : 'Start a new conversation with support';
+  static String get chatNewConversation =>
+      _isAr ? 'محادثة جديدة' : 'New Conversation';
+  static String get chatInitialMessage =>
+      _isAr ? 'مرحبا، محتاج مساعدة' : 'Hello, I need help';
+  static String get chatTypeSupport =>
+      _isAr ? 'دعم فني' : 'Technical support';
+  static String get chatTypeComplaint => _isAr ? 'شكوى' : 'Complaint';
+  static String get chatTypeSuggestion =>
+      _isAr ? 'اقتراح' : 'Suggestion';
+  static String get chatTypeGeneral => _isAr ? 'عام' : 'General';
+  static String get chatConversation => _isAr ? 'محادثة' : 'Conversation';
+  static String get chatStartConversation =>
+      _isAr ? 'ابدأ المحادثة...' : 'Start the conversation...';
+  static String get chatMessageHint =>
+      _isAr ? 'اكتب رسالة...' : 'Type a message...';
+  static String get chatCloseConversation =>
+      _isAr ? 'قفل المحادثة' : 'Close conversation';
+  static String get chatCloseConfirm =>
+      _isAr
+          ? 'متأكد عايز تقفل المحادثة دي؟'
+          : 'Are you sure you want to close this conversation?';
+  static String get chatClosed =>
+      _isAr ? 'المحادثة مقفولة' : 'Conversation closed';
+  static String get chatClosedDesc =>
+      _isAr
+          ? 'المحادثة دي اتقفلت. افتح محادثة جديدة لو محتاج مساعدة.'
+          : 'This conversation is closed. Start a new one if you need help.';
 
   // SOS
-  static const String sosEmergency = 'حالة طوارئ';
-  static const String sosSubtitle = 'اضغط الزر لإرسال إشارة طوارئ\nلجهات الاتصال والإدارة';
-  static const String sosActivated = 'تم تفعيل الطوارئ';
-  static const String sosActivatedSubtitle = 'تم إبلاغ جهات الطوارئ والإدارة\nابقى في مكانك';
-  static const String sosResolve = 'تم حل المشكلة';
-  static const String sosDismiss = 'كان بالغلط';
-  static const String sosSelectProblem = 'إيه المشكلة؟';
-  static const String sosAddNotes = 'تفاصيل أكتر (اختياري)';
-  static const String sosNotesHint = 'اكتب أي تفاصيل ممكن تساعد...';
-  static const String sosSendSignal = 'ابعت إشارة طوارئ';
-  static const String sosResolutionNote = 'إيه اللي حصل؟';
-  static const String sosResolutionHint = 'اكتب ملخص للحل...';
-  static const String sosConfirmResolve = 'تأكيد الحل';
-  static const String sosDismissConfirm = 'متأكد إن دي كانت بالغلط؟';
-  static const String sosHistory = 'سجل الطوارئ';
-  static const String sosNoHistory = 'مفيش حالات طوارئ سابقة';
-  static const String sosNoHistoryDesc = 'لو حصل أي طوارئ هيظهر هنا';
-  static const String sosWasFalseAlarm = 'كان إنذار كاذب';
-  static const String sosStatusActive = 'نشط';
-  static const String sosStatusResolved = 'تم الحل';
-  static const String sosStatusDismissed = 'ملغي';
-  static const String sosStatusExpired = 'منتهي';
-  static const String sosProblemAccident = 'حادث سير';
-  static const String sosProblemVehicle = 'عطل في المركبة';
-  static const String sosProblemTheft = 'سرقة';
-  static const String sosProblemAssault = 'اعتداء';
-  static const String sosProblemHealth = 'حالة صحية طارئة';
-  static const String sosProblemRoadBlock = 'طريق مغلق';
-  static const String sosProblemOther = 'أخرى';
+  static String get sosEmergency =>
+      _isAr ? 'حالة طوارئ' : 'Emergency';
+  static String get sosSubtitle =>
+      _isAr
+          ? 'اضغط الزر لإرسال إشارة طوارئ\nلجهات الاتصال والإدارة'
+          : 'Press the button to send an emergency signal\nto your contacts and management';
+  static String get sosActivated =>
+      _isAr ? 'تم تفعيل الطوارئ' : 'Emergency activated';
+  static String get sosActivatedSubtitle =>
+      _isAr
+          ? 'تم إبلاغ جهات الطوارئ والإدارة\nابقى في مكانك'
+          : 'Emergency contacts and management have been notified\nStay where you are';
+  static String get sosResolve =>
+      _isAr ? 'تم حل المشكلة' : 'Issue resolved';
+  static String get sosDismiss =>
+      _isAr ? 'كان بالغلط' : 'False alarm';
+  static String get sosSelectProblem =>
+      _isAr ? 'إيه المشكلة؟' : 'What\'s the problem?';
+  static String get sosAddNotes =>
+      _isAr ? 'تفاصيل أكتر (اختياري)' : 'More details (optional)';
+  static String get sosNotesHint =>
+      _isAr ? 'اكتب أي تفاصيل ممكن تساعد...' : 'Write any details that might help...';
+  static String get sosSendSignal =>
+      _isAr ? 'ابعت إشارة طوارئ' : 'Send emergency signal';
+  static String get sosResolutionNote =>
+      _isAr ? 'إيه اللي حصل؟' : 'What happened?';
+  static String get sosResolutionHint =>
+      _isAr ? 'اكتب ملخص للحل...' : 'Write a resolution summary...';
+  static String get sosConfirmResolve =>
+      _isAr ? 'تأكيد الحل' : 'Confirm resolution';
+  static String get sosDismissConfirm =>
+      _isAr ? 'متأكد إن دي كانت بالغلط؟' : 'Are you sure this was a false alarm?';
+  static String get sosHistory =>
+      _isAr ? 'سجل الطوارئ' : 'Emergency history';
+  static String get sosNoHistory =>
+      _isAr ? 'مفيش حالات طوارئ سابقة' : 'No previous emergencies';
+  static String get sosNoHistoryDesc =>
+      _isAr ? 'لو حصل أي طوارئ هيظهر هنا' : 'Any emergencies will appear here';
+  static String get sosWasFalseAlarm =>
+      _isAr ? 'كان إنذار كاذب' : 'Was a false alarm';
+  static String get sosStatusActive => _isAr ? 'نشط' : 'Active';
+  static String get sosStatusResolved =>
+      _isAr ? 'تم الحل' : 'Resolved';
+  static String get sosStatusDismissed => _isAr ? 'ملغي' : 'Dismissed';
+  static String get sosStatusExpired => _isAr ? 'منتهي' : 'Expired';
+  static String get sosProblemAccident =>
+      _isAr ? 'حادث سير' : 'Traffic accident';
+  static String get sosProblemVehicle =>
+      _isAr ? 'عطل في المركبة' : 'Vehicle breakdown';
+  static String get sosProblemTheft => _isAr ? 'سرقة' : 'Theft';
+  static String get sosProblemAssault => _isAr ? 'اعتداء' : 'Assault';
+  static String get sosProblemHealth =>
+      _isAr ? 'حالة صحية طارئة' : 'Medical emergency';
+  static String get sosProblemRoadBlock =>
+      _isAr ? 'طريق مغلق' : 'Road blocked';
+  static String get sosProblemOther => _isAr ? 'أخرى' : 'Other';
 
   // General
-  static const String retry = 'حاول تاني';
-  static const String save = 'حفظ';
-  static const String cancel = 'إلغاء';
-  static const String confirm = 'تأكيد';
-  static const String skip = 'تخطي';
-  static const String next = 'التالي';
-  static const String back = 'رجوع';
-  static const String search = 'بحث...';
-  static const String currency = 'ج.م';
-  static const String km = 'كم';
-  static const String minutes = 'دقيقة';
+  static String get retry => _isAr ? 'حاول تاني' : 'Retry';
+  static String get save => _isAr ? 'حفظ' : 'Save';
+  static String get cancel => _isAr ? 'إلغاء' : 'Cancel';
+  static String get confirm => _isAr ? 'تأكيد' : 'Confirm';
+  static String get skip => _isAr ? 'تخطي' : 'Skip';
+  static String get next => _isAr ? 'التالي' : 'Next';
+  static String get back => _isAr ? 'رجوع' : 'Back';
+  static String get search => _isAr ? 'بحث...' : 'Search...';
+  static String get currency => _isAr ? 'ج.م' : 'EGP';
+  static String get km => _isAr ? 'كم' : 'km';
 }

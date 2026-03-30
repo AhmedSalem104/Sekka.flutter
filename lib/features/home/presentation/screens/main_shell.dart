@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/widgets/sekka_bottom_nav.dart';
 import '../../../orders/presentation/screens/orders_list_screen.dart';
+import '../../../settlements/presentation/screens/settlements_screen.dart';
 import '../../../wallet/presentation/screens/wallet_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 import 'contacts_screen.dart';
@@ -29,7 +31,7 @@ class _MainShellState extends State<MainShell> {
     const OrdersListScreen(),
     const ContactsScreen(),
     const WalletScreen(),
-    const Scaffold(body: SizedBox.shrink()), // الحسابات — placeholder
+    const SettlementsScreen(),
   ];
 
   final _navItems = [
@@ -56,7 +58,7 @@ class _MainShellState extends State<MainShell> {
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.calculator,
       activeIcon: IconsaxPlusBold.calculator,
-      label: 'الحسابات',
+      label: AppStrings.accountHandover,
     ),
   ];
 

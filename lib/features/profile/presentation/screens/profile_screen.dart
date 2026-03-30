@@ -8,7 +8,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
@@ -42,10 +42,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title: Text(AppStrings.profileTitle, style: AppTypography.headlineSmall),
-        leading: const SekkaBackButton(),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.profileTitle),
       body: BlocConsumer<ProfileBloc, ProfileState>(
         listener: (context, state) {
           if (state is ProfileError) {

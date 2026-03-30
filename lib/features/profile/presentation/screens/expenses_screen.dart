@@ -8,7 +8,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/widgets/sekka_back_button.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
@@ -101,10 +101,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: AppBar(
-        title: Text(AppStrings.expenses, style: AppTypography.headlineSmall),
-        leading: const SekkaBackButton(),
-      ),
+      appBar: SekkaAppBar(title: AppStrings.expenses),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
         backgroundColor: AppColors.primary,

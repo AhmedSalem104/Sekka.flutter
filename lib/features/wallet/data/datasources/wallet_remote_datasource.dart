@@ -44,11 +44,11 @@ class WalletRemoteDataSource {
   }) async {
     try {
       final queryParams = <String, dynamic>{
-        'pageNumber': pageNumber,
-        'pageSize': pageSize,
-        if (type != null) 'type': type,
-        if (dateFrom != null) 'dateFrom': dateFrom,
-        if (dateTo != null) 'dateTo': dateTo,
+        'Page': pageNumber,
+        'PageSize': pageSize,
+        if (type != null) 'TransactionType': type,
+        if (dateFrom != null) 'DateFrom': dateFrom,
+        if (dateTo != null) 'DateTo': dateTo,
       };
       final response = await _dio.get<Map<String, dynamic>>(
         ApiConstants.walletTransactions,
