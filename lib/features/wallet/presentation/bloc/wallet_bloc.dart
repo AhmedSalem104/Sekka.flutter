@@ -1,13 +1,17 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/cash_status_model.dart';
+import '../../data/models/transaction_model.dart';
+import '../../data/models/wallet_balance_model.dart';
+import '../../data/models/wallet_summary_model.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import 'wallet_event.dart';
 import 'wallet_state.dart';
 
-class WalletBloc extends Bloc<WalletEvent, WalletState> {
+class WalletBloc extends HydratedBloc<WalletEvent, WalletState> {
   WalletBloc({required WalletRepository repository})
       : _repository = repository,
         super(const WalletInitial()) {
@@ -32,7 +36,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
     WalletLoadRequested event,
     Emitter<WalletState> emit,
   ) async {
-    emit(const WalletLoading());
+    final current = state;
+    if (current is! WalletLoaded) {
+      emit(const WalletLoading());
+    }
     try {
       final balance = await _repository.getBalance();
       final cashStatus = await _repository.getCashStatus();
@@ -49,9 +56,9 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         currentPage: 1,
       ));
     } on ApiException catch (e) {
-      emit(WalletError(e.message));
+      if (current is! WalletLoaded) emit(WalletError(e.message));
     } catch (_) {
-      emit(WalletError(AppStrings.unknownError));
+      if (current is! WalletLoaded) emit(WalletError(AppStrings.unknownError));
     }
   }
 
@@ -80,10 +87,10 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         currentPage: 1,
         activeFilter: currentFilter,
       ));
-    } on ApiException catch (e) {
-      emit(WalletError(e.message));
+    } on ApiException {
+      // Keep existing cached data on network failure
     } catch (_) {
-      emit(WalletError(AppStrings.unknownError));
+      // Keep existing cached data on unexpected error
     }
   }
 
@@ -150,5 +157,66 @@ class WalletBloc extends Bloc<WalletEvent, WalletState> {
         isLoadingMore: false,
       ));
     }
+  }
+
+  // ── Hydration ──
+
+  @override
+  WalletState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final balance = WalletBalanceModel.fromJson(
+          Map<String, dynamic>.from(json['balance'] as Map),
+        );
+        final cashStatus = CashStatusModel.fromJson(
+          Map<String, dynamic>.from(json['cashStatus'] as Map),
+        );
+        final summary = WalletSummaryModel.fromJson(
+          Map<String, dynamic>.from(json['summary'] as Map),
+        );
+        final txList = (json['transactions'] as List<dynamic>)
+            .map((t) => TransactionModel.fromJson(
+                  Map<String, dynamic>.from(t as Map),
+                ))
+            .toList();
+        return WalletLoaded(
+          balance: balance,
+          cashStatus: cashStatus,
+          summary: summary,
+          transactions: txList,
+          hasMore: json['hasMore'] as bool? ?? false,
+          currentPage: json['currentPage'] as int? ?? 1,
+          activeFilter: json['activeFilter'] as int? ?? 0,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(WalletState state) {
+    if (state is WalletLoaded) {
+      final balance = state.balance;
+      final cashStatus = state.cashStatus;
+      final summary = state.summary;
+      if (balance is WalletBalanceModel &&
+          cashStatus is CashStatusModel &&
+          summary is WalletSummaryModel) {
+        return {
+          'type': 'loaded',
+          'balance': balance.toJson(),
+          'cashStatus': cashStatus.toJson(),
+          'summary': summary.toJson(),
+          'transactions': state.transactions
+              .whereType<TransactionModel>()
+              .map((t) => t.toJson())
+              .toList(),
+          'hasMore': state.hasMore,
+          'currentPage': state.currentPage,
+          'activeFilter': state.activeFilter,
+        };
+      }
+    }
+    return null;
   }
 }

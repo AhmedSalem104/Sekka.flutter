@@ -1,16 +1,22 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:async';
+
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/enums/order_enums.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_result.dart';
+import '../../../../shared/offline/offline_queue_service.dart';
+import '../../../../shared/offline/queue_operation.dart';
+import '../../../../shared/offline/sync_queue_service.dart';
+import '../../../../shared/services/connectivity_service.dart';
 import '../../data/models/order_model.dart';
 import '../../../search/data/repositories/search_repository.dart';
 import '../../domain/repositories/order_repository.dart';
 import 'orders_event.dart';
 import 'orders_state.dart';
 
-class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
+class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
   OrdersBloc({
     required OrderRepository repository,
     SearchRepository? searchRepository,
@@ -52,10 +58,27 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<RecurringOrderResumeRequested>(_onRecurringOrderResume);
     on<RecurringOrderDeleteRequested>(_onRecurringOrderDelete);
     on<OrdersClearMessage>(_onClearMessage);
+    on<OrderTempIdResolved>(_onTempIdResolved);
+
+    // Listen for sync results that map tempId → realId
+    _syncSub = SyncQueueService.instance.syncedItems.listen((items) {
+      for (final item in items) {
+        if (item.entityType == 'order') {
+          add(OrderTempIdResolved(tempId: item.tempId, realId: item.realId));
+        }
+      }
+    });
   }
 
   final OrderRepository _repository;
   final SearchRepository? _searchRepository;
+  StreamSubscription<List<SyncedItem>>? _syncSub;
+
+  @override
+  Future<void> close() {
+    _syncSub?.cancel();
+    return super.close();
+  }
 
   /// IDs بتاع الطلبات اللي اتسلّمت محلياً (عشان الـ list API مش بيحدث الـ status)
   final Set<String> _deliveredOrderIds = {};
@@ -165,7 +188,8 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final searchTerm =
         event.searchTerm ?? (current is OrdersLoaded ? current.searchTerm : null);
 
-    if (!event.refresh) {
+    // Only show loading spinner if no cached data
+    if (!event.refresh && current is! OrdersLoaded) {
       emit(const OrdersLoading());
     }
 
@@ -189,9 +213,14 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         currentPage: 1,
       ));
     } on ApiException catch (e) {
-      emit(OrdersError(e.message));
+      // Keep cached data on failure
+      if (current is! OrdersLoaded) {
+        emit(OrdersError(e.message));
+      }
     } catch (_) {
-      emit(OrdersError(AppStrings.unknownError));
+      if (current is! OrdersLoaded) {
+        emit(OrdersError(AppStrings.unknownError));
+      }
     }
   }
 
@@ -358,6 +387,38 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
     emit(loaded.copyWith(isActionInProgress: true, actionMessage: () => null));
 
+    // Offline: enqueue via /sync/push and create an optimistic order
+    if (!ConnectivityService.instance.isOnline) {
+      final tempId = await SyncQueueService.instance.enqueueCreate(
+        entityType: 'order',
+        payload: event.data,
+      );
+      final optimistic = OrderModel(
+        id: tempId,
+        orderNumber: AppStrings.pendingSync,
+        deliveryAddress: event.data['deliveryAddress'] as String? ?? '',
+        amount: (event.data['amount'] as num?)?.toDouble() ?? 0,
+        paymentMethod: PaymentMethod.fromValue(
+          event.data['paymentMethod'] as int? ?? 0,
+        ),
+        status: OrderStatus.pending,
+        priority: OrderPriority.fromValue(
+          event.data['priority'] as int? ?? 0,
+        ),
+        customerName: event.data['customerName'] as String?,
+        customerPhone: event.data['customerPhone'] as String?,
+        notes: event.data['notes'] as String?,
+        pickupAddress: event.data['pickupAddress'] as String?,
+        createdAt: DateTime.now(),
+      );
+      emit(loaded.copyWith(
+        orders: [optimistic, ...loaded.orders],
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
+
     try {
       var newOrder = await _repository.createOrder(event.data);
 
@@ -387,6 +448,26 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         isActionError: true,
       ));
     }
+  }
+
+  // ── TempId resolved (offline order synced) ───────────────────────────
+
+  void _onTempIdResolved(
+    OrderTempIdResolved event,
+    Emitter<OrdersState> emit,
+  ) {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    final updated = current.orders.map((o) {
+      if (o.id != event.tempId) return o;
+      return o.copyWith(id: event.realId, orderNumber: '');
+    }).toList();
+
+    emit(current.copyWith(
+      orders: updated,
+      actionMessage: () => AppStrings.orderSyncedSuccess,
+    ));
   }
 
   // ── Create Recurring ─────────────────────────────────────────────────
@@ -505,17 +586,14 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         selectedOrder: () => order,
         isActionInProgress: false,
       ));
-    } on ApiException catch (e) {
-      emit(current.copyWith(
-        isActionInProgress: false,
-        actionMessage: () => e.message,
-        isActionError: true,
-      ));
     } catch (_) {
+      // Offline fallback: use cached order from the list
+      final cached = current.orders
+          .where((o) => o.id == event.orderId)
+          .firstOrNull;
       emit(current.copyWith(
+        selectedOrder: () => cached ?? current.selectedOrder,
         isActionInProgress: false,
-        actionMessage: () => AppStrings.unknownError,
-        isActionError: true,
       ));
     }
   }
@@ -530,6 +608,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    if (!ConnectivityService.instance.isOnline) {
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.update,
+        orderId: event.orderId,
+        payload: event.data,
+      );
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       final updated = await _repository.updateOrder(event.orderId, event.data);
@@ -610,6 +701,28 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'status': event.newStatus,
+        if (event.notes != null) 'notes': event.notes,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.statusChange,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      final optimistic = current.orders.map((o) {
+        if (o.id != event.orderId) return o;
+        return o.copyWith(status: OrderStatus.fromValue(event.newStatus));
+      }).toList();
+      emit(current.copyWith(
+        orders: optimistic,
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
+
     try {
       await _repository.updateOrderStatus(event.orderId, {
         'status': event.newStatus,
@@ -654,6 +767,36 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    // Offline: queue the action and optimistically update the UI
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        if (event.actualAmount != null) 'actualCollectedAmount': event.actualAmount,
+        if (event.latitude != null) 'latitude': event.latitude,
+        if (event.longitude != null) 'longitude': event.longitude,
+        if (event.notes != null) 'notes': event.notes,
+        if (event.rating != null) 'ratingValue': event.rating,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.deliver,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      _deliveredOrderIds.add(event.orderId);
+      final optimistic = current.orders.map((o) {
+        if (o.id != event.orderId) return o;
+        return o.copyWith(status: OrderStatus.delivered);
+      }).toList();
+      emit(current.copyWith(
+        orders: optimistic,
+        selectedOrder: () => current.selectedOrder?.id == event.orderId
+            ? current.selectedOrder?.copyWith(status: OrderStatus.delivered)
+            : current.selectedOrder,
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       await _repository.deliverOrder(event.orderId, {
@@ -709,6 +852,32 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
+    // Offline: queue and optimistically update
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'reason': event.reason,
+        if (event.reasonText != null) 'reasonText': event.reasonText,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.fail,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      final optimistic = current.orders.map((o) {
+        if (o.id != event.orderId) return o;
+        return o.copyWith(status: OrderStatus.failed);
+      }).toList();
+      emit(current.copyWith(
+        orders: optimistic,
+        selectedOrder: () => current.selectedOrder?.id == event.orderId
+            ? current.selectedOrder?.copyWith(status: OrderStatus.failed)
+            : current.selectedOrder,
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
+
     try {
       await _repository.failOrder(event.orderId, {
         'reason': event.reason,
@@ -753,6 +922,33 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    // Offline: queue and optimistically update
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'cancellationReason': event.reason,
+        if (event.reasonText != null) 'reasonText': event.reasonText,
+        if (event.lossAmount != null) 'lossAmount': event.lossAmount,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.cancel,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      final optimistic = current.orders.map((o) {
+        if (o.id != event.orderId) return o;
+        return o.copyWith(status: OrderStatus.cancelled);
+      }).toList();
+      emit(current.copyWith(
+        orders: optimistic,
+        selectedOrder: () => current.selectedOrder?.id == event.orderId
+            ? current.selectedOrder?.copyWith(status: OrderStatus.cancelled)
+            : current.selectedOrder,
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       await _repository.cancelOrder(event.orderId, {
@@ -836,6 +1032,23 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'newDeliveryAddress': event.newAddress,
+        if (event.reason != null) 'reason': event.reason,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.swapAddress,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       await _repository.swapAddress(event.orderId, {
@@ -928,6 +1141,23 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'targetDriverId': event.targetDriverId,
+        if (event.reason != null) 'reason': event.reason,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.transfer,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
+
     try {
       await _repository.transferOrder(event.orderId, {
         'targetDriverId': event.targetDriverId,
@@ -972,6 +1202,31 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    if (!ConnectivityService.instance.isOnline) {
+      final payload = {
+        'deliveredItemCount': event.deliveredItemCount,
+        'totalItemCount': event.totalItemCount,
+        'collectedAmount': event.collectedAmount,
+        'remainingAmount': event.remainingAmount,
+        if (event.reason != null) 'reason': event.reason,
+      };
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.partial,
+        orderId: event.orderId,
+        payload: payload,
+      );
+      final optimistic = current.orders.map((o) {
+        if (o.id != event.orderId) return o;
+        return o.copyWith(status: OrderStatus.partiallyDelivered);
+      }).toList();
+      emit(current.copyWith(
+        orders: optimistic,
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       await _repository.partialDelivery(event.orderId, {
@@ -1021,6 +1276,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
+    if (!ConnectivityService.instance.isOnline) {
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.waitingStart,
+        orderId: event.orderId,
+        payload: const {},
+      );
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
+
     try {
       await _repository.startWaitingTimer(event.orderId);
 
@@ -1053,6 +1321,19 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     if (current is! OrdersLoaded) return;
 
     emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    if (!ConnectivityService.instance.isOnline) {
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.waitingStop,
+        orderId: event.orderId,
+        payload: const {},
+      );
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.savedOffline,
+      ));
+      return;
+    }
 
     try {
       await _repository.stopWaitingTimer(event.orderId);
@@ -1575,5 +1856,39 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         isActionError: true,
       ));
     }
+  }
+
+  // ── Hydration ──────────────────────────────────────────────────────
+
+  @override
+  OrdersState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final orders = (json['orders'] as List<dynamic>)
+            .map((o) => OrderModel.fromJson(
+                  Map<String, dynamic>.from(o as Map),
+                ))
+            .toList();
+        return OrdersLoaded(
+          orders: orders,
+          hasMore: json['hasMore'] as bool? ?? false,
+          currentPage: json['currentPage'] as int? ?? 1,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(OrdersState state) {
+    if (state is OrdersLoaded) {
+      return {
+        'type': 'loaded',
+        'orders': state.orders.map((o) => o.toJson()).toList(),
+        'hasMore': state.hasMore,
+        'currentPage': state.currentPage,
+      };
+    }
+    return null;
   }
 }

@@ -16,6 +16,21 @@ class SettlementModel extends SettlementEntity {
     required super.createdAt,
   });
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'driverId': driverId,
+        'partnerId': partnerId,
+        'partnerName': partnerName,
+        'amount': amount,
+        'settlementType': settlementType,
+        'orderCount': orderCount,
+        'notes': notes,
+        'receiptImageUrl': receiptImageUrl,
+        'whatsAppSent': whatsAppSent,
+        'settledAt': settledAt.toIso8601String(),
+        'createdAt': createdAt.toIso8601String(),
+      };
+
   factory SettlementModel.fromJson(Map<String, dynamic> json) {
     final now = DateTime.now().toIso8601String();
     return SettlementModel(

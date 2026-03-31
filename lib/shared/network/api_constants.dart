@@ -133,6 +133,11 @@ abstract final class ApiConstants {
   static String chatMessageRead(String id) => '$_chat/messages/$id/read';
   static const String chatUnreadCount = '$_chat/unread-count';
 
+  // Badge endpoints
+  static const String _badge = '$baseUrl/badge';
+  static const String badge = _badge;
+  static String badgeVerify(String qrToken) => '$_badge/verify/$qrToken';
+
   // SOS endpoints
   static const String _sos = '$baseUrl/sos';
   static const String sosActivate = '$_sos/activate';
@@ -182,6 +187,14 @@ abstract final class ApiConstants {
   static String recurringOrderDetail(String id) => '$_orders/recurring/$id';
   static String recurringOrderPause(String id) => '$_orders/recurring/$id/pause';
   static String recurringOrderResume(String id) => '$_orders/recurring/$id/resume';
+
+  // Break endpoints
+  static const String _breaks = '$baseUrl/breaks';
+  static const String breakSuggestion = '$_breaks/suggestion';
+  static const String breakActive = '$_breaks/active';
+  static const String breakStart = '$_breaks/start';
+  static const String breakEnd = '$_breaks/end';
+  static const String breakHistory = '$_breaks/history';
 
   // Sync endpoints
   static const String _sync = '$baseUrl/sync';

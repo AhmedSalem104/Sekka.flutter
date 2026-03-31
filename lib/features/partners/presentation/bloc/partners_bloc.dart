@@ -1,4 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../shared/network/api_result.dart';
 import '../../../search/data/repositories/search_repository.dart';
@@ -7,7 +7,7 @@ import '../../data/repositories/partner_repository.dart';
 import 'partners_event.dart';
 import 'partners_state.dart';
 
-class PartnersBloc extends Bloc<PartnersEvent, PartnersState> {
+class PartnersBloc extends HydratedBloc<PartnersEvent, PartnersState> {
   PartnersBloc({
     required PartnerRepository repository,
     SearchRepository? searchRepository,
@@ -25,7 +25,10 @@ class PartnersBloc extends Bloc<PartnersEvent, PartnersState> {
     PartnersLoadRequested event,
     Emitter<PartnersState> emit,
   ) async {
-    emit(const PartnersLoading());
+    // Only show loading spinner if no cached data
+    if (state is! PartnersLoaded) {
+      emit(const PartnersLoading());
+    }
 
     final result = await _repository.getPartners(
       pageNumber: event.page,
@@ -43,7 +46,10 @@ class PartnersBloc extends Bloc<PartnersEvent, PartnersState> {
           hasNextPage: false,
         ));
       case ApiFailure(:final error):
-        emit(PartnersError(message: error.arabicMessage));
+        // Keep cached data on failure
+        if (state is! PartnersLoaded) {
+          emit(PartnersError(message: error.arabicMessage));
+        }
     }
   }
 
@@ -91,5 +97,41 @@ class PartnersBloc extends Bloc<PartnersEvent, PartnersState> {
         searchTerm: term,
       ));
     }
+  }
+
+  // ── Hydration ──
+
+  @override
+  PartnersState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final partners = (json['partners'] as List<dynamic>)
+            .map((p) => PartnerModel.fromJson(
+                  Map<String, dynamic>.from(p as Map),
+                ))
+            .toList();
+        return PartnersLoaded(
+          partners: partners,
+          totalCount: json['totalCount'] as int? ?? partners.length,
+          page: json['page'] as int? ?? 1,
+          hasNextPage: json['hasNextPage'] as bool? ?? false,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(PartnersState state) {
+    if (state is PartnersLoaded) {
+      return {
+        'type': 'loaded',
+        'partners': state.partners.map((p) => p.toJson()).toList(),
+        'totalCount': state.totalCount,
+        'page': state.page,
+        'hasNextPage': state.hasNextPage,
+      };
+    }
+    return null;
   }
 }

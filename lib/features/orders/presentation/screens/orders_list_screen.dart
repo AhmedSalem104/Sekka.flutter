@@ -45,7 +45,12 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<OrdersBloc>().add(const OrdersLoadRequested());
+    final bloc = context.read<OrdersBloc>();
+    if (bloc.state is OrdersLoaded) {
+      bloc.add(const OrdersLoadRequested(refresh: true));
+    } else {
+      bloc.add(const OrdersLoadRequested());
+    }
     _scrollController.addListener(_onScroll);
   }
 

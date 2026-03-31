@@ -10,6 +10,15 @@ class DailySettlementSummaryModel extends DailySettlementSummaryEntity {
     required super.pendingPartners,
   });
 
+  Map<String, dynamic> toJson() => {
+        'date': date,
+        'totalCollected': totalCollected,
+        'totalSettled': totalSettled,
+        'remainingBalance': remainingBalance,
+        'settlementCount': settlementCount,
+        'pendingPartners': pendingPartners,
+      };
+
   factory DailySettlementSummaryModel.fromJson(Map<String, dynamic> json) {
     return DailySettlementSummaryModel(
       date: json['date'] as String? ?? '',

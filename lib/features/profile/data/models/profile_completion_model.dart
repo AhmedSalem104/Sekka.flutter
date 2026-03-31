@@ -8,6 +8,15 @@ class ProfileCompletionModel extends ProfileCompletionEntity {
     required super.isProfileComplete,
   });
 
+  Map<String, dynamic> toJson() => {
+        'completionPercentage': completionPercentage,
+        'completedSteps': completedSteps,
+        'pendingSteps': pendingSteps
+            .map((s) => (s as PendingStepModel).toJson())
+            .toList(),
+        'isProfileComplete': isProfileComplete,
+      };
+
   factory ProfileCompletionModel.fromJson(Map<String, dynamic> json) {
     return ProfileCompletionModel(
       completionPercentage: json['completionPercentage'] as int? ?? 0,
@@ -34,6 +43,13 @@ class PendingStepModel extends PendingStepEntity {
     required super.isRequired,
     required super.weight,
   });
+
+  Map<String, dynamic> toJson() => {
+        'stepName': stepName,
+        'stepKey': stepKey,
+        'isRequired': isRequired,
+        'weight': weight,
+      };
 
   factory PendingStepModel.fromJson(Map<String, dynamic> json) {
     return PendingStepModel(

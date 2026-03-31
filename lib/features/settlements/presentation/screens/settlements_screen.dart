@@ -34,7 +34,12 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<SettlementBloc>().add(const SettlementsLoadRequested());
+    final bloc = context.read<SettlementBloc>();
+    if (bloc.state is SettlementLoaded) {
+      bloc.add(const SettlementRefreshRequested());
+    } else {
+      bloc.add(const SettlementsLoadRequested());
+    }
     _scrollController.addListener(_onScroll);
     _checkOnboarding();
   }

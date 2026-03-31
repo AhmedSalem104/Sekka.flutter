@@ -1,7 +1,10 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/daily_stats_model.dart';
+import '../../data/models/monthly_stats_model.dart';
+import '../../data/models/weekly_stats_model.dart';
 import '../../domain/entities/daily_stats_entity.dart';
 import '../../domain/entities/monthly_stats_entity.dart';
 import '../../domain/entities/weekly_stats_entity.dart';
@@ -79,7 +82,7 @@ final class StatisticsError extends StatisticsState {
 
 // ── BLoC ──
 
-class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
+class StatisticsBloc extends HydratedBloc<StatisticsEvent, StatisticsState> {
   StatisticsBloc({required StatisticsRepository repository})
       : _repository = repository,
         super(const StatisticsInitial()) {
@@ -131,7 +134,10 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
     StatisticsTab tab,
     Emitter<StatisticsState> emit,
   ) async {
-    emit(StatisticsLoading(tab: tab));
+    final current = state;
+    if (current is! StatisticsLoaded) {
+      emit(StatisticsLoading(tab: tab));
+    }
     try {
       switch (tab) {
         case StatisticsTab.daily:
@@ -149,11 +155,59 @@ class StatisticsBloc extends Bloc<StatisticsEvent, StatisticsState> {
           emit(StatisticsLoaded(tab: tab, monthly: _cachedMonthly));
       }
     } on ApiException catch (e) {
-      if (e.statusCode == 404) {
-        emit(StatisticsEmpty(tab: tab));
-      } else {
-        emit(StatisticsError(tab: tab, message: e.message));
+      if (current is! StatisticsLoaded) {
+        if (e.statusCode == 404) {
+          emit(StatisticsEmpty(tab: tab));
+        } else {
+          emit(StatisticsError(tab: tab, message: e.message));
+        }
       }
     }
+  }
+
+  // ── Hydration ──
+
+  @override
+  StatisticsState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final tabName = json['tab'] as String? ?? 'weekly';
+        final tab = StatisticsTab.values.byName(tabName);
+        final daily = json['daily'] != null
+            ? DailyStatsModel.fromJson(Map<String, dynamic>.from(json['daily'] as Map))
+            : null;
+        final weekly = json['weekly'] != null
+            ? WeeklyStatsModel.fromJson(Map<String, dynamic>.from(json['weekly'] as Map))
+            : null;
+        final monthly = json['monthly'] != null
+            ? MonthlyStatsModel.fromJson(Map<String, dynamic>.from(json['monthly'] as Map))
+            : null;
+        _cachedDaily = daily;
+        _cachedWeekly = weekly;
+        _cachedMonthly = monthly;
+        return StatisticsLoaded(tab: tab, daily: daily, weekly: weekly, monthly: monthly);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(StatisticsState state) {
+    if (state is StatisticsLoaded) {
+      return {
+        'type': 'loaded',
+        'tab': state.tab.name,
+        'daily': state.daily is DailyStatsModel
+            ? (state.daily! as DailyStatsModel).toJson()
+            : null,
+        'weekly': state.weekly is WeeklyStatsModel
+            ? (state.weekly! as WeeklyStatsModel).toJson()
+            : null,
+        'monthly': state.monthly is MonthlyStatsModel
+            ? (state.monthly! as MonthlyStatsModel).toJson()
+            : null,
+      };
+    }
+    return null;
   }
 }

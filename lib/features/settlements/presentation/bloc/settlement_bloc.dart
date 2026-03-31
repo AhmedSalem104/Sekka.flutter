@@ -1,13 +1,20 @@
 import 'dart:io';
 
 import 'package:equatable/equatable.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_result.dart';
+import '../../../../shared/offline/offline_queue_service.dart';
+import '../../../../shared/offline/queue_operation.dart';
+import '../../../../shared/services/connectivity_service.dart';
 import '../../../partners/data/models/create_partner_model.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../../../partners/data/repositories/partner_repository.dart';
+import '../../data/models/daily_settlement_summary_model.dart';
+import '../../data/models/partner_balance_model.dart';
+import '../../data/models/settlement_model.dart';
 import '../../domain/entities/daily_settlement_summary_entity.dart';
 import '../../domain/entities/partner_balance_entity.dart';
 import '../../domain/entities/settlement_entity.dart';
@@ -16,7 +23,7 @@ import '../../domain/repositories/settlement_repository.dart';
 part 'settlement_event.dart';
 part 'settlement_state.dart';
 
-class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
+class SettlementBloc extends HydratedBloc<SettlementEvent, SettlementState> {
   SettlementBloc({
     required SettlementRepository repository,
     required PartnerRepository partnerRepository,
@@ -40,7 +47,10 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
     SettlementsLoadRequested event,
     Emitter<SettlementState> emit,
   ) async {
-    emit(const SettlementLoading());
+    final current = state;
+    if (current is! SettlementLoaded) {
+      emit(const SettlementLoading());
+    }
     try {
       final results = await Future.wait([
         _repository.getDailySummary(),
@@ -63,7 +73,7 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
         currentPage: 1,
       ));
     } on ApiException catch (e) {
-      emit(SettlementError(e.message));
+      if (current is! SettlementLoaded) emit(SettlementError(e.message));
     }
   }
 
@@ -138,8 +148,8 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
         filterPartnerId: partnerId,
         filterType: type,
       ));
-    } on ApiException catch (e) {
-      emit(SettlementError(e.message));
+    } on ApiException {
+      // Keep existing cached data on network failure
     }
   }
 
@@ -147,6 +157,22 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
     SettlementCreateRequested event,
     Emitter<SettlementState> emit,
   ) async {
+    if (!ConnectivityService.instance.isOnline) {
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.settlementCreate,
+        orderId: '',
+        payload: {
+          'partnerId': event.partnerId,
+          'amount': event.amount,
+          'settlementType': event.settlementType,
+          'orderCount': event.orderCount,
+          'notes': event.notes,
+        },
+      );
+      emit(SettlementError(AppStrings.savedOffline));
+      return;
+    }
+
     emit(const SettlementCreating());
     try {
       final settlement = await _repository.createSettlement(
@@ -179,8 +205,6 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
   ) async {
     final current = state;
     if (current is! SettlementLoaded) return;
-
-    emit(const SettlementLoading());
     try {
       final settlements = await _repository.getSettlements(
         page: 1,
@@ -249,9 +273,7 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
         // Refresh to include the new partner
         add(const SettlementRefreshRequested());
       } else if (result is ApiFailure<PartnerModel>) {
-        emit(SettlementError(
-          (result as ApiFailure<PartnerModel>).error.arabicMessage,
-        ));
+        emit(SettlementError(result.error.arabicMessage));
       }
     } on ApiException catch (e) {
       emit(SettlementError(e.message));
@@ -264,5 +286,69 @@ class SettlementBloc extends Bloc<SettlementEvent, SettlementState> {
       return result.data;
     }
     return [];
+  }
+
+  // ── Hydration ──
+
+  @override
+  SettlementState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final summary = DailySettlementSummaryModel.fromJson(
+          Map<String, dynamic>.from(json['summary'] as Map),
+        );
+        final settlements = (json['settlements'] as List<dynamic>)
+            .map((s) => SettlementModel.fromJson(
+                  Map<String, dynamic>.from(s as Map),
+                ))
+            .toList();
+        final partners = (json['partners'] as List<dynamic>)
+            .map((p) => PartnerModel.fromJson(
+                  Map<String, dynamic>.from(p as Map),
+                ))
+            .toList();
+        final balancesRaw =
+            Map<String, dynamic>.from(json['partnerBalances'] as Map? ?? {});
+        final partnerBalances = balancesRaw.map((k, v) => MapEntry(
+              k,
+              PartnerBalanceModel.fromJson(
+                Map<String, dynamic>.from(v as Map),
+              ) as PartnerBalanceEntity,
+            ));
+        return SettlementLoaded(
+          summary: summary,
+          settlements: settlements,
+          partners: partners,
+          partnerBalances: partnerBalances,
+          hasMore: json['hasMore'] as bool? ?? false,
+          currentPage: json['currentPage'] as int? ?? 1,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(SettlementState state) {
+    if (state is SettlementLoaded) {
+      final summary = state.summary;
+      if (summary is! DailySettlementSummaryModel) return null;
+      return {
+        'type': 'loaded',
+        'summary': summary.toJson(),
+        'settlements': state.settlements
+            .whereType<SettlementModel>()
+            .map((s) => s.toJson())
+            .toList(),
+        'partners': state.partners.map((p) => p.toJson()).toList(),
+        'partnerBalances': state.partnerBalances.map((k, v) => MapEntry(
+              k,
+              v is PartnerBalanceModel ? v.toJson() : <String, dynamic>{},
+            )),
+        'hasMore': state.hasMore,
+        'currentPage': state.currentPage,
+      };
+    }
+    return null;
   }
 }

@@ -30,7 +30,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<SettingsBloc>().add(const SettingsLoadRequested());
+    final bloc = context.read<SettingsBloc>();
+    if (bloc.state is SettingsLoaded) {
+      bloc.add(const SettingsRefreshRequested());
+    } else {
+      bloc.add(const SettingsLoadRequested());
+    }
   }
 
   @override

@@ -15,6 +15,20 @@ class ProfileStatsModel extends ProfileStatsEntity {
     required super.bestDayOrders,
   });
 
+  Map<String, dynamic> toJson() => {
+        'totalOrders': totalOrders,
+        'totalDelivered': totalDelivered,
+        'totalFailed': totalFailed,
+        'totalCancelled': totalCancelled,
+        'successRate': successRate,
+        'averageRating': averageRating,
+        'totalEarnings': totalEarnings,
+        'totalCommissions': totalCommissions,
+        'averageDeliveryTimeMinutes': averageDeliveryTimeMinutes,
+        'bestDay': bestDay,
+        'bestDayOrders': bestDayOrders,
+      };
+
   factory ProfileStatsModel.fromJson(Map<String, dynamic> json) {
     return ProfileStatsModel(
       totalOrders: json['totalOrders'] as int? ?? 0,

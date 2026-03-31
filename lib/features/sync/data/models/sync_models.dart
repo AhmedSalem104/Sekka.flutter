@@ -21,11 +21,35 @@ class SyncStatusModel {
   final bool isOnline;
 }
 
+class SyncedItemModel {
+  const SyncedItemModel({
+    required this.tempId,
+    required this.realId,
+    required this.entityType,
+    this.operation = '',
+  });
+
+  final String tempId;
+  final String realId;
+  final String entityType;
+  final String operation;
+
+  factory SyncedItemModel.fromJson(Map<String, dynamic> json) {
+    return SyncedItemModel(
+      tempId: json['tempId'] as String? ?? '',
+      realId: json['realId'] as String? ?? '',
+      entityType: json['entityType'] as String? ?? '',
+      operation: json['operation'] as String? ?? '',
+    );
+  }
+}
+
 class SyncPushResult {
   const SyncPushResult({
     this.syncedCount = 0,
     this.conflictCount = 0,
     this.failedCount = 0,
+    this.syncedItems = const [],
     this.conflicts = const [],
     this.syncTimestamp,
   });
@@ -35,6 +59,11 @@ class SyncPushResult {
       syncedCount: json['syncedCount'] as int? ?? 0,
       conflictCount: json['conflictCount'] as int? ?? 0,
       failedCount: json['failedCount'] as int? ?? 0,
+      syncedItems: (json['syncedItems'] as List<dynamic>?)
+              ?.map((e) =>
+                  SyncedItemModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
       conflicts: (json['conflicts'] as List<dynamic>?) ?? [],
       syncTimestamp: json['syncTimestamp'] as String?,
     );
@@ -43,6 +72,7 @@ class SyncPushResult {
   final int syncedCount;
   final int conflictCount;
   final int failedCount;
+  final List<SyncedItemModel> syncedItems;
   final List<dynamic> conflicts;
   final String? syncTimestamp;
 }

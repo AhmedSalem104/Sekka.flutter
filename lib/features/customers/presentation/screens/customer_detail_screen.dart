@@ -54,20 +54,24 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Future<void> _loadExtras() async {
-    final results = await Future.wait([
-      _repository.getInterests(widget.customerId),
-      _repository.getEngagement(widget.customerId),
-    ]);
+    try {
+      final results = await Future.wait([
+        _repository.getInterests(widget.customerId),
+        _repository.getEngagement(widget.customerId),
+      ]);
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final interestsResult = results[0] as ApiResult<CustomerInterestsModel>;
-    final engagementResult = results[1] as ApiResult<CustomerEngagementModel>;
+      final interestsResult = results[0] as ApiResult<CustomerInterestsModel>;
+      final engagementResult = results[1] as ApiResult<CustomerEngagementModel>;
 
-    setState(() {
-      if (interestsResult case ApiSuccess(:final data)) _interests = data;
-      if (engagementResult case ApiSuccess(:final data)) _engagement = data;
-    });
+      setState(() {
+        if (interestsResult case ApiSuccess(:final data)) _interests = data;
+        if (engagementResult case ApiSuccess(:final data)) _engagement = data;
+      });
+    } catch (_) {
+      // Offline — extras not available
+    }
   }
 
   @override

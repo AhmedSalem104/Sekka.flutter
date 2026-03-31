@@ -1,4 +1,4 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../search/data/repositories/search_repository.dart';
 import '../../data/models/customer_model.dart';
@@ -6,7 +6,7 @@ import '../../data/repositories/customer_repository.dart';
 import 'customers_event.dart';
 import 'customers_state.dart';
 
-class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
+class CustomersBloc extends HydratedBloc<CustomersEvent, CustomersState> {
   CustomersBloc({
     required CustomerRepository repository,
     SearchRepository? searchRepository,
@@ -24,7 +24,10 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     CustomersLoadRequested event,
     Emitter<CustomersState> emit,
   ) async {
-    emit(const CustomersLoading());
+    // Only show loading spinner if no cached data
+    if (state is! CustomersLoaded) {
+      emit(const CustomersLoading());
+    }
 
     final result = await _repository.getCustomers(
       pageNumber: event.page,
@@ -44,7 +47,10 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
           hasNextPage: data.hasNextPage,
         ));
       case ApiFailure(:final error):
-        emit(CustomersError(message: error.arabicMessage));
+        // Keep cached data on failure
+        if (state is! CustomersLoaded) {
+          emit(CustomersError(message: error.arabicMessage));
+        }
     }
   }
 
@@ -88,5 +94,41 @@ class CustomersBloc extends Bloc<CustomersEvent, CustomersState> {
     } else {
       add(CustomersLoadRequested(searchTerm: term));
     }
+  }
+
+  // ── Hydration ──
+
+  @override
+  CustomersState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final customers = (json['customers'] as List<dynamic>)
+            .map((c) => CustomerModel.fromJson(
+                  Map<String, dynamic>.from(c as Map),
+                ))
+            .toList();
+        return CustomersLoaded(
+          customers: customers,
+          totalCount: json['totalCount'] as int? ?? customers.length,
+          page: json['page'] as int? ?? 1,
+          hasNextPage: json['hasNextPage'] as bool? ?? false,
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(CustomersState state) {
+    if (state is CustomersLoaded) {
+      return {
+        'type': 'loaded',
+        'customers': state.customers.map((c) => c.toJson()).toList(),
+        'totalCount': state.totalCount,
+        'page': state.page,
+        'hasNextPage': state.hasNextPage,
+      };
+    }
+    return null;
   }
 }

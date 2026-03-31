@@ -44,7 +44,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ProfileBloc>().add(const ProfileLoadRequested());
+    final bloc = context.read<ProfileBloc>();
+    if (bloc.state is ProfileLoaded) {
+      bloc.add(const ProfileRefreshRequested());
+    } else {
+      bloc.add(const ProfileLoadRequested());
+    }
   }
 
   @override
@@ -138,6 +143,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: AppSizes.xxl),
 
           // ── Sections ──────────────────────────────
+          ProfileSectionTile(
+            icon: IconsaxPlusLinear.card,
+            label: AppStrings.badgeSectionLabel,
+            onTap: () => context.push(RouteNames.badge),
+          ),
+          SizedBox(height: AppSizes.sm),
+
           ProfileSectionTile(
             icon: IconsaxPlusLinear.notification,
             label: AppStrings.notificationsTitle,

@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/settings_model.dart';
 import '../../domain/entities/settings_entity.dart';
 import '../../domain/repositories/settings_repository.dart';
 import 'settings_event.dart';
 import 'settings_state.dart';
 
-class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
+class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
   SettingsBloc({
     required SettingsRepository repository,
     required this.themeModeNotifier,
@@ -16,6 +17,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   })  : _repository = repository,
         super(const SettingsInitial()) {
     on<SettingsLoadRequested>(_onLoad);
+    on<SettingsRefreshRequested>(_onRefresh);
     on<SettingsUpdateRequested>(_onUpdate);
     on<SettingsToggled>(_onToggle);
     on<SettingsErrorCleared>(_onErrorCleared);
@@ -49,15 +51,35 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     SettingsLoadRequested event,
     Emitter<SettingsState> emit,
   ) async {
-    emit(const SettingsLoading());
+    final current = state;
+    if (current is! SettingsLoaded) {
+      emit(const SettingsLoading());
+    }
     try {
       final settings = await _repository.getSettings();
       _syncNotifiers(settings.theme, settings.language);
       emit(SettingsLoaded(settings: settings));
     } on ApiException catch (e) {
-      emit(SettingsError(e.message));
+      if (current is! SettingsLoaded) emit(SettingsError(e.message));
     } catch (_) {
-      emit(SettingsError(AppStrings.unknownError));
+      if (current is! SettingsLoaded) emit(SettingsError(AppStrings.unknownError));
+    }
+  }
+
+  // ── Silent Refresh ───────────────────────────────────
+
+  Future<void> _onRefresh(
+    SettingsRefreshRequested event,
+    Emitter<SettingsState> emit,
+  ) async {
+    try {
+      final settings = await _repository.getSettings();
+      _syncNotifiers(settings.theme, settings.language);
+      emit(SettingsLoaded(settings: settings));
+    } on ApiException {
+      // Keep existing cached data on network failure
+    } catch (_) {
+      // Keep existing cached data
     }
   }
 
@@ -243,5 +265,66 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
         entity.copyWith(backToBaseRadiusKm: value as double),
       _ => entity,
     };
+  }
+
+  // ── Hydration ─────────────────────────────────────────
+
+  @override
+  SettingsState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final settings = SettingsModel.fromJson(
+          Map<String, dynamic>.from(json['settings'] as Map),
+        );
+        _syncNotifiers(settings.theme, settings.language);
+        return SettingsLoaded(settings: settings);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(SettingsState state) {
+    if (state is SettingsLoaded) {
+      final s = state.settings;
+      if (s is SettingsModel) {
+        return {'type': 'loaded', 'settings': s.toJson()};
+      }
+      // If it's a plain SettingsEntity (from copyWith), serialize manually
+      return {
+        'type': 'loaded',
+        'settings': {
+          'theme': s.theme,
+          'language': s.language,
+          'numberFormat': s.numberFormat,
+          'focusModeAutoTrigger': s.focusModeAutoTrigger,
+          'focusModeSpeedThreshold': s.focusModeSpeedThreshold,
+          'textToSpeechEnabled': s.textToSpeechEnabled,
+          'hapticFeedback': s.hapticFeedback,
+          'highContrastMode': s.highContrastMode,
+          'notifyNewOrder': s.notifyNewOrder,
+          'notifyCashAlert': s.notifyCashAlert,
+          'notifyBreakReminder': s.notifyBreakReminder,
+          'notifyMaintenance': s.notifyMaintenance,
+          'notifySettlement': s.notifySettlement,
+          'notifyAchievement': s.notifyAchievement,
+          'notifySound': s.notifySound,
+          'notifyVibration': s.notifyVibration,
+          'quietHoursStart': s.quietHoursStart,
+          'quietHoursEnd': s.quietHoursEnd,
+          'preferredMapApp': s.preferredMapApp,
+          'maxOrdersPerShift': s.maxOrdersPerShift,
+          'autoSendReceipt': s.autoSendReceipt,
+          'locationTrackingInterval': s.locationTrackingInterval,
+          'offlineSyncInterval': s.offlineSyncInterval,
+          'homeLatitude': s.homeLatitude,
+          'homeLongitude': s.homeLongitude,
+          'homeAddress': s.homeAddress,
+          'backToBaseAlertEnabled': s.backToBaseAlertEnabled,
+          'backToBaseRadiusKm': s.backToBaseRadiusKm,
+        },
+      };
+    }
+    return null;
   }
 }

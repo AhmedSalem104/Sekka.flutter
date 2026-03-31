@@ -105,7 +105,12 @@
       "Bash(__NEW_LINE_78c5493a82a36c48__ echo:*)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjBhYmY3YjQxLWEwZWUtNDE1OS1jODgxLTA4ZGU4YjkxMDFkNyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLZgtin2LfZhdmHINmF2K3ZhdivINi52YTZiiIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL21vYmlsZXBob25lIjoiKzIwMTE0ODYyMzk4NSIsImp0aSI6IjIzM2YyODY4LTAzNTQtNDM4OS1iOTI2LTExZjI1OGQ5NGJiZSIsImV4cCI6MTc3NDkyMDg2OSwiaXNzIjoiU2Vra2EuQVBJIiwiYXVkIjoiU2Vra2EuTW9iaWxlIn0.Mmh1wF-lMioMouiG3wjZKSIA1gLaLsq_6GUnLSQvmZY\")",
       "Bash(__NEW_LINE_d13ecd61ca55942d__ echo:*)",
-      "Bash(__NEW_LINE_e842d9df2e745e72__ echo:*)"
+      "Bash(__NEW_LINE_e842d9df2e745e72__ echo:*)",
+      "Bash(git checkout:*)",
+      "Bash(git fetch:*)",
+      "Bash(taskkill /F /IM dart.exe)",
+      "Bash(taskkill /F /IM flutter.exe)",
+      "Bash(flutter clean:*)"
     ]
   }
 }

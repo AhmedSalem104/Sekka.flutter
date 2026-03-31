@@ -35,13 +35,18 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
 
   Future<void> _load() async {
     setState(() { _isLoading = true; _error = null; });
-    final result = await widget.repository.getConversations();
-    if (!mounted) return;
-    switch (result) {
-      case ApiSuccess(:final data):
-        setState(() { _data = data; _isLoading = false; });
-      case ApiFailure(:final error):
-        setState(() { _error = error.arabicMessage; _isLoading = false; });
+    try {
+      final result = await widget.repository.getConversations();
+      if (!mounted) return;
+      switch (result) {
+        case ApiSuccess(:final data):
+          setState(() { _data = data; _isLoading = false; });
+        case ApiFailure(:final error):
+          setState(() { _error = error.arabicMessage; _isLoading = false; });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() { _error = 'مفيش نت — جرّب تاني لما النت يرجع'; _isLoading = false; });
     }
   }
 

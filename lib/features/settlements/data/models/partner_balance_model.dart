@@ -10,6 +10,15 @@ class PartnerBalanceModel extends PartnerBalanceEntity {
     required super.pendingOrderCount,
   });
 
+  Map<String, dynamic> toJson() => {
+        'partnerId': partnerId,
+        'partnerName': partnerName,
+        'totalCollected': totalCollected,
+        'totalSettled': totalSettled,
+        'pendingBalance': pendingBalance,
+        'pendingOrderCount': pendingOrderCount,
+      };
+
   factory PartnerBalanceModel.fromJson(Map<String, dynamic> json) {
     return PartnerBalanceModel(
       partnerId: json['partnerId'] as String? ?? '',

@@ -53,12 +53,19 @@ class _ContactsScreenState extends State<ContactsScreen>
     _customersBloc = CustomersBloc(
       repository: CustomerRepository(dioClient.dio),
       searchRepository: searchRepo,
-    )..add(const CustomersLoadRequested());
+    );
+    // HydratedBloc may have restored cached data — only full-load if empty
+    if (_customersBloc.state is! CustomersLoaded) {
+      _customersBloc.add(const CustomersLoadRequested());
+    }
 
     _partnersBloc = PartnersBloc(
       repository: PartnerRepository(dioClient.dio),
       searchRepository: searchRepo,
-    )..add(const PartnersLoadRequested());
+    );
+    if (_partnersBloc.state is! PartnersLoaded) {
+      _partnersBloc.add(const PartnersLoadRequested());
+    }
 
     _tabController.addListener(_onTabChanged);
   }

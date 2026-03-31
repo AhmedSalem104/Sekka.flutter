@@ -21,6 +21,26 @@ class DailyStatsModel extends DailyStatsEntity {
     required super.peakHourOrders,
   });
 
+  Map<String, dynamic> toJson() => {
+        'date': date,
+        'totalOrders': totalOrders,
+        'successfulOrders': successfulOrders,
+        'failedOrders': failedOrders,
+        'cancelledOrders': cancelledOrders,
+        'totalEarnings': earnings,
+        'totalCommissions': commissions,
+        'totalExpenses': expenses,
+        'netProfit': netProfit,
+        'totalDistanceKm': distanceKm,
+        'timeWorkedMinutes': timeWorkedMinutes,
+        'successRate': successRate,
+        'averageOrderValue': averageOrderValue,
+        'averageDeliveryTimeMinutes': averageDeliveryTimeMinutes,
+        'cashCollected': tips,
+        'peakHour': peakHour,
+        'peakHourOrders': peakHourOrders,
+      };
+
   factory DailyStatsModel.fromJson(Map<String, dynamic> json) {
     return DailyStatsModel(
       date: json['date'] as String? ?? '',

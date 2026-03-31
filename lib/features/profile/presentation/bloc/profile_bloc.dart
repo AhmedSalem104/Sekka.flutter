@@ -1,14 +1,19 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../../../shared/offline/offline_queue_service.dart';
+import '../../../../shared/offline/queue_operation.dart';
+import '../../../../shared/services/connectivity_service.dart';
+import '../../data/models/profile_completion_model.dart';
 import '../../data/models/profile_model.dart';
+import '../../data/models/profile_stats_model.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import 'profile_event.dart';
 import 'profile_state.dart';
 
-class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
+class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
   ProfileBloc({required ProfileRepository repository})
       : _repository = repository,
         super(const ProfileInitial()) {
@@ -26,7 +31,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     ProfileLoadRequested event,
     Emitter<ProfileState> emit,
   ) async {
-    emit(const ProfileLoading());
+    final current = state;
+    if (current is! ProfileLoaded) {
+      emit(const ProfileLoading());
+    }
     try {
       final (profile, completion, stats) = await (
         _repository.getProfile(),
@@ -40,9 +48,9 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         stats: stats,
       ));
     } on ApiException catch (e) {
-      emit(ProfileError(e.message));
+      if (current is! ProfileLoaded) emit(ProfileError(e.message));
     } catch (_) {
-      emit(ProfileError(AppStrings.unknownError));
+      if (current is! ProfileLoaded) emit(ProfileError(AppStrings.unknownError));
     }
   }
 
@@ -62,10 +70,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         completion: completion,
         stats: stats,
       ));
-    } on ApiException catch (e) {
-      emit(ProfileError(e.message));
+    } on ApiException {
+      // Keep existing cached data on network failure
     } catch (_) {
-      emit(ProfileError(AppStrings.unknownError));
+      // Keep existing cached data on unexpected error
     }
   }
 
@@ -77,6 +85,16 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (current is! ProfileLoaded) return;
 
     emit(current.copyWith(isUpdating: true));
+
+    if (!ConnectivityService.instance.isOnline) {
+      await OfflineQueueService.instance.enqueueNew(
+        type: QueueOperationType.profileUpdate,
+        orderId: '',
+        payload: event.updates,
+      );
+      emit(current.copyWith(isUpdating: false));
+      return;
+    }
 
     try {
       final profile = await _repository.updateProfile(event.updates);
@@ -228,5 +246,47 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       todayOrdersCount: p.todayOrdersCount, todayEarnings: p.todayEarnings,
       referralCode: p.referralCode,
     );
+  }
+
+  // ── Hydration ──
+
+  @override
+  ProfileState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        return ProfileLoaded(
+          profile: ProfileModel.fromJson(
+            Map<String, dynamic>.from(json['profile'] as Map),
+          ),
+          completion: ProfileCompletionModel.fromJson(
+            Map<String, dynamic>.from(json['completion'] as Map),
+          ),
+          stats: ProfileStatsModel.fromJson(
+            Map<String, dynamic>.from(json['stats'] as Map),
+          ),
+        );
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(ProfileState state) {
+    if (state is ProfileLoaded) {
+      final profile = state.profile;
+      final completion = state.completion;
+      final stats = state.stats;
+      if (profile is ProfileModel &&
+          completion is ProfileCompletionModel &&
+          stats is ProfileStatsModel) {
+        return {
+          'type': 'loaded',
+          'profile': profile.toJson(),
+          'completion': completion.toJson(),
+          'stats': stats.toJson(),
+        };
+      }
+    }
+    return null;
   }
 }

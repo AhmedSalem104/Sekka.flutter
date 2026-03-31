@@ -25,6 +25,20 @@ class PartnerModel {
   final bool isActive;
   final int verificationStatus;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'partnerType': partnerType,
+        'phone': phone,
+        'address': address,
+        'commissionType': commissionType,
+        'commissionValue': commissionValue,
+        'color': color,
+        'logoUrl': logoUrl,
+        'isActive': isActive,
+        'verificationStatus': verificationStatus,
+      };
+
   factory PartnerModel.fromJson(Map<String, dynamic> json) {
     return PartnerModel(
       id: json['id'] as String,

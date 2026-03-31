@@ -10,6 +10,15 @@ class CashStatusModel extends CashStatusEntity {
     required super.hoursSinceLastSettlement,
   });
 
+  Map<String, dynamic> toJson() => {
+        'driverId': driverId,
+        'cashOnHand': cashOnHand,
+        'cashAlertThreshold': cashAlertThreshold,
+        'isOverThreshold': isOverThreshold,
+        'lastSettlementAt': lastSettlementAt?.toIso8601String(),
+        'hoursSinceLastSettlement': hoursSinceLastSettlement,
+      };
+
   factory CashStatusModel.fromJson(Map<String, dynamic> json) {
     return CashStatusModel(
       driverId: json['driverId'] as String? ?? '',

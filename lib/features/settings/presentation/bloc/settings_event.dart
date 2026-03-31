@@ -11,6 +11,10 @@ final class SettingsLoadRequested extends SettingsEvent {
   const SettingsLoadRequested();
 }
 
+final class SettingsRefreshRequested extends SettingsEvent {
+  const SettingsRefreshRequested();
+}
+
 final class SettingsUpdateRequested extends SettingsEvent {
   const SettingsUpdateRequested(this.updates);
 

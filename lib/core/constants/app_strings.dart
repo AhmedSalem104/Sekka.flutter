@@ -119,6 +119,51 @@ abstract final class AppStrings {
   static String get deleteAccountDeleted =>
       _isAr ? 'اتمسح الحساب بنجاح' : 'Account successfully deleted';
 
+  // Break
+  static String get breakSuggestionTitle =>
+      _isAr ? 'وقت الاستراحة!' : 'Break Time!';
+  static String get breakTakeBreak =>
+      _isAr ? 'خذ استراحة دلوقتي' : 'Take a Break Now';
+  static String get breakStart =>
+      _isAr ? 'ابدأ الاستراحة' : 'Start Break';
+  static String get breakEnd =>
+      _isAr ? 'إنهاء الاستراحة' : 'End Break';
+  static String get breakEndBreak =>
+      _isAr ? 'إنهاء الاستراحة' : 'End Break';
+  static String get breakActiveTitle =>
+      _isAr ? 'في استراحة' : 'On Break';
+  static String get breakMinutes =>
+      _isAr ? 'دقيقة' : 'min';
+  static String get breakLocation =>
+      _isAr ? 'مكانك دلوقتي' : 'Your current location';
+  static String get breakLocationHint =>
+      _isAr ? 'مثال: كافيه، حديقة...' : 'e.g. Cafe, park...';
+  static String get breakLocationRequired =>
+      _isAr ? 'اكتب مكانك' : 'Enter your location';
+  static String get breakEnergyBeforeTitle =>
+      _isAr ? 'كيف حالتك الآن؟' : 'How do you feel right now?';
+  static String get breakEnergyAfterTitle =>
+      _isAr ? 'كيف حالتك بعد الاستراحة؟' : 'How do you feel after the break?';
+  static String get breakEnergySubtitle =>
+      _isAr ? 'اختار مستوى طاقتك' : 'Select your energy level';
+  static String get breakEnergyBefore =>
+      _isAr ? 'قبل' : 'Before';
+  static String get breakEnergyAfter =>
+      _isAr ? 'بعد' : 'After';
+  static String get breakHistoryTitle =>
+      _isAr ? 'سجل الاستراحات' : 'Break History';
+  static String get breakHistoryEmpty =>
+      _isAr ? 'مفيش استراحات' : 'No breaks yet';
+  static String get breakHistoryEmptyDesc =>
+      _isAr ? 'الاستراحات هتظهر هنا' : 'Your breaks will appear here';
+
+  // Energy level labels (Arabic-only, used in energy selector)
+  static const String energyLevel1 = 'تعبان';
+  static const String energyLevel2 = 'خفيف';
+  static const String energyLevel3 = 'معقول';
+  static const String energyLevel4 = 'كويس';
+  static const String energyLevel5 = 'ممتاز';
+
   // Errors
   static String get networkError =>
       _isAr ? 'النت فصل عندك، شيّك على الاتصال' : 'No internet connection. Check your network.';
@@ -570,6 +615,12 @@ abstract final class AppStrings {
       _isAr ? 'تم تسجيل المحاولة' : 'Attempt recorded';
   static String get orderCancelledSuccess =>
       _isAr ? 'الطلب اتلغى' : 'Order cancelled';
+  static String get savedOffline =>
+      _isAr ? 'تمام! اتحفظ عندك — هيتبعت أول ما النت يرجع' : 'Saved! Will be sent when you\'re back online';
+  static String get pendingSync =>
+      _isAr ? 'مستني النت' : 'Waiting for connection';
+  static String get orderSyncedSuccess =>
+      _isAr ? 'تمام! الطلب اتأكد' : 'Done! Order confirmed';
   static String get photoUploadedSuccess =>
       _isAr ? 'تمام! الصورة اترفعت' : 'Photo uploaded!';
   static String get addressSwappedSuccess =>
@@ -1122,4 +1173,34 @@ abstract final class AppStrings {
   static const String useLocal = 'استخدم المحلي';
   static const String useServer = 'استخدم من السيرفر';
   static const String syncOffline = 'أنت أوفلاين — التغييرات هتتزامن لما النت يرجع';
+
+  // Badge
+  static String get badgeTitle => _isAr ? 'بطاقتي' : 'My Badge';
+  static String get badgeQrTitle =>
+      _isAr ? 'كود QR الخاص بيك' : 'Your QR Code';
+  static String get badgeQrSubtitle =>
+      _isAr
+          ? 'اعرض الكود للعميل عشان يتأكد من هويتك'
+          : 'Show this code to customers to verify your identity';
+  static String get badgeShare => _isAr ? 'شارك البطاقة' : 'Share badge';
+  static String get badgeScanQr =>
+      _isAr ? 'امسح QR سائق' : 'Scan Driver QR';
+  static String get badgeScanHint =>
+      _isAr
+          ? 'وجّه الكاميرا على كود QR السائق'
+          : 'Point camera at driver QR code';
+  static String get badgeScanSubhint =>
+      _isAr
+          ? 'سيتم التحقق تلقائياً'
+          : 'Verification will happen automatically';
+  static String get badgeVerifyValid =>
+      _isAr ? 'سائق موثّق' : 'Verified driver';
+  static String get badgeVerifyInvalid =>
+      _isAr ? 'الكود مش صالح' : 'Invalid QR code';
+  static String get badgeLoadError =>
+      _isAr ? 'مش قادرين نجيب البطاقة' : 'Could not load badge';
+  static String get badgeShareText =>
+      _isAr ? 'أنا سائق موثّق في سِكّة!' : 'I am a verified Sekka driver!';
+  static String get badgeSectionLabel =>
+      _isAr ? 'بطاقتي الرقمية' : 'My Digital Badge';
 }

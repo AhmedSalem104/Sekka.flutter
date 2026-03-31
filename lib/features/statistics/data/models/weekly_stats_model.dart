@@ -20,6 +20,33 @@ class WeeklyStatsModel extends WeeklyStatsEntity {
     super.comparisonWithLastWeek,
   });
 
+  Map<String, dynamic> toJson() => {
+        'weekStart': weekStart,
+        'weekEnd': weekEnd,
+        'totalOrders': totalOrders,
+        'successfulOrders': successfulOrders,
+        'totalEarnings': earnings,
+        'totalCommissions': commissions,
+        'totalExpenses': expenses,
+        'netProfit': netProfit,
+        'totalDistanceKm': distanceKm,
+        'timeWorkedMinutes': timeWorkedMinutes,
+        'successRate': successRate,
+        'averageOrderValue': averageOrderValue,
+        'dailyBreakdown': dailyBreakdown
+            .map((d) => {'date': d.date, 'orders': d.orders, 'earnings': d.earnings})
+            .toList(),
+        'bestDay': bestDay,
+        'worstDay': worstDay,
+        'comparisonWithLastWeek': comparisonWithLastWeek != null
+            ? {
+                'ordersChange': comparisonWithLastWeek!.ordersChange,
+                'earningsChange': comparisonWithLastWeek!.earningsChange,
+                'successRateChange': comparisonWithLastWeek!.successRateChange,
+              }
+            : null,
+      };
+
   factory WeeklyStatsModel.fromJson(Map<String, dynamic> json) {
     return WeeklyStatsModel(
       weekStart: json['weekStart'] as String? ?? '',

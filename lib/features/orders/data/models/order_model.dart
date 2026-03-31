@@ -111,6 +111,48 @@ class OrderModel {
   final String? nextScheduledDate;
   final int? totalOccurrences;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'orderNumber': orderNumber,
+        'customerName': customerName,
+        'customerPhone': customerPhone,
+        'partnerName': partnerName,
+        'partnerColor': partnerColor,
+        'description': description,
+        'amount': amount,
+        'commissionAmount': commissionAmount,
+        'paymentMethod': paymentMethod.value,
+        'status': status.value,
+        'priority': priority.value,
+        'pickupAddress': pickupAddress,
+        'pickupLatitude': pickupLatitude,
+        'pickupLongitude': pickupLongitude,
+        'deliveryAddress': deliveryAddress,
+        'deliveryLatitude': deliveryLatitude,
+        'deliveryLongitude': deliveryLongitude,
+        'distanceKm': distanceKm,
+        'sequenceIndex': sequenceIndex,
+        'worthScore': worthScore,
+        'notes': notes,
+        'itemCount': itemCount,
+        'timeWindowStart': timeWindowStart?.toIso8601String(),
+        'timeWindowEnd': timeWindowEnd?.toIso8601String(),
+        'scheduledDate': scheduledDate,
+        'createdAt': createdAt.toIso8601String(),
+        'deliveredAt': deliveredAt?.toIso8601String(),
+        'photos': photos.map((p) => {
+              'id': p.id,
+              'photoUrl': p.photoUrl,
+              'photoType': p.photoType,
+              'takenAt': p.takenAt?.toIso8601String(),
+            }).toList(),
+        'isRecurring': isRecurring,
+        'recurrencePattern': recurrencePattern,
+        'isPaused': isPaused,
+        'nextScheduledDate': nextScheduledDate,
+        'totalOccurrences': totalOccurrences,
+      };
+
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
       id: json['id'] as String,
@@ -161,6 +203,8 @@ class OrderModel {
   }
 
   OrderModel copyWith({
+    String? id,
+    String? orderNumber,
     String? customerName,
     String? customerPhone,
     String? pickupAddress,
@@ -172,8 +216,8 @@ class OrderModel {
     bool? isPaused,
   }) {
     return OrderModel(
-      id: id,
-      orderNumber: orderNumber,
+      id: id ?? this.id,
+      orderNumber: orderNumber ?? this.orderNumber,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,
       partnerName: partnerName,
@@ -232,7 +276,8 @@ class OrderModel {
     );
   }
 
-  Map<String, dynamic> toJson() => {
+  /// Minimal payload for creating/updating an order on the server.
+  Map<String, dynamic> toCreateJson() => {
         if (customerName != null) 'customerName': customerName,
         if (customerPhone != null) 'customerPhone': customerPhone,
         if (description != null) 'description': description,

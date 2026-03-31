@@ -13,6 +13,18 @@ class TransactionModel extends TransactionEntity {
     required super.createdAt,
   });
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'transactionType': type,
+        'typeName': typeName,
+        'typeNameAr': typeNameAr,
+        'amount': amount,
+        'balanceAfter': balanceAfter,
+        'description': description,
+        'referenceId': referenceId,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as String,

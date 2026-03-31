@@ -10,6 +10,17 @@ class RouteOrderModel {
     this.estimatedArrivalMinutes,
   });
 
+  Map<String, dynamic> toJson() => {
+        'orderId': orderId,
+        'sequenceIndex': sequenceIndex,
+        'orderNumber': orderNumber,
+        'customerName': customerName,
+        'deliveryAddress': deliveryAddress,
+        'amount': amount,
+        'status': status,
+        'estimatedArrivalMinutes': estimatedArrivalMinutes,
+      };
+
   factory RouteOrderModel.fromJson(Map<String, dynamic> json) {
     return RouteOrderModel(
       orderId: json['orderId'] as String? ?? '',
@@ -42,6 +53,15 @@ class RouteModel {
     this.efficiencyScore,
     this.isActive = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'orders': orders.map((o) => o.toJson()).toList(),
+        'estimatedTimeMinutes': estimatedTimeMinutes,
+        'totalDistanceKm': totalDistanceKm,
+        'efficiencyScore': efficiencyScore,
+        'isActive': isActive,
+      };
 
   factory RouteModel.fromJson(Map<String, dynamic> json) {
     return RouteModel(

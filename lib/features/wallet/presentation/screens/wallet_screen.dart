@@ -32,7 +32,12 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<WalletBloc>().add(const WalletLoadRequested());
+    final bloc = context.read<WalletBloc>();
+    if (bloc.state is WalletLoaded) {
+      bloc.add(const WalletRefreshRequested());
+    } else {
+      bloc.add(const WalletLoadRequested());
+    }
     _scrollController.addListener(_onScroll);
   }
 
@@ -231,7 +236,7 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
             ),
 
-          SizedBox(height: AppSizes.xxl),
+          SizedBox(height: AppSizes.bottomNavHeight + AppSizes.md),
         ],
       ),
     );

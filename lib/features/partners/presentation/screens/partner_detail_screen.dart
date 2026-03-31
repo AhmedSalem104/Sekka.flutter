@@ -36,8 +36,9 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
     super.initState();
     final dioClient = context.read<DioClient>();
     _repository = PartnerRepository(dioClient.dio);
-    _bloc = PartnerDetailBloc(repository: _repository)
-      ..add(PartnerDetailLoadRequested(partner: widget.partner));
+    _bloc = PartnerDetailBloc(repository: _repository);
+    // Show the partner info we already have, then try loading extras
+    _bloc.add(PartnerDetailLoadRequested(partner: widget.partner));
   }
 
   @override

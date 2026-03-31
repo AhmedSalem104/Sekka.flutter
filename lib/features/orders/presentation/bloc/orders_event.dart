@@ -404,3 +404,14 @@ final class OrderCheckDuplicateRequested extends OrdersEvent {
   @override
   List<Object?> get props => [data];
 }
+
+/// Fired by [SyncQueueService] after a successful push resolves a temp order.
+final class OrderTempIdResolved extends OrdersEvent {
+  const OrderTempIdResolved({required this.tempId, required this.realId});
+
+  final String tempId;
+  final String realId;
+
+  @override
+  List<Object?> get props => [tempId, realId];
+}

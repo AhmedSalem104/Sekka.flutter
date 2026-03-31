@@ -109,13 +109,17 @@ class CustomerDetailBloc
   ) async {
     emit(const CustomerDetailLoading());
 
-    final result = await _repository.getCustomer(event.customerId);
+    try {
+      final result = await _repository.getCustomer(event.customerId);
 
-    switch (result) {
-      case ApiSuccess(:final data):
-        emit(CustomerDetailLoaded(customer: data));
-      case ApiFailure(:final error):
-        emit(CustomerDetailError(message: error.arabicMessage));
+      switch (result) {
+        case ApiSuccess(:final data):
+          emit(CustomerDetailLoaded(customer: data));
+        case ApiFailure(:final error):
+          emit(CustomerDetailError(message: error.arabicMessage));
+      }
+    } catch (_) {
+      emit(const CustomerDetailError(message: 'مفيش نت — جرّب تاني لما النت يرجع'));
     }
   }
 

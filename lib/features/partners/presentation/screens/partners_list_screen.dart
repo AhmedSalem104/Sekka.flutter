@@ -41,8 +41,10 @@ class _PartnersListScreenState extends State<PartnersListScreen> {
     _bloc = PartnersBloc(
       repository: _repository,
       searchRepository: SearchRepository(dioClient.dio),
-    )
-      ..add(const PartnersLoadRequested());
+    );
+    if (_bloc.state is! PartnersLoaded) {
+      _bloc.add(const PartnersLoadRequested());
+    }
   }
 
   @override

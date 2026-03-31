@@ -411,7 +411,7 @@ class _LoadedBody extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: Responsive.h(12),
       crossAxisSpacing: Responsive.w(12),
-      childAspectRatio: 1.6,
+      childAspectRatio: 1.4,
       children: [
         StatSummaryCard(
           label: AppStrings.totalOrders,

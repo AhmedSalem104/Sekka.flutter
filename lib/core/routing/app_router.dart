@@ -36,6 +36,10 @@ import '../../features/notifications/data/repositories/notification_repository.d
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/sos/data/repositories/sos_repository.dart';
 import '../../features/sos/presentation/screens/sos_history_screen.dart';
+import '../../features/badge/data/repositories/badge_repository.dart';
+import '../../features/badge/presentation/bloc/badge_bloc.dart';
+import '../../features/badge/presentation/bloc/badge_event.dart';
+import '../../features/badge/presentation/screens/badge_screen.dart';
 import '../../shared/network/dio_client.dart';
 import 'route_names.dart';
 
@@ -171,8 +175,13 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
             remoteDataSource: dataSource,
           );
           return BlocProvider(
-            create: (_) => StatisticsBloc(repository: repository)
-              ..add(const StatisticsTabChanged(StatisticsTab.weekly)),
+            create: (_) {
+              final bloc = StatisticsBloc(repository: repository);
+              if (bloc.state is! StatisticsLoaded) {
+                bloc.add(const StatisticsTabChanged(StatisticsTab.weekly));
+              }
+              return bloc;
+            },
             child: const StatisticsScreen(),
           );
         },
@@ -279,6 +288,18 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         },
       ),
 
+      // Badge
+      GoRoute(
+        path: RouteNames.badge,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return BlocProvider(
+            create: (_) => BadgeBloc(repository: BadgeRepository(dio))
+              ..add(const BadgeLoadRequested()),
+            child: const BadgeScreen(),
+          );
+        },
+      ),
       // Partners
       GoRoute(
         path: RouteNames.partners,

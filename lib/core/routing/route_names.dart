@@ -46,4 +46,8 @@ abstract final class RouteNames {
   static const String sos = '/sos';
   static const String sosHistory = '/sos-history';
   static const String chat = '/chat';
+
+  // Badge
+  static const String badge = '/badge';
+  static const String badgeScanner = '/badge/scanner';
 }

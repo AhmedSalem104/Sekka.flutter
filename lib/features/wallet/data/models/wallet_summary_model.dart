@@ -9,6 +9,14 @@ class WalletSummaryModel extends WalletSummaryEntity {
     required super.transactionCount,
   });
 
+  Map<String, dynamic> toJson() => {
+        'totalEarnings': totalEarnings,
+        'totalExpenses': totalExpenses,
+        'totalSettlements': totalSettlements,
+        'netBalance': netBalance,
+        'transactionCount': transactionCount,
+      };
+
   factory WalletSummaryModel.fromJson(Map<String, dynamic> json) {
     return WalletSummaryModel(
       totalEarnings: (json['totalEarnings'] as num?)?.toDouble() ?? 0,

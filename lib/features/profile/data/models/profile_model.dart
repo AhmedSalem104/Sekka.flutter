@@ -30,6 +30,35 @@ class ProfileModel extends ProfileEntity {
     required super.referralCode,
   });
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'profileImageUrl': profileImageUrl,
+        'licenseImageUrl': licenseImageUrl,
+        'vehicleType': vehicleType,
+        'isOnline': isOnline,
+        'defaultRegion': defaultRegion,
+        'cashOnHand': cashOnHand,
+        'walletBalance': walletBalance,
+        'totalPoints': totalPoints,
+        'level': level,
+        'nextLevelPoints': nextLevelPoints,
+        'joinedAt': joinedAt.toIso8601String(),
+        'totalOrders': totalOrders,
+        'totalDelivered': totalDelivered,
+        'averageRating': averageRating,
+        'shiftStatus': shiftStatus,
+        'healthScore': healthScore,
+        'badgesCount': badgesCount,
+        'currentStreak': currentStreak,
+        'completionPercentage': completionPercentage,
+        'todayOrdersCount': todayOrdersCount,
+        'todayEarnings': todayEarnings,
+        'referralCode': referralCode,
+      };
+
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'] as String? ?? '',

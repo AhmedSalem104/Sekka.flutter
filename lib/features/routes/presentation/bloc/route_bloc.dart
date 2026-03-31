@@ -1,12 +1,13 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/route_model.dart';
 import '../../domain/repositories/route_repository.dart';
 import 'route_event.dart';
 import 'route_state.dart';
 
-class RouteBloc extends Bloc<RouteEvent, RouteState> {
+class RouteBloc extends HydratedBloc<RouteEvent, RouteState> {
   RouteBloc({required RouteRepository repository})
       : _repository = repository,
         super(const RouteInitial()) {
@@ -24,16 +25,19 @@ class RouteBloc extends Bloc<RouteEvent, RouteState> {
     RouteActiveLoadRequested event,
     Emitter<RouteState> emit,
   ) async {
-    emit(const RouteLoading());
+    final current = state;
+    if (current is! RouteLoaded) {
+      emit(const RouteLoading());
+    }
 
     try {
       final route = await _repository.getActiveRoute();
       emit(RouteLoaded(activeRoute: route));
     } on ApiException {
       // مفيش مسار نشط — نعرض الـ empty state مش error
-      emit(const RouteLoaded());
+      if (current is! RouteLoaded) emit(const RouteLoaded());
     } catch (_) {
-      emit(const RouteLoaded());
+      if (current is! RouteLoaded) emit(const RouteLoaded());
     }
   }
 
@@ -189,5 +193,33 @@ class RouteBloc extends Bloc<RouteEvent, RouteState> {
         isActionError: false,
       ));
     }
+  }
+
+  // ── Hydration ──
+
+  @override
+  RouteState? fromJson(Map<String, dynamic> json) {
+    try {
+      if (json['type'] == 'loaded') {
+        final route = json['activeRoute'] != null
+            ? RouteModel.fromJson(
+                Map<String, dynamic>.from(json['activeRoute'] as Map),
+              )
+            : null;
+        return RouteLoaded(activeRoute: route);
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  @override
+  Map<String, dynamic>? toJson(RouteState state) {
+    if (state is RouteLoaded) {
+      return {
+        'type': 'loaded',
+        'activeRoute': state.activeRoute?.toJson(),
+      };
+    }
+    return null;
   }
 }

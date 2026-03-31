@@ -77,29 +77,38 @@ class PartnerDetailBloc
   ) async {
     emit(const PartnerDetailLoading());
 
-    final results = await Future.wait([
-      _repository.getPickupPoints(event.partner.id),
-      _repository.getPartnerOrders(event.partner.id),
-    ]);
+    try {
+      final results = await Future.wait([
+        _repository.getPickupPoints(event.partner.id),
+        _repository.getPartnerOrders(event.partner.id),
+      ]);
 
-    final pickupResult = results[0] as ApiResult<List<PickupPointModel>>;
-    final ordersResult =
-        results[1] as ApiResult<PagedData<PartnerOrderModel>>;
+      final pickupResult = results[0] as ApiResult<List<PickupPointModel>>;
+      final ordersResult =
+          results[1] as ApiResult<PagedData<PartnerOrderModel>>;
 
-    switch ((pickupResult, ordersResult)) {
-      case (
-          ApiSuccess(data: final pickupPoints),
-          ApiSuccess(data: final orders),
-        ):
-        emit(PartnerDetailLoaded(
-          partner: event.partner,
-          pickupPoints: pickupPoints,
-          orders: orders,
-        ));
-      case (ApiFailure(:final error), _):
-        emit(PartnerDetailError(message: error.arabicMessage));
-      case (_, ApiFailure(:final error)):
-        emit(PartnerDetailError(message: error.arabicMessage));
+      switch ((pickupResult, ordersResult)) {
+        case (
+            ApiSuccess(data: final pickupPoints),
+            ApiSuccess(data: final orders),
+          ):
+          emit(PartnerDetailLoaded(
+            partner: event.partner,
+            pickupPoints: pickupPoints,
+            orders: orders,
+          ));
+        case (ApiFailure(:final error), _):
+          emit(PartnerDetailError(message: error.arabicMessage));
+        case (_, ApiFailure(:final error)):
+          emit(PartnerDetailError(message: error.arabicMessage));
+      }
+    } catch (_) {
+      // Offline: show partner info we have with empty lists
+      emit(PartnerDetailLoaded(
+        partner: event.partner,
+        pickupPoints: const [],
+        orders: const PagedData(items: [], totalCount: 0, page: 1, pageSize: 20, totalPages: 0),
+      ));
     }
   }
 }

@@ -21,6 +21,33 @@ class MonthlyStatsModel extends MonthlyStatsEntity {
     super.comparisonWithLastMonth,
   });
 
+  Map<String, dynamic> toJson() => {
+        'month': month,
+        'year': year,
+        'totalOrders': totalOrders,
+        'successfulOrders': successfulOrders,
+        'totalEarnings': earnings,
+        'totalCommissions': commissions,
+        'totalExpenses': expenses,
+        'netProfit': netProfit,
+        'totalDistanceKm': distanceKm,
+        'timeWorkedMinutes': timeWorkedMinutes,
+        'successRate': successRate,
+        'averageOrderValue': averageOrderValue,
+        'averageDailyOrders': averageDailyOrders,
+        'averageDailyEarnings': averageDailyEarnings,
+        'weeklyBreakdown': weeklyBreakdown
+            .map((w) => {'weekStart': w.weekStart, 'orders': w.orders, 'earnings': w.earnings})
+            .toList(),
+        'comparisonWithLastMonth': comparisonWithLastMonth != null
+            ? {
+                'ordersChange': comparisonWithLastMonth!.ordersChange,
+                'earningsChange': comparisonWithLastMonth!.earningsChange,
+                'successRateChange': comparisonWithLastMonth!.successRateChange,
+              }
+            : null,
+      };
+
   factory MonthlyStatsModel.fromJson(Map<String, dynamic> json) {
     return MonthlyStatsModel(
       month: json['month'] as int? ?? 1,

@@ -18,6 +18,9 @@ import '../../../../shared/network/dio_client.dart';
 import '../../../notifications/data/repositories/notification_repository.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../routes/presentation/screens/route_screen.dart';
+import '../../../breaks/presentation/bloc/break_bloc.dart';
+import '../../../breaks/presentation/widgets/active_break_card.dart';
+import '../../../breaks/presentation/widgets/break_suggestion_card.dart';
 import '../../../sync/presentation/widgets/sync_status_indicator.dart';
 import '../bloc/daily_stats_bloc.dart';
 
@@ -46,6 +49,8 @@ class HomeScreen extends StatelessWidget {
               _buildCurrentOrderCard(isDark),
               SizedBox(height: Responsive.h(24)),
               _buildDailyStats(isDark),
+              SizedBox(height: Responsive.h(20)),
+              _buildBreakSection(context, isDark),
               SizedBox(height: Responsive.h(20)),
               _buildRouteOptimizeButton(context, isDark),
               SizedBox(height: Responsive.h(28)),
@@ -382,6 +387,28 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(Responsive.r(14)),
       ),
       child: Icon(icon, color: AppColors.textOnPrimary, size: Responsive.r(22)),
+    );
+  }
+
+  // ── Break Section ──
+
+  Widget _buildBreakSection(BuildContext context, bool isDark) {
+    return BlocConsumer<BreakBloc, BreakState>(
+      listener: (context, state) {
+        if (state is BreakStarted || state is BreakEnded) {
+          context.read<BreakBloc>().add(const BreakCheckRequested());
+        }
+      },
+      builder: (context, state) {
+        if (state is! BreakCheckLoaded) return const SizedBox.shrink();
+        if (state.activeBreak != null) {
+          return ActiveBreakCard(activeBreak: state.activeBreak!, isDark: isDark);
+        }
+        if (state.suggestion != null && state.suggestion!.shouldBreak) {
+          return BreakSuggestionCard(suggestion: state.suggestion!, isDark: isDark);
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 

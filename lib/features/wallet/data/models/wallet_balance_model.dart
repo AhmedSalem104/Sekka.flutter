@@ -9,6 +9,14 @@ class WalletBalanceModel extends WalletBalanceEntity {
     required super.lastUpdated,
   });
 
+  Map<String, dynamic> toJson() => {
+        'driverId': driverId,
+        'balance': balance,
+        'cashOnHand': cashOnHand,
+        'pendingSettlements': pendingSettlements,
+        'lastUpdated': lastUpdated.toIso8601String(),
+      };
+
   factory WalletBalanceModel.fromJson(Map<String, dynamic> json) {
     return WalletBalanceModel(
       driverId: json['driverId'] as String? ?? '',

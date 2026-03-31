@@ -43,7 +43,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
       repository: repository,
       searchRepository: SearchRepository(dioClient.dio),
     );
-    _bloc.add(const CustomersLoadRequested());
+    if (_bloc.state is! CustomersLoaded) {
+      _bloc.add(const CustomersLoadRequested());
+    }
   }
 
   @override

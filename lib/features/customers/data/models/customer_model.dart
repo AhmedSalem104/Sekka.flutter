@@ -19,6 +19,17 @@ class CustomerModel {
   final bool isBlocked;
   final DateTime? lastDeliveryDate;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'phone': phone,
+        'name': name,
+        'averageRating': averageRating,
+        'totalDeliveries': totalDeliveries,
+        'successfulDeliveries': successfulDeliveries,
+        'isBlocked': isBlocked,
+        'lastDeliveryDate': lastDeliveryDate?.toIso8601String(),
+      };
+
   factory CustomerModel.fromJson(Map<String, dynamic> json) {
     return CustomerModel(
       id: json['id'] as String,
