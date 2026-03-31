@@ -20,6 +20,29 @@ class OrderRepositoryImpl implements OrderRepository {
       _remote.createRecurringOrder(data);
 
   @override
+  Future<List<Map<String, dynamic>>> getRecurringOrders() =>
+      _remote.getRecurringOrders();
+
+  @override
+  Future<Map<String, dynamic>> updateRecurringOrder(
+    String id,
+    Map<String, dynamic> data,
+  ) =>
+      _remote.updateRecurringOrder(id, data);
+
+  @override
+  Future<void> deleteRecurringOrder(String id) =>
+      _remote.deleteRecurringOrder(id);
+
+  @override
+  Future<void> pauseRecurringOrder(String id) =>
+      _remote.pauseRecurringOrder(id);
+
+  @override
+  Future<void> resumeRecurringOrder(String id) =>
+      _remote.resumeRecurringOrder(id);
+
+  @override
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,
     int pageSize = 20,

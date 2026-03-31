@@ -6,6 +6,11 @@ import '../../../../shared/network/api_response.dart';
 abstract class OrderRepository {
   Future<OrderModel> createOrder(Map<String, dynamic> data);
   Future<OrderModel> createRecurringOrder(Map<String, dynamic> data);
+  Future<List<Map<String, dynamic>>> getRecurringOrders();
+  Future<Map<String, dynamic>> updateRecurringOrder(String id, Map<String, dynamic> data);
+  Future<void> deleteRecurringOrder(String id);
+  Future<void> pauseRecurringOrder(String id);
+  Future<void> resumeRecurringOrder(String id);
 
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,

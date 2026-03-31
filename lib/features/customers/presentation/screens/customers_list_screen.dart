@@ -14,6 +14,7 @@ import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../search/data/repositories/search_repository.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../bloc/customers_bloc.dart';
 import '../bloc/customers_event.dart';
@@ -38,7 +39,10 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
 
     final dioClient = context.read<DioClient>();
     final repository = CustomerRepository(dioClient.dio);
-    _bloc = CustomersBloc(repository: repository);
+    _bloc = CustomersBloc(
+      repository: repository,
+      searchRepository: SearchRepository(dioClient.dio),
+    );
     _bloc.add(const CustomersLoadRequested());
   }
 

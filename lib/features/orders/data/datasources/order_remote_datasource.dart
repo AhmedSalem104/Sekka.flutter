@@ -57,6 +57,90 @@ class OrderRemoteDataSource {
     }
   }
 
+  /// GET /orders/recurring — list recurring orders.
+  Future<List<Map<String, dynamic>>> getRecurringOrders() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiConstants.ordersRecurring,
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+      return (json['data'] as List<dynamic>)
+          .cast<Map<String, dynamic>>();
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// PUT /orders/recurring/:id — update recurring order.
+  Future<Map<String, dynamic>> updateRecurringOrder(
+    String id,
+    Map<String, dynamic> data,
+  ) async {
+    try {
+      final response = await _dio.put<Map<String, dynamic>>(
+        ApiConstants.recurringOrderDetail(id),
+        data: data,
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+      return json['data'] as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// DELETE /orders/recurring/:id — delete recurring order.
+  Future<void> deleteRecurringOrder(String id) async {
+    try {
+      final response = await _dio.delete<Map<String, dynamic>>(
+        ApiConstants.recurringOrderDetail(id),
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /orders/recurring/:id/pause — pause recurring order.
+  Future<void> pauseRecurringOrder(String id) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.recurringOrderPause(id),
+        data: <String, dynamic>{},
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /orders/recurring/:id/resume — resume recurring order.
+  Future<void> resumeRecurringOrder(String id) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.recurringOrderResume(id),
+        data: <String, dynamic>{},
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
   /// GET /orders — paginated list with filters.
   Future<PagedData<OrderModel>> getOrders({
     int page = 1,
@@ -550,6 +634,7 @@ class OrderRemoteDataSource {
   }
 
   /// GET /orders/time-slots — get available time slots.
+  /// API returns: { date: String, slots: [...] }
   Future<List<dynamic>> getTimeSlots() async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
@@ -559,7 +644,11 @@ class OrderRemoteDataSource {
       if (json['isSuccess'] != true) {
         throw ApiException(message: json['message'] as String? ?? '');
       }
-      return json['data'] as List<dynamic>? ?? [];
+      final data = json['data'];
+      if (data is Map<String, dynamic>) {
+        return data['slots'] as List<dynamic>? ?? [];
+      }
+      return data is List<dynamic> ? data : [];
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

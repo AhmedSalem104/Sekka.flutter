@@ -33,21 +33,13 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   Timer? _debounce;
   int? _selectedStatusFilter;
 
-  /// Filter chip data: (label, statusValue)
-  /// null statusValue means "all orders".
-  static const _statusFilters = <(String, int?)>[
-    ('الكل', null),
-    ('مستني', 0),
-    ('اتقبل', 1),
-    ('اتستلم', 2),
-    ('في السكة', 3),
-    ('وصلت', 4),
-    ('اتسلّم', 5),
-    ('معرفتش أسلّم', 6),
-    ('ملغي', 7),
-    ('تسليم جزئي', 8),
-    ('هجرب تاني', 9),
-    ('مرتجع', 10),
+  static final _statusFilters = <(String, int?)>[
+    (AppStrings.statusNew, 0),
+    (AppStrings.statusOnTheWay, 3),
+    (AppStrings.statusDelivered, 5),
+    (AppStrings.statusPartiallyDelivered, 8),
+    (AppStrings.statusFailed, 6),
+    (AppStrings.statusCancelled, 7),
   ];
 
   @override
@@ -107,7 +99,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   void _navigateToOrderDetail(String orderId) {
     Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (_) => OrderDetailScreen(orderId: orderId)),
+      MaterialPageRoute<void>(
+          builder: (_) => OrderDetailScreen(orderId: orderId)),
     );
   }
 
@@ -119,13 +112,14 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
       floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: AppSizes.bottomNavHeight + AppSizes.md),
+        padding:
+            EdgeInsets.only(bottom: AppSizes.bottomNavHeight + AppSizes.md),
         child: FloatingActionButton.extended(
           heroTag: 'orders_fab',
           onPressed: _navigateToCreateOrder,
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+            borderRadius: BorderRadius.circular(AppSizes.fabRadius),
           ),
           label: Text(
             AppStrings.addOrder,
@@ -141,10 +135,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           textDirection: TextDirection.rtl,
           children: [
-            // Header
             _buildHeader(isDark),
 
-            // Search bar
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: AppSizes.pagePadding,
@@ -157,13 +149,39 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
             ),
             SizedBox(height: AppSizes.md),
 
-            // Status filter chips
             _buildFilterChips(isDark),
             SizedBox(height: AppSizes.sm),
 
-            // Orders list
             Expanded(
-              child: BlocBuilder<OrdersBloc, OrdersState>(
+              child: BlocConsumer<OrdersBloc, OrdersState>(
+                listener: (context, state) {
+                  if (state is OrdersLoaded && state.actionMessage != null) {
+                    final msg = state.actionMessage!;
+                    final isError = state.isActionError;
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Text(msg,
+                                style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.textOnPrimary)),
+                          ),
+                          backgroundColor:
+                              isError ? AppColors.error : AppColors.success,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusMd),
+                          ),
+                        ),
+                      );
+                    context
+                        .read<OrdersBloc>()
+                        .add(const OrdersClearMessage());
+                  }
+                },
                 builder: (context, state) => switch (state) {
                   OrdersInitial() || OrdersLoading() => const SekkaLoading(),
                   OrdersLoaded(:final orders) when orders.isEmpty =>
@@ -216,46 +234,46 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
-        itemCount: _statusFilters.length,
-        separatorBuilder: (_, __) => SizedBox(width: Responsive.w(8)),
-        itemBuilder: (context, index) {
-          final (label, statusValue) = _statusFilters[index];
-          final isSelected = _selectedStatusFilter == statusValue;
+          itemCount: _statusFilters.length,
+          separatorBuilder: (_, __) => SizedBox(width: Responsive.w(8)),
+          itemBuilder: (context, index) {
+            final (label, statusValue) = _statusFilters[index];
+            final isSelected = _selectedStatusFilter == statusValue;
 
-          return ChoiceChip(
-            label: Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                color: isSelected
-                    ? AppColors.textOnPrimary
-                    : isDark
-                        ? AppColors.textBodyDark
-                        : AppColors.textBody,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+            return ChoiceChip(
+              label: Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isSelected
+                      ? AppColors.textOnPrimary
+                      : isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
-            ),
-            selected: isSelected,
-            onSelected: (_) => _onFilterSelected(statusValue),
-            selectedColor: AppColors.primary,
-            backgroundColor:
-                isDark ? AppColors.surfaceDark : AppColors.surface,
-            side: BorderSide(
-              color: isSelected
-                  ? AppColors.primary
-                  : isDark
-                      ? AppColors.borderDark
-                      : AppColors.border,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusPill),
-            ),
-            showCheckmark: false,
-            padding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
-          );
-        },
-      ),
+              selected: isSelected,
+              onSelected: (_) => _onFilterSelected(statusValue),
+              selectedColor: AppColors.primary,
+              backgroundColor:
+                  isDark ? AppColors.surfaceDark : AppColors.surface,
+              side: BorderSide(
+                color: isSelected
+                    ? AppColors.primary
+                    : isDark
+                        ? AppColors.borderDark
+                        : AppColors.border,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSizes.chipRadius),
+              ),
+              showCheckmark: false,
+              padding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+            );
+          },
+        ),
       ),
     );
   }
@@ -277,7 +295,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 refresh: true,
               ),
             );
-        // Wait for state change
         await context.read<OrdersBloc>().stream.firstWhere(
               (state) => state is OrdersLoaded || state is OrdersError,
             );

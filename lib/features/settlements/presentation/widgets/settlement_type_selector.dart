@@ -43,7 +43,7 @@ class SettlementTypeSelector extends StatelessWidget {
                     : isDark
                         ? AppColors.surfaceDark
                         : AppColors.surface,
-                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                borderRadius: BorderRadius.circular(AppSizes.chipRadius),
                 border: Border.all(
                   color: isSelected
                       ? typeColor

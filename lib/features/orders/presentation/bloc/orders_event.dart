@@ -361,6 +361,41 @@ final class OrderCalculatePriceRequested extends OrdersEvent {
   List<Object?> get props => [data];
 }
 
+final class OrdersClearMessage extends OrdersEvent {
+  const OrdersClearMessage();
+}
+
+final class RecurringOrdersLoadRequested extends OrdersEvent {
+  const RecurringOrdersLoadRequested();
+}
+
+final class RecurringOrderPauseRequested extends OrdersEvent {
+  const RecurringOrderPauseRequested({required this.orderId});
+
+  final String orderId;
+
+  @override
+  List<Object?> get props => [orderId];
+}
+
+final class RecurringOrderResumeRequested extends OrdersEvent {
+  const RecurringOrderResumeRequested({required this.orderId});
+
+  final String orderId;
+
+  @override
+  List<Object?> get props => [orderId];
+}
+
+final class RecurringOrderDeleteRequested extends OrdersEvent {
+  const RecurringOrderDeleteRequested({required this.orderId});
+
+  final String orderId;
+
+  @override
+  List<Object?> get props => [orderId];
+}
+
 final class OrderCheckDuplicateRequested extends OrdersEvent {
   const OrderCheckDuplicateRequested({required this.data});
 

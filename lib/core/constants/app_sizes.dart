@@ -7,15 +7,35 @@ import '../utils/responsive.dart';
 abstract final class AppSizes {
   // ── Static (for const contexts & borders) ──
 
-  static const double radiusSm = 8.0;
-  static const double radiusMd = 12.0;
-  static const double radiusLg = 16.0;
-  static const double radiusXl = 20.0;
+  static const double radiusSm = 6.0;
+  static const double radiusMd = 8.0;
+  static const double radiusLg = 12.0;
+  static const double radiusXl = 16.0;
   static const double radiusPill = 100.0;
 
-  static const double buttonRadius = 12.0;
+  /// ── Proportional Radius System ──
+  /// All radii are ~25% of the element's height for visual consistency.
+  /// Change [radiusRatio] to adjust all radii at once.
+  static const double radiusRatio = 0.25;
+
+  /// Button: height=56 → radius=14
+  static double get buttonRadius => (56 * radiusRatio).roundToDouble();
+
+  /// Card: height varies, uses a base of 64 → radius=16
   static const double cardRadius = 16.0;
-  static const double inputRadius = 12.0;
+
+  /// Input field: height=56 → radius=14
+  static double get inputRadius => (56 * radiusRatio).roundToDouble();
+
+  /// Chip/Category: height=40 → radius=10
+  static double get chipRadius => (40 * radiusRatio).roundToDouble();
+
+  /// FAB: height=48 → radius=12
+  static double get fabRadius => (48 * radiusRatio).roundToDouble();
+
+  /// Bottom sheet top corners: uses base of 80 → radius=20
+  static double get sheetRadius => (80 * radiusRatio).roundToDouble();
+
   static const double swipeRadius = 28.0;
 
   // ── Responsive Padding & Margin ──

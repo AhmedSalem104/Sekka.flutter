@@ -1,11 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
@@ -14,6 +13,7 @@ import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../search/data/repositories/search_repository.dart';
 import '../../../settlements/presentation/widgets/add_partner_sheet.dart';
 import '../../../customers/data/models/customer_model.dart';
 import '../../../customers/data/repositories/customer_repository.dart';
@@ -39,7 +39,6 @@ class _ContactsScreenState extends State<ContactsScreen>
   late final TextEditingController _searchController;
   late final CustomersBloc _customersBloc;
   late final PartnersBloc _partnersBloc;
-  Timer? _debounce;
 
   @override
   void initState() {
@@ -49,12 +48,16 @@ class _ContactsScreenState extends State<ContactsScreen>
 
     final dioClient = context.read<DioClient>();
 
+    final searchRepo = SearchRepository(dioClient.dio);
+
     _customersBloc = CustomersBloc(
       repository: CustomerRepository(dioClient.dio),
+      searchRepository: searchRepo,
     )..add(const CustomersLoadRequested());
 
     _partnersBloc = PartnersBloc(
       repository: PartnerRepository(dioClient.dio),
+      searchRepository: searchRepo,
     )..add(const PartnersLoadRequested());
 
     _tabController.addListener(_onTabChanged);
@@ -67,7 +70,6 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   @override
   void dispose() {
-    _debounce?.cancel();
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
@@ -86,8 +88,7 @@ class _ContactsScreenState extends State<ContactsScreen>
       floatingActionButton: _tabController.index == 1
           ? Padding(
               padding: EdgeInsets.only(bottom: Responsive.h(72)),
-              child: FloatingActionButton.small(
-                heroTag: 'contacts_fab',
+              child: FloatingActionButton.extended(
                 onPressed: () => showAddPartnerSheet(
                   context,
                   onPartnerCreated: () {
@@ -95,9 +96,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                   },
                 ),
                 backgroundColor: AppColors.primary,
-                child: const Icon(
-                  IconsaxPlusLinear.add,
-                  color: AppColors.textOnPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
+                ),
+                label: Text(
+                  'إضافة شريك',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.textOnPrimary,
+                  ),
                 ),
               ),
             )
@@ -109,14 +115,16 @@ class _ContactsScreenState extends State<ContactsScreen>
             SizedBox(height: Responsive.h(16)),
 
             // Title
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
-              child: Text(
-                'جهات الاتصال',
-                style: AppTypography.headlineMedium.copyWith(
-                  color: isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline,
+            Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
+                child: Text(
+                  'جهاتي',
+                  style: AppTypography.headlineMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
                 ),
               ),
             ),
@@ -195,14 +203,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                     ? AppStrings.searchCustomer
                     : AppStrings.searchPartner,
                 onChanged: (value) {
-                  _debounce?.cancel();
-                  _debounce = Timer(const Duration(milliseconds: 300), () {
-                    if (_tabController.index == 0) {
-                      _customersBloc.add(CustomersSearchChanged(value));
-                    } else {
-                      _partnersBloc.add(PartnersSearchChanged(value));
-                    }
-                  });
+                  if (_tabController.index == 0) {
+                    _customersBloc.add(CustomersSearchChanged(value));
+                  } else {
+                    _partnersBloc.add(PartnersSearchChanged(value));
+                  }
                 },
               ),
             ),

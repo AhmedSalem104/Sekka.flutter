@@ -159,13 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: AppSizes.sm),
 
-          ProfileSectionTile(
-            icon: IconsaxPlusLinear.danger,
-            label: AppStrings.sosHistory,
-            color: AppColors.error,
-            onTap: () => context.push(RouteNames.sosHistory),
-          ),
-          SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
             icon: IconsaxPlusLinear.money_send,

@@ -14,6 +14,7 @@ import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../search/data/repositories/search_repository.dart';
 import '../../data/models/partner_model.dart';
 import '../../data/repositories/partner_repository.dart';
 import '../bloc/partners_bloc.dart';
@@ -37,7 +38,10 @@ class _PartnersListScreenState extends State<PartnersListScreen> {
     super.initState();
     final dioClient = context.read<DioClient>();
     _repository = PartnerRepository(dioClient.dio);
-    _bloc = PartnersBloc(repository: _repository)
+    _bloc = PartnersBloc(
+      repository: _repository,
+      searchRepository: SearchRepository(dioClient.dio),
+    )
       ..add(const PartnersLoadRequested());
   }
 

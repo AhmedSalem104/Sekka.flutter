@@ -3,14 +3,19 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/enums/order_enums.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../../../shared/network/api_result.dart';
 import '../../data/models/order_model.dart';
+import '../../../search/data/repositories/search_repository.dart';
 import '../../domain/repositories/order_repository.dart';
 import 'orders_event.dart';
 import 'orders_state.dart';
 
 class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
-  OrdersBloc({required OrderRepository repository})
-      : _repository = repository,
+  OrdersBloc({
+    required OrderRepository repository,
+    SearchRepository? searchRepository,
+  })  : _repository = repository,
+        _searchRepository = searchRepository,
         super(const OrdersInitial()) {
     on<OrdersLoadRequested>(_onLoad);
     on<OrdersLoadMore>(_onLoadMore);
@@ -42,9 +47,15 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     on<OrderBookSlotRequested>(_onBookSlot);
     on<OrderCalculatePriceRequested>(_onCalculatePrice);
     on<OrderCheckDuplicateRequested>(_onCheckDuplicate);
+    on<RecurringOrdersLoadRequested>(_onRecurringOrdersLoad);
+    on<RecurringOrderPauseRequested>(_onRecurringOrderPause);
+    on<RecurringOrderResumeRequested>(_onRecurringOrderResume);
+    on<RecurringOrderDeleteRequested>(_onRecurringOrderDelete);
+    on<OrdersClearMessage>(_onClearMessage);
   }
 
   final OrderRepository _repository;
+  final SearchRepository? _searchRepository;
 
   /// IDs بتاع الطلبات اللي اتسلّمت محلياً (عشان الـ list API مش بيحدث الـ status)
   final Set<String> _deliveredOrderIds = {};
@@ -58,6 +69,88 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       }
       return o;
     }).toList();
+  }
+
+  // ── Clear Message ───────────────────────────────────────────────────
+
+  void _onClearMessage(
+    OrdersClearMessage event,
+    Emitter<OrdersState> emit,
+  ) {
+    final current = state;
+    if (current is OrdersLoaded) {
+      emit(current.copyWith(actionMessage: () => null, isActionError: false));
+    }
+  }
+
+  // ── Recurring merge helper ──────────────────────────────────────────
+
+  /// Cached recurring orders so they persist across filter/search changes.
+  List<OrderModel> _cachedRecurringOrders = [];
+
+  Future<void> _fetchAndCacheRecurring() async {
+    try {
+      final data = await _repository.getRecurringOrders();
+      _cachedRecurringOrders = data
+          .map((m) => OrderModel.fromRecurringMap(m))
+          .toList();
+    } catch (_) {
+      // Keep whatever we had cached
+    }
+  }
+
+  List<OrderModel> _mergeWithRecurring(List<OrderModel> regularOrders) {
+    final recurringMap = {
+      for (final r in _cachedRecurringOrders) r.id: r,
+    };
+
+    // Update existing orders with recurring info
+    final updated = regularOrders.map((o) {
+      final rec = recurringMap.remove(o.id);
+      if (rec != null) {
+        return OrderModel(
+          id: o.id,
+          orderNumber: o.orderNumber,
+          customerName: o.customerName,
+          customerPhone: o.customerPhone,
+          partnerName: o.partnerName,
+          partnerColor: o.partnerColor,
+          description: o.description,
+          amount: o.amount,
+          commissionAmount: o.commissionAmount,
+          paymentMethod: o.paymentMethod,
+          status: o.status,
+          priority: o.priority,
+          pickupAddress: o.pickupAddress,
+          pickupLatitude: o.pickupLatitude,
+          pickupLongitude: o.pickupLongitude,
+          deliveryAddress: o.deliveryAddress,
+          deliveryLatitude: o.deliveryLatitude,
+          deliveryLongitude: o.deliveryLongitude,
+          distanceKm: o.distanceKm,
+          sequenceIndex: o.sequenceIndex,
+          worthScore: o.worthScore,
+          notes: o.notes,
+          itemCount: o.itemCount,
+          timeWindowStart: o.timeWindowStart,
+          timeWindowEnd: o.timeWindowEnd,
+          scheduledDate: o.scheduledDate,
+          createdAt: o.createdAt,
+          deliveredAt: o.deliveredAt,
+          photos: o.photos,
+          isRecurring: true,
+          recurrencePattern: rec.recurrencePattern,
+          isPaused: rec.isPaused,
+          nextScheduledDate: rec.nextScheduledDate,
+          totalOccurrences: rec.totalOccurrences,
+        );
+      }
+      return o;
+    }).toList();
+
+    // Add remaining recurring orders not in regular list
+    updated.addAll(recurringMap.values);
+    return updated;
   }
 
   // ── Load / Refresh ──────────────────────────────────────────────────
@@ -83,8 +176,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         searchTerm: searchTerm,
       );
 
+      await _fetchAndCacheRecurring();
+      final allOrders = _mergeWithRecurring(
+        _fixDeliveredStatuses(result.items),
+      );
+
       emit(OrdersLoaded(
-        orders: _fixDeliveredStatuses(result.items),
+        orders: allOrders,
         statusFilter: statusFilter,
         searchTerm: searchTerm ?? '',
         hasMore: result.hasNextPage,
@@ -154,7 +252,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       );
 
       emit(current.copyWith(
-        orders: _fixDeliveredStatuses(result.items),
+        orders: _mergeWithRecurring(_fixDeliveredStatuses(result.items)),
         statusFilter: () => event.status,
         hasMore: result.hasNextPage,
         currentPage: 1,
@@ -175,35 +273,73 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     Emitter<OrdersState> emit,
   ) async {
     final current = state;
-    if (current is! OrdersLoaded) {
-      add(OrdersLoadRequested(searchTerm: event.searchTerm));
+    final term = event.searchTerm.trim();
+
+    // Empty search → reload all orders
+    if (term.isEmpty) {
+      add(OrdersLoadRequested(
+        statusFilter: current is OrdersLoaded ? current.statusFilter : null,
+      ));
       return;
     }
 
-    emit(current.copyWith(
-      searchTerm: event.searchTerm,
-      isLoadingMore: true,
-    ));
+    if (current is! OrdersLoaded) {
+      emit(const OrdersLoading());
+    } else {
+      emit(current.copyWith(searchTerm: term, isLoadingMore: true));
+    }
 
     try {
-      final result = await _repository.getOrders(
-        page: 1,
-        status: current.statusFilter,
-        searchTerm: event.searchTerm.isEmpty ? null : event.searchTerm,
-      );
-
-      emit(current.copyWith(
-        orders: _fixDeliveredStatuses(result.items),
-        searchTerm: event.searchTerm,
-        hasMore: result.hasNextPage,
-        currentPage: 1,
-        isLoadingMore: false,
-      ));
+      if (_searchRepository != null) {
+        // Use unified search endpoint
+        final result = await _searchRepository.search(query: term);
+        switch (result) {
+          case ApiSuccess(:final data):
+            final orders = data.orders
+                .map((o) => OrderModel(
+                      id: o.id,
+                      orderNumber: o.orderNumber,
+                      customerName: o.customerName,
+                      customerPhone: o.customerPhone,
+                      amount: o.amount,
+                      status: OrderStatus.fromValue(o.status),
+                      priority: OrderPriority.fromValue(0),
+                      paymentMethod: PaymentMethod.fromValue(0),
+                      deliveryAddress: o.deliveryAddress ?? '',
+                      createdAt: o.createdAt ?? DateTime.now(),
+                    ))
+                .toList();
+            emit(OrdersLoaded(
+              orders: orders,
+              searchTerm: term,
+              hasMore: false,
+              currentPage: 1,
+            ));
+          case ApiFailure(:final error):
+            if (current is OrdersLoaded) {
+              emit(current.copyWith(searchTerm: term, isLoadingMore: false));
+            } else {
+              emit(OrdersError(error.arabicMessage));
+            }
+        }
+      } else {
+        // Fallback to regular endpoint
+        final result = await _repository.getOrders(
+          page: 1,
+          status: current is OrdersLoaded ? current.statusFilter : null,
+          searchTerm: term,
+        );
+        emit(OrdersLoaded(
+          orders: _fixDeliveredStatuses(result.items),
+          searchTerm: term,
+          hasMore: result.hasNextPage,
+          currentPage: 1,
+        ));
+      }
     } on ApiException {
-      emit(current.copyWith(
-        searchTerm: event.searchTerm,
-        isLoadingMore: false,
-      ));
+      if (current is OrdersLoaded) {
+        emit(current.copyWith(searchTerm: term, isLoadingMore: false));
+      }
     }
   }
 
@@ -220,7 +356,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         ? current
         : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
 
-    emit(loaded.copyWith(isActionInProgress: true));
+    emit(loaded.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       var newOrder = await _repository.createOrder(event.data);
@@ -242,11 +378,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -262,7 +400,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         ? current
         : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
 
-    emit(loaded.copyWith(isActionInProgress: true));
+    emit(loaded.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       var newOrder = await _repository.createRecurringOrder(event.data);
@@ -283,11 +421,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -301,7 +441,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       var order = await _repository.getOrderDetail(event.orderId);
@@ -311,9 +451,41 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
           .where((o) => o.id == event.orderId)
           .firstOrNull;
       if (localOrder != null) {
-        order = order.copyWith(
+        order = OrderModel(
+          id: order.id,
+          orderNumber: order.orderNumber,
           customerName: order.customerName ?? localOrder.customerName,
           customerPhone: order.customerPhone ?? localOrder.customerPhone,
+          partnerName: order.partnerName,
+          partnerColor: order.partnerColor,
+          description: order.description,
+          amount: order.amount,
+          commissionAmount: order.commissionAmount,
+          paymentMethod: order.paymentMethod,
+          status: order.status,
+          priority: order.priority,
+          pickupAddress: order.pickupAddress,
+          pickupLatitude: order.pickupLatitude,
+          pickupLongitude: order.pickupLongitude,
+          deliveryAddress: order.deliveryAddress,
+          deliveryLatitude: order.deliveryLatitude,
+          deliveryLongitude: order.deliveryLongitude,
+          distanceKm: order.distanceKm,
+          sequenceIndex: order.sequenceIndex,
+          worthScore: order.worthScore,
+          notes: order.notes,
+          itemCount: order.itemCount,
+          timeWindowStart: order.timeWindowStart,
+          timeWindowEnd: order.timeWindowEnd,
+          scheduledDate: order.scheduledDate,
+          createdAt: order.createdAt,
+          deliveredAt: order.deliveredAt,
+          photos: order.photos,
+          isRecurring: order.isRecurring || localOrder.isRecurring,
+          recurrencePattern: localOrder.recurrencePattern ?? order.recurrencePattern,
+          isPaused: localOrder.isPaused,
+          nextScheduledDate: localOrder.nextScheduledDate ?? order.nextScheduledDate,
+          totalOccurrences: localOrder.totalOccurrences ?? order.totalOccurrences,
         );
       }
 
@@ -337,11 +509,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -355,7 +529,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final updated = await _repository.updateOrder(event.orderId, event.data);
@@ -375,11 +549,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -393,7 +569,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.deleteOrder(event.orderId);
@@ -412,11 +588,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -430,7 +608,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.updateOrderStatus(event.orderId, {
@@ -455,11 +633,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -473,7 +653,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.deliverOrder(event.orderId, {
@@ -507,11 +687,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -525,7 +707,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.failOrder(event.orderId, {
@@ -550,11 +732,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -568,7 +752,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.cancelOrder(event.orderId, {
@@ -594,11 +778,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -612,7 +798,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.uploadPhoto(
@@ -629,11 +815,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -647,7 +835,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.swapAddress(event.orderId, {
@@ -672,11 +860,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -690,7 +880,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final result = await _repository.bulkImport({
@@ -716,11 +906,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -734,7 +926,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.transferOrder(event.orderId, {
@@ -759,11 +951,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -777,7 +971,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.partialDelivery(event.orderId, {
@@ -805,11 +999,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -823,7 +1019,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.startWaitingTimer(event.orderId);
@@ -836,11 +1032,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -854,7 +1052,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.stopWaitingTimer(event.orderId);
@@ -867,11 +1065,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -885,7 +1085,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.postDisclaimer(event.orderId, event.data);
@@ -898,11 +1098,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -916,7 +1118,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final data = await _repository.getDisclaimer(event.orderId);
@@ -929,11 +1131,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -947,7 +1151,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.postDispute(event.orderId, event.data);
@@ -960,11 +1164,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -978,7 +1184,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final data = await _repository.getDisputes(event.orderId);
@@ -991,11 +1197,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -1009,7 +1217,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.postRefund(event.orderId, event.data);
@@ -1022,11 +1230,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -1040,7 +1250,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final data = await _repository.getRefunds(event.orderId);
@@ -1053,11 +1263,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -1073,7 +1285,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         ? current
         : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
 
-    emit(loaded.copyWith(isActionInProgress: true));
+    emit(loaded.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final data = await _repository.getTimeSlots();
@@ -1086,11 +1298,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(loaded.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -1104,7 +1318,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
     final current = state;
     if (current is! OrdersLoaded) return;
 
-    emit(current.copyWith(isActionInProgress: true));
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       await _repository.bookSlot(event.orderId, event.data);
@@ -1117,11 +1331,13 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => e.message,
+        isActionError: true,
       ));
     } catch (_) {
       emit(current.copyWith(
         isActionInProgress: false,
         actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }
@@ -1165,7 +1381,7 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
         ? current
         : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
 
-    emit(loaded.copyWith(isActionInProgress: true));
+    emit(loaded.copyWith(isActionInProgress: true, actionMessage: () => null));
 
     try {
       final data = await _repository.checkDuplicate(event.data);
@@ -1184,6 +1400,179 @@ class OrdersBloc extends Bloc<OrdersEvent, OrdersState> {
       emit(loaded.copyWith(
         isActionInProgress: false,
         duplicateCheck: () => {'isDuplicate': false},
+      ));
+    }
+  }
+
+  // ── Recurring Orders ────────────────────────────────────────────────
+
+  Future<void> _onRecurringOrdersLoad(
+    RecurringOrdersLoadRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    final loaded = current is OrdersLoaded
+        ? current
+        : const OrdersLoaded(orders: [], hasMore: false, currentPage: 1);
+
+    emit(loaded.copyWith(isRecurringLoading: true));
+
+    try {
+      await _fetchAndCacheRecurring();
+      final nonRecurringOrders =
+          loaded.orders.where((o) => !o.isRecurring).toList();
+      final mergedOrders = _mergeWithRecurring(nonRecurringOrders);
+
+      emit(loaded.copyWith(
+        isRecurringLoading: false,
+        orders: mergedOrders,
+      ));
+    } on ApiException catch (e) {
+      emit(loaded.copyWith(
+        isRecurringLoading: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (_) {
+      emit(loaded.copyWith(
+        isRecurringLoading: false,
+        actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
+      ));
+    }
+  }
+
+  Future<void> _onRecurringOrderPause(
+    RecurringOrderPauseRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    try {
+      await _repository.pauseRecurringOrder(event.orderId);
+
+      // Update isPaused in cache and orders list
+      _cachedRecurringOrders = _cachedRecurringOrders.map((o) {
+        if (o.id == event.orderId) return o.copyWith(isPaused: true);
+        return o;
+      }).toList();
+      final updatedOrders = current.orders.map((o) {
+        if (o.id == event.orderId) return o.copyWith(isPaused: true);
+        return o;
+      }).toList();
+
+      final updatedSelected = current.selectedOrder?.id == event.orderId
+          ? current.selectedOrder?.copyWith(isPaused: true)
+          : current.selectedOrder;
+
+      emit(current.copyWith(
+        isActionInProgress: false,
+        orders: updatedOrders,
+        selectedOrder: () => updatedSelected,
+        actionMessage: () => AppStrings.recurringPaused,
+        isActionError: false,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (_) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
+      ));
+    }
+  }
+
+  Future<void> _onRecurringOrderResume(
+    RecurringOrderResumeRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    try {
+      await _repository.resumeRecurringOrder(event.orderId);
+
+      _cachedRecurringOrders = _cachedRecurringOrders.map((o) {
+        if (o.id == event.orderId) return o.copyWith(isPaused: false);
+        return o;
+      }).toList();
+      final updatedOrders = current.orders.map((o) {
+        if (o.id == event.orderId) return o.copyWith(isPaused: false);
+        return o;
+      }).toList();
+
+      final updatedSelected = current.selectedOrder?.id == event.orderId
+          ? current.selectedOrder?.copyWith(isPaused: false)
+          : current.selectedOrder;
+
+      emit(current.copyWith(
+        isActionInProgress: false,
+        orders: updatedOrders,
+        selectedOrder: () => updatedSelected,
+        actionMessage: () => AppStrings.recurringResumed,
+        isActionError: false,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (_) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
+      ));
+    }
+  }
+
+  Future<void> _onRecurringOrderDelete(
+    RecurringOrderDeleteRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isActionInProgress: true, actionMessage: () => null));
+
+    try {
+      await _repository.deleteRecurringOrder(event.orderId);
+
+      _cachedRecurringOrders = _cachedRecurringOrders
+          .where((o) => o.id != event.orderId)
+          .toList();
+      final updatedOrders = current.orders
+          .where((o) => o.id != event.orderId)
+          .toList();
+
+      emit(current.copyWith(
+        isActionInProgress: false,
+        orders: updatedOrders,
+        actionMessage: () => AppStrings.recurringDeleted,
+        isActionError: false,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (_) {
+      emit(current.copyWith(
+        isActionInProgress: false,
+        actionMessage: () => AppStrings.unknownError,
+        isActionError: true,
       ));
     }
   }

@@ -17,8 +17,8 @@ import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../notifications/data/repositories/notification_repository.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
-import '../../../sos/data/repositories/sos_repository.dart';
-import '../../../sos/presentation/screens/sos_screen.dart';
+import '../../../routes/presentation/screens/route_screen.dart';
+import '../../../sync/presentation/widgets/sync_status_indicator.dart';
 import '../bloc/daily_stats_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -46,6 +46,8 @@ class HomeScreen extends StatelessWidget {
               _buildCurrentOrderCard(isDark),
               SizedBox(height: Responsive.h(24)),
               _buildDailyStats(isDark),
+              SizedBox(height: Responsive.h(20)),
+              _buildRouteOptimizeButton(context, isDark),
               SizedBox(height: Responsive.h(28)),
               _buildUpcomingOrders(isDark),
               SizedBox(height: Responsive.h(120)),
@@ -63,18 +65,6 @@ class HomeScreen extends StatelessWidget {
       MaterialPageRoute<void>(
         builder: (_) => NotificationsScreen(
           repository: NotificationRepository(dio),
-        ),
-      ),
-    );
-  }
-
-  void _openSos(BuildContext context) {
-    final dio = context.read<DioClient>().dio;
-    Navigator.push<void>(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => SosScreen(
-          repository: SosRepository(dio),
         ),
       ),
     );
@@ -131,16 +121,9 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        // SOS
-        GestureDetector(
-          onTap: () => _openSos(context),
-          child: Icon(
-            IconsaxPlusLinear.danger,
-            color: AppColors.error,
-            size: Responsive.r(26),
-          ),
-        ),
-        SizedBox(width: Responsive.w(18)),
+        // Sync status
+        const SyncStatusChip(),
+        SizedBox(width: Responsive.w(8)),
         // Notifications
         _NotificationBadge(
           isDark: isDark,
@@ -399,6 +382,74 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(Responsive.r(14)),
       ),
       child: Icon(icon, color: AppColors.textOnPrimary, size: Responsive.r(22)),
+    );
+  }
+
+  // ── Route Optimize Button ──
+
+  Widget _buildRouteOptimizeButton(BuildContext context, bool isDark) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => const RouteScreen()),
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.w(16),
+          vertical: Responsive.h(14),
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Row(
+          textDirection: TextDirection.rtl,
+          children: [
+            Container(
+              padding: EdgeInsets.all(Responsive.w(10)),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              ),
+              child: Icon(
+                IconsaxPlusBold.routing_2,
+                color: AppColors.primary,
+                size: Responsive.r(20),
+              ),
+            ),
+            SizedBox(width: Responsive.w(12)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppStrings.optimizeRoute,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Text(
+                    AppStrings.noActiveRouteHint,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              IconsaxPlusLinear.arrow_left_2,
+              color: AppColors.primary,
+              size: Responsive.r(20),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

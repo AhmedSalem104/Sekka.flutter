@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
+import '../constants/app_sizes.dart';
 import 'app_typography.dart';
 
 abstract final class AppTheme {
@@ -38,7 +39,7 @@ abstract final class AppTheme {
           color: AppColors.surface,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
           ),
           margin: EdgeInsets.zero,
         ),
@@ -49,7 +50,7 @@ abstract final class AppTheme {
             elevation: 0,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
             ),
             textStyle: AppTypography.buttonBase,
           ),
@@ -60,7 +61,7 @@ abstract final class AppTheme {
             elevation: 0,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
             ),
             side: const BorderSide(color: AppColors.primary, width: 1.5),
             textStyle: AppTypography.buttonBase.copyWith(
@@ -87,26 +88,26 @@ abstract final class AppTheme {
             color: AppColors.textCaption,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.border),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.border),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(
               color: AppColors.primary,
               width: 2,
             ),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.error),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(
               color: AppColors.error,
               width: 2,
@@ -181,7 +182,7 @@ abstract final class AppTheme {
           color: AppColors.surfaceDark,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
           ),
           margin: EdgeInsets.zero,
         ),
@@ -192,7 +193,7 @@ abstract final class AppTheme {
             elevation: 0,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
             ),
             textStyle: AppTypography.buttonBase,
           ),
@@ -203,7 +204,7 @@ abstract final class AppTheme {
             elevation: 0,
             minimumSize: const Size(double.infinity, 56),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
             ),
             side: const BorderSide(color: AppColors.primary, width: 1.5),
             textStyle: AppTypography.buttonBase.copyWith(
@@ -230,26 +231,26 @@ abstract final class AppTheme {
             color: AppColors.textCaptionDark,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.borderDark),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.borderDark),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(
               color: AppColors.primary,
               width: 2,
             ),
           ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(color: AppColors.error),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSizes.inputRadius),
             borderSide: const BorderSide(
               color: AppColors.error,
               width: 2,

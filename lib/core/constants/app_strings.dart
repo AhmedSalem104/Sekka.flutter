@@ -226,7 +226,7 @@ abstract final class AppStrings {
 
   // Account Handover (Settlement)
   static String get accountHandover =>
-      _isAr ? 'تسليم الحساب' : 'Account Handover';
+      _isAr ? 'الحسابات' : 'Accounts';
   static String get accountHandoverSubtitle =>
       _isAr ? 'سلّم فلوس شركائك بسهولة' : 'Settle partner money easily';
   static String get settlementsTitle =>
@@ -505,8 +505,9 @@ abstract final class AppStrings {
   static const String noPickupPoints = 'الشريك ده مسجلش نقاط استلام';
   static const String pickOnMap = 'حدد ع الخريطة';
   static const String pickLocationOnMap = 'حدد الموقع على الخريطة';
-  static const String manualEntry = 'إضافة يدوي';
-  static const String bulkImport = 'استيراد';
+  static const String manualEntry = 'اكتب بإيدك';
+  static const String bulkImport = 'الصق طلبات';
+  static const String voiceEntry = 'قول بصوتك';
   static const String availableSlots = 'المواعيد اللي متاحة';
   static const String loadSlots = 'حمّل المواعيد';
   static const String loadSlotsHint = 'اضغط "حمّل المواعيد" عشان تشوف المتاح';
@@ -599,7 +600,8 @@ abstract final class AppStrings {
   static String get statusArrived => _isAr ? 'وصلت' : 'Arrived';
   static String get statusDelivered =>
       _isAr ? 'تم التسليم' : 'Delivered';
-  static String get statusFailed => _isAr ? 'فشل' : 'Failed';
+  static String get statusFailed => _isAr ? 'معرفتش أسلّم' : 'Failed';
+  static String get statusPartiallyDelivered => _isAr ? 'تسليم جزئي' : 'Partially Delivered';
   static String get statusCancelled => _isAr ? 'ملغي' : 'Cancelled';
   static String get statusReturned => _isAr ? 'مرتجع' : 'Returned';
   static String get statusPostponed => _isAr ? 'مؤجّل' : 'Postponed';
@@ -1047,6 +1049,77 @@ abstract final class AppStrings {
   static String get next => _isAr ? 'التالي' : 'Next';
   static String get back => _isAr ? 'رجوع' : 'Back';
   static String get search => _isAr ? 'بحث...' : 'Search...';
+  static String get searchGlobal =>
+      _isAr ? 'دوّر على طلب أو عميل أو شريك...' : 'Search orders, customers, partners...';
+  static String get searchNoResults =>
+      _isAr ? 'مفيش نتايج' : 'No results';
   static String get currency => _isAr ? 'ج.م' : 'EGP';
   static String get km => _isAr ? 'كم' : 'km';
+
+  // ── Duplicate Check ──
+  static const String duplicateWarningTitle = 'طلب مشابه موجود!';
+  static const String duplicateWarningMessage =
+      'في طلب شبه ده موجود قبل كده. متأكد إنك عايز تكمّل؟';
+  static const String duplicateContinue = 'كمّل برضو';
+  static const String duplicateCancel = 'لا، ارجع';
+  static const String checkingDuplicate = 'بنتحقق من الطلب...';
+
+  // ── Recurring Orders Management ──
+  static const String recurringOrders = 'الطلبات المتكررة';
+  static const String noRecurringOrders = 'مفيش طلبات متكررة';
+  static const String noRecurringOrdersHint = 'أنشئ طلب متكرر من شاشة إضافة طلب';
+  static const String pauseRecurring = 'إيقاف مؤقت';
+  static const String resumeRecurring = 'تشغيل';
+  static const String deleteRecurring = 'حذف';
+  static const String recurringPaused = 'تم الإيقاف المؤقت';
+  static const String recurringResumed = 'تم التشغيل';
+  static const String recurringDeleted = 'تم حذف الطلب المتكرر';
+  static const String nextScheduled = 'التسليم الجاي';
+  static const String totalOccurrences = 'مرات التكرار';
+  static const String confirmDeleteRecurring = 'متأكد إنك عايز تحذف الطلب المتكرر ده؟';
+
+  // ── Routes ──
+  static const String routeOptimization = 'تحسين المسار';
+  static const String optimizeRoute = 'حسّن مسارك';
+  static const String activeRoute = 'المسار الحالي';
+  static const String noActiveRoute = 'مفيش مسار نشط';
+  static const String noActiveRouteHint = 'رتّب طلباتك وحسّن مسار التوصيل';
+  static const String routeOptimized = 'تم تحسين المسار بنجاح';
+  static const String routeCompleted = 'تم إنهاء المسار';
+  static const String completeRoute = 'إنهاء المسار';
+  static const String reorderRoute = 'إعادة ترتيب';
+  static const String addToRoute = 'أضف للمسار';
+  static const String estimatedTime = 'الوقت المتوقع';
+  static const String totalRouteDistance = 'المسافة الكلية';
+  static const String efficiencyScore = 'نقاط الكفاءة';
+  static const String confirmCompleteRoute = 'متأكد إنك عايز تنهي المسار ده؟';
+  static const String orderAddedToRoute = 'تم إضافة الطلب للمسار';
+  static const String routeReordered = 'تم إعادة ترتيب المسار';
+  static const String enterYourRoute = 'دخّل مسارك';
+  static const String selectOrders = 'اختار الطلبات';
+  static const String startPoint = 'نقطة البداية';
+  static const String yourCurrentLocation = 'موقعك الحالي';
+  static const String optimizationTypeLabel = 'نوع التحسين';
+  static const String fastestRoute = 'أسرع مسار';
+  static const String shortestRoute = 'أقصر مسار';
+  static const String lowestCost = 'أقل تكلفة';
+  static const String noActiveOrders = 'مفيش طلبات نشطة';
+  static const String addOrderToRoute = 'إضافة طلب للمسار';
+  static const String routeIsEmpty = 'المسار فاضي';
+  static const String addOrdersToRoute = 'أضف طلبات للمسار';
+  static const String dragToReorder = 'اسحب عشان تعيد الترتيب';
+
+  // ── Sync ──
+  static const String syncStatus = 'حالة المزامنة';
+  static const String syncing = 'جاري المزامنة...';
+  static const String syncComplete = 'تم المزامنة';
+  static const String syncFailed = 'فشل المزامنة';
+  static const String syncNow = 'زامن دلوقتي';
+  static const String lastSyncAt = 'آخر مزامنة';
+  static const String pendingChanges = 'تغييرات معلقة';
+  static const String conflicts = 'تعارضات';
+  static const String resolveConflict = 'حل التعارض';
+  static const String useLocal = 'استخدم المحلي';
+  static const String useServer = 'استخدم من السيرفر';
+  static const String syncOffline = 'أنت أوفلاين — التغييرات هتتزامن لما النت يرجع';
 }

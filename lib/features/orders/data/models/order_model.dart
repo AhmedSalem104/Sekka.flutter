@@ -1,5 +1,43 @@
 import '../../../../shared/enums/order_enums.dart';
 
+class OrderPhotoModel {
+  const OrderPhotoModel({
+    required this.id,
+    required this.photoUrl,
+    required this.photoType,
+    this.takenAt,
+  });
+
+  final String id;
+  final String photoUrl;
+  final int photoType;
+  final DateTime? takenAt;
+
+  factory OrderPhotoModel.fromJson(Map<String, dynamic> json) {
+    return OrderPhotoModel(
+      id: json['id'] as String,
+      photoUrl: json['photoUrl'] as String,
+      photoType: json['photoType'] as int? ?? 0,
+      takenAt: json['takenAt'] != null
+          ? DateTime.tryParse(json['takenAt'] as String)
+          : null,
+    );
+  }
+
+  /// Full URL using base domain.
+  String get fullUrl => 'https://sekka.runasp.net$photoUrl';
+
+  String get typeLabel => switch (photoType) {
+        0 => 'إثبات التسليم',
+        1 => 'صورة الشحنة',
+        2 => 'صورة التلف',
+        3 => 'صورة الفاتورة',
+        4 => 'التوقيع',
+        5 => 'صورة المكان',
+        _ => 'صورة',
+      };
+}
+
 class OrderModel {
   const OrderModel({
     required this.id,
@@ -30,6 +68,12 @@ class OrderModel {
     this.scheduledDate,
     required this.createdAt,
     this.deliveredAt,
+    this.photos = const [],
+    this.isRecurring = false,
+    this.recurrencePattern,
+    this.isPaused = false,
+    this.nextScheduledDate,
+    this.totalOccurrences,
   });
 
   final String id;
@@ -60,6 +104,12 @@ class OrderModel {
   final String? scheduledDate;
   final DateTime createdAt;
   final DateTime? deliveredAt;
+  final List<OrderPhotoModel> photos;
+  final bool isRecurring;
+  final String? recurrencePattern;
+  final bool isPaused;
+  final String? nextScheduledDate;
+  final int? totalOccurrences;
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
@@ -97,6 +147,16 @@ class OrderModel {
       deliveredAt: json['deliveredAt'] != null
           ? DateTime.parse(json['deliveredAt'] as String)
           : null,
+      photos: (json['photos'] as List<dynamic>?)
+              ?.map((e) =>
+                  OrderPhotoModel.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
+      isRecurring: json['isRecurring'] as bool? ?? false,
+      recurrencePattern: json['recurrencePattern'] as String?,
+      isPaused: json['isPaused'] as bool? ?? false,
+      nextScheduledDate: json['nextScheduledDate'] as String?,
+      totalOccurrences: json['totalOccurrences'] as int?,
     );
   }
 
@@ -108,6 +168,8 @@ class OrderModel {
     String? notes,
     OrderStatus? status,
     DateTime? deliveredAt,
+    List<OrderPhotoModel>? photos,
+    bool? isPaused,
   }) {
     return OrderModel(
       id: id,
@@ -138,6 +200,35 @@ class OrderModel {
       scheduledDate: scheduledDate,
       createdAt: createdAt,
       deliveredAt: deliveredAt ?? this.deliveredAt,
+      photos: photos ?? this.photos,
+      isRecurring: isRecurring,
+      recurrencePattern: recurrencePattern,
+      isPaused: isPaused ?? this.isPaused,
+      nextScheduledDate: nextScheduledDate,
+      totalOccurrences: totalOccurrences,
+    );
+  }
+
+  /// Create from recurring orders list endpoint (Map<String, dynamic>).
+  factory OrderModel.fromRecurringMap(Map<String, dynamic> json) {
+    return OrderModel(
+      id: json['id'] as String,
+      orderNumber: json['orderNumber'] as String? ?? '',
+      customerName: json['customerName'] as String?,
+      customerPhone: json['customerPhone'] as String?,
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      paymentMethod: PaymentMethod.fromValue(json['paymentMethod'] as int? ?? 0),
+      status: OrderStatus.fromValue(json['status'] as int? ?? 0),
+      priority: OrderPriority.fromValue(json['priority'] as int? ?? 0),
+      deliveryAddress: json['deliveryAddress'] as String? ?? '',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      isRecurring: true,
+      recurrencePattern: json['recurrencePattern'] as String?,
+      isPaused: json['isPaused'] as bool? ?? false,
+      nextScheduledDate: json['nextScheduledDate'] as String?,
+      totalOccurrences: json['totalOccurrences'] as int?,
     );
   }
 
