@@ -67,6 +67,67 @@ class OrderCard extends StatelessWidget {
                     ),
                     SizedBox(height: AppSizes.sm),
 
+                    // Recurring badge
+                    if (order.isRecurring)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: AppSizes.sm),
+                        child: Row(
+                          textDirection: TextDirection.rtl,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppSizes.sm,
+                                vertical: Responsive.h(2),
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(IconsaxPlusLinear.repeat,
+                                      size: Responsive.r(12),
+                                      color: AppColors.primary),
+                                  SizedBox(width: Responsive.w(4)),
+                                  Text(
+                                    _recurrenceLabel(order.recurrencePattern),
+                                    style: AppTypography.captionSmall.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: AppSizes.xs),
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: AppSizes.sm,
+                                vertical: Responsive.h(2),
+                              ),
+                              decoration: BoxDecoration(
+                                color: order.isPaused
+                                    ? AppColors.warning.withValues(alpha: 0.12)
+                                    : AppColors.success.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                              ),
+                              child: Text(
+                                order.isPaused
+                                    ? AppStrings.pauseRecurring
+                                    : AppStrings.resumeRecurring,
+                                style: AppTypography.captionSmall.copyWith(
+                                  color: order.isPaused
+                                      ? AppColors.warning
+                                      : AppColors.success,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
                     // Bottom row: amount + payment method + priority
                     _buildBottomRow(isDark),
                   ],
@@ -226,22 +287,23 @@ class OrderCard extends StatelessWidget {
 
   static (Color, String) _statusInfo(OrderStatus status) => switch (status) {
         OrderStatus.pending => (AppColors.statusNew, AppStrings.statusNew),
-        OrderStatus.accepted => (AppColors.statusNew, status.arabic),
-        OrderStatus.pickedUp => (AppColors.statusOnTheWay, status.arabic),
+        OrderStatus.accepted => (AppColors.statusNew, AppStrings.statusNew),
+        OrderStatus.pickedUp => (AppColors.statusOnTheWay, AppStrings.statusOnTheWay),
         OrderStatus.inTransit => (AppColors.statusOnTheWay, AppStrings.statusOnTheWay),
-        OrderStatus.arrivedAtDestination => (
-          AppColors.statusArrived,
-          AppStrings.statusArrived,
-        ),
+        OrderStatus.arrivedAtDestination => (AppColors.statusOnTheWay, AppStrings.statusOnTheWay),
         OrderStatus.delivered => (AppColors.statusDelivered, AppStrings.statusDelivered),
         OrderStatus.failed => (AppColors.statusFailed, AppStrings.statusFailed),
         OrderStatus.cancelled => (AppColors.statusCancelled, AppStrings.statusCancelled),
-        OrderStatus.partiallyDelivered => (
-          AppColors.statusReturned,
-          status.arabic,
-        ),
+        OrderStatus.partiallyDelivered => (AppColors.statusDelivered, AppStrings.statusPartiallyDelivered),
         OrderStatus.retryPending => (AppColors.statusPostponed, AppStrings.statusPostponed),
         OrderStatus.returned => (AppColors.statusReturned, AppStrings.statusReturned),
+      };
+
+  static String _recurrenceLabel(String? pattern) => switch (pattern) {
+        'Daily' => AppStrings.recurrenceDaily,
+        'Weekly' => AppStrings.recurrenceWeekly,
+        'Monthly' => AppStrings.recurrenceMonthly,
+        _ => pattern ?? '',
       };
 
   static Color? _parsePartnerColor(String? hex) {

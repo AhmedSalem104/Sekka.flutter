@@ -152,7 +152,7 @@ class _SekkaSwipeActionState extends State<SekkaSwipeAction>
                 child: Icon(
                   _completed
                       ? Icons.check_rounded
-                      : (widget.icon ?? Icons.arrow_back_rounded),
+                      : (widget.icon ?? Icons.arrow_forward_rounded),
                   color: AppColors.textOnPrimary,
                   size: AppSizes.iconMd,
                 ),

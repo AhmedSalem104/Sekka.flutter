@@ -103,7 +103,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = _isEditMode ? null : TabController(length: 2, vsync: this);
+    _tabController = _isEditMode ? null : TabController(length: 3, vsync: this);
     _idempotencyKey = const Uuid().v4();
     _partnerRepo = PartnerRepository(context.read<DioClient>().dio);
 
@@ -142,12 +142,27 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         setState(() {
           _pickupPoints = data;
           _isLoadingPickupPoints = false;
-          // لو فيه نقطة واحدة بس، اختارها تلقائي
           if (data.length == 1) {
+            // لو فيه نقطة واحدة بس، اختارها تلقائي
             _selectPickupPoint(data.first);
+          } else if (data.isEmpty) {
+            // لو مفيش نقاط استلام، استخدم عنوان الشريك نفسه
+            final partner = _partners
+                .where((p) => p.id == partnerId)
+                .firstOrNull;
+            if (partner?.address != null && partner!.address!.isNotEmpty) {
+              _pickupAddressController.text = partner.address!;
+            }
           }
         });
       case ApiFailure():
+        // لو فشل جلب النقاط، استخدم عنوان الشريك
+        final partner = _partners
+            .where((p) => p.id == partnerId)
+            .firstOrNull;
+        if (partner?.address != null && partner!.address!.isNotEmpty) {
+          _pickupAddressController.text = partner.address!;
+        }
         setState(() => _isLoadingPickupPoints = false);
     }
   }
@@ -201,7 +216,19 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   bool _validateStep(int step) {
     switch (step) {
       case 0:
-        // Step 1: customer info — optional fields, no strict validation
+        // Step 1: customer info — phone validation if entered
+        final phone = _customerPhoneController.text.trim().toEnglishNumbers;
+        if (phone.isNotEmpty) {
+          final cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
+          if (cleaned.length != 11 || !cleaned.startsWith('01')) {
+            SekkaMessageDialog.show(
+              context,
+              message: AppStrings.phoneInvalid,
+              type: SekkaMessageType.error,
+            );
+            return false;
+          }
+        }
         return true;
       case 1:
         // Step 2: delivery address required
@@ -425,7 +452,9 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
 
   // ── Submit ──
 
-  void _submit() {
+  bool _isCheckingDuplicate = false;
+
+  Future<void> _submit() async {
     if (!_validateStep(2)) return;
 
     final data = _buildData();
@@ -437,11 +466,85 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
               data: data,
             ),
           );
-    } else if (_isRecurring) {
-      context.read<OrdersBloc>().add(RecurringOrderCreateRequested(data: data));
-    } else {
-      context.read<OrdersBloc>().add(OrderCreateRequested(data: data));
+      return;
     }
+
+    // ── Check for duplicate before creating ──
+    final phone = _customerPhoneController.text.trim().toEnglishNumbers;
+    final address = _deliveryAddressController.text.trim();
+
+    if (phone.isNotEmpty && address.isNotEmpty) {
+      setState(() => _isCheckingDuplicate = true);
+
+      context.read<OrdersBloc>().add(
+            OrderCheckDuplicateRequested(data: {
+              'customerPhone': phone,
+              'deliveryAddress': address,
+            }),
+          );
+      // The listener will handle the result
+    } else {
+      _doCreateOrder(data);
+    }
+  }
+
+  void _doCreateOrder(Map<String, dynamic> data) {
+    context.read<OrdersBloc>().add(OrderCreateRequested(data: data));
+  }
+
+  Future<bool> _showDuplicateWarning(Map<String, dynamic> dupData) async {
+    final matchScore = dupData['matchScore'] as num? ?? 0;
+    final matchedOrder = dupData['matchedOrder'] as Map<String, dynamic>?;
+
+    final orderInfo = matchedOrder != null
+        ? '\n\nرقم الطلب: ${matchedOrder['orderNumber'] ?? ''}'
+        : '';
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: AppColors.warning, size: AppSizes.iconLg),
+              SizedBox(width: AppSizes.sm),
+              Text(AppStrings.duplicateWarningTitle,
+                  style: AppTypography.titleMedium),
+            ],
+          ),
+          content: Text(
+            '${AppStrings.duplicateWarningMessage}'
+            '${matchScore > 0 ? '\n\nنسبة التشابه: $matchScore%' : ''}'
+            '$orderInfo',
+            style: AppTypography.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(AppStrings.duplicateCancel,
+                  style: AppTypography.bodyMedium),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(
+                AppStrings.duplicateContinue,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return result ?? false;
   }
 
   // ──────────────────────────── BUILD ────────────────────────────
@@ -453,30 +556,67 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
     return Directionality(
       textDirection: TextDirection.rtl,
       child: BlocConsumer<OrdersBloc, OrdersState>(
-        listener: (context, state) {
-          if (state is OrdersLoaded && state.actionMessage != null) {
-            final msg = state.actionMessage!;
-            final isSuccess = msg == AppStrings.orderCreatedSuccess ||
-                msg == AppStrings.orderUpdatedSuccess;
+        listener: (context, state) async {
+          if (state is! OrdersLoaded) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  msg,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textOnPrimary,
+          // ── Auto-fill amount from calculated price ──
+          if (state.priceCalculation != null) {
+            final price = state.priceCalculation!['suggestedPrice'];
+            if (price != null && _amountController.text.trim().isEmpty) {
+              _amountController.text = '$price';
+            }
+          }
+
+          // ── Handle duplicate check result ──
+          if (_isCheckingDuplicate && state.duplicateCheck != null) {
+            _isCheckingDuplicate = false;
+            setState(() {});
+
+            final dupData = state.duplicateCheck!;
+            final isDuplicate = dupData['isDuplicate'] as bool? ?? false;
+
+            // Clear duplicate check data
+            context.read<OrdersBloc>().add(const OrdersClearMessage());
+
+            if (isDuplicate) {
+              final shouldContinue = await _showDuplicateWarning(dupData);
+              if (!shouldContinue || !mounted) return;
+            }
+
+            _doCreateOrder(_buildData());
+            return;
+          }
+
+          if (state.actionMessage != null) {
+            final msg = state.actionMessage!;
+            final isError = state.isActionError;
+
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(
+                      msg,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textOnPrimary,
+                      ),
+                    ),
+                  ),
+                  backgroundColor:
+                      isError ? AppColors.error : AppColors.success,
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                   ),
                 ),
-                backgroundColor:
-                    isSuccess ? AppColors.success : AppColors.error,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                ),
-              ),
-            );
+              );
 
-            if (isSuccess) Navigator.of(context).pop();
+            // امسح الرسالة عشان متتعرضش تاني
+            context.read<OrdersBloc>().add(const OrdersClearMessage());
+
+            if (!isError) Navigator.of(context).pop();
           }
         },
         builder: (context, state) {
@@ -505,14 +645,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                                 ? AppColors.surfaceDark
                                 : AppColors.border.withValues(alpha: 0.3),
                             borderRadius:
-                                BorderRadius.circular(Responsive.r(12)),
+                                BorderRadius.circular(AppSizes.radiusMd),
                           ),
                           child: TabBar(
                             controller: _tabController,
                             indicator: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius:
-                                  BorderRadius.circular(Responsive.r(10)),
+                                  BorderRadius.circular(AppSizes.radiusSm),
                             ),
                             indicatorSize: TabBarIndicatorSize.tab,
                             dividerColor: Colors.transparent,
@@ -526,33 +666,10 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                             unselectedLabelStyle: AppTypography.titleMedium,
                             labelPadding: EdgeInsets.zero,
                             padding: EdgeInsets.all(Responsive.w(3)),
-                            tabs: [
-                              Tab(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      IconsaxPlusBold.edit_2,
-                                      size: Responsive.r(18),
-                                    ),
-                                    SizedBox(width: Responsive.w(6)),
-                                    const Text(AppStrings.manualEntry),
-                                  ],
-                                ),
-                              ),
-                              Tab(
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      IconsaxPlusBold.document_download,
-                                      size: Responsive.r(18),
-                                    ),
-                                    SizedBox(width: Responsive.w(6)),
-                                    const Text(AppStrings.bulkImport),
-                                  ],
-                                ),
-                              ),
+                            tabs: const [
+                              Tab(text: AppStrings.manualEntry),
+                              Tab(text: AppStrings.bulkImport),
+                              Tab(text: AppStrings.voiceEntry),
                             ],
                           ),
                         ),
@@ -566,6 +683,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                           children: [
                             _buildSteppedForm(state, isLoading, isDark),
                             _buildBulkImportTab(isLoading, isDark),
+                            _buildVoiceEntryTab(isLoading, isDark),
                           ],
                         ),
                       ),
@@ -650,7 +768,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
               child: SekkaButton(
                 label: AppStrings.previousStep,
                 type: SekkaButtonType.secondary,
-                icon: IconsaxPlusLinear.arrow_right_1,
                 onPressed: _previousStep,
               ),
             ),
@@ -661,16 +778,12 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
             child: _currentStep < _totalSteps - 1
                 ? SekkaButton(
                     label: AppStrings.nextStep,
-                    icon: IconsaxPlusLinear.arrow_left_1,
                     onPressed: _nextStep,
                   )
                 : SekkaButton(
                     label: _isEditMode
                         ? AppStrings.saveChanges
                         : AppStrings.confirmAdd,
-                    icon: _isEditMode
-                        ? IconsaxPlusLinear.edit_2
-                        : IconsaxPlusLinear.add_circle,
                     isLoading: isLoading,
                     onPressed: isLoading ? null : _submit,
                   ),
@@ -684,27 +797,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
 
   List<Widget> _buildStep1CustomerInfo(bool isDark) {
     return [
-      // Order Type Selector
-      if (!_isEditMode) ...[
-        _buildSectionLabel(AppStrings.orderTypeLabel),
-        SizedBox(height: AppSizes.sm),
-        _ChipSelector<OrderType>(
-          items: OrderType.values,
-          selectedValue: _orderType,
-          labelBuilder: (item) => switch (item) {
-            OrderType.normal => AppStrings.orderTypeNormal,
-            OrderType.recurring => AppStrings.orderTypeRecurring,
-          },
-          onChanged: (value) {
-            setState(() {
-              _orderType = value;
-              _isRecurring = value == OrderType.recurring;
-            });
-          },
-        ),
-        SizedBox(height: AppSizes.lg),
-      ],
-
       // Customer Name
       SekkaInputField(
         controller: _customerNameController,
@@ -729,6 +821,63 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
       SizedBox(height: AppSizes.sm),
       _buildPartnerSelector(isDark),
       SizedBox(height: AppSizes.lg),
+
+      // Order Type Selector
+      if (!_isEditMode) ...[
+        _buildSectionLabel(AppStrings.orderTypeLabel),
+        SizedBox(height: AppSizes.sm),
+        _ChipSelector<OrderType>(
+          items: OrderType.values,
+          selectedValue: _orderType,
+          labelBuilder: (item) => switch (item) {
+            OrderType.normal => AppStrings.orderTypeNormal,
+            OrderType.recurring => AppStrings.orderTypeRecurring,
+          },
+          onChanged: (value) {
+            setState(() {
+              _orderType = value;
+              _isRecurring = value == OrderType.recurring;
+            });
+          },
+        ),
+        SizedBox(height: AppSizes.lg),
+
+        // Recurring fields
+        if (_isRecurring) ...[
+          _buildSectionLabel(AppStrings.recurrencePatternLabel),
+          SizedBox(height: AppSizes.sm),
+          _ChipSelector<String>(
+            items: const ['Daily', 'Weekly', 'Monthly'],
+            selectedValue: _recurrencePattern,
+            labelBuilder: _recurrencePatternArabic,
+            onChanged: (value) =>
+                setState(() => _recurrencePattern = value),
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // Start Date
+          _buildSectionLabel(AppStrings.recurrenceStartDate),
+          SizedBox(height: AppSizes.sm),
+          _buildRecurrenceDatePicker(
+            value: _recurrenceStartDate,
+            isDark: isDark,
+            onPick: () => _pickRecurrenceDate(isStart: true),
+            onClear: () => setState(() => _recurrenceStartDate = null),
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // End Date
+          _buildSectionLabel(AppStrings.recurrenceEndDate),
+          SizedBox(height: AppSizes.sm),
+          _buildRecurrenceDatePicker(
+            value: _recurrenceEndDate,
+            isDark: isDark,
+            onPick: () => _pickRecurrenceDate(isStart: false),
+            onClear: () => setState(() => _recurrenceEndDate = null),
+          ),
+          SizedBox(height: AppSizes.lg),
+        ],
+      ],
     ];
   }
 
@@ -1206,41 +1355,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         SizedBox(height: AppSizes.lg),
       ],
 
-      // Recurring fields (shown only when order type is recurring)
-      if (_isRecurring) ...[
-        _buildSectionLabel(AppStrings.recurrencePatternLabel),
-        SizedBox(height: AppSizes.sm),
-        _ChipSelector<String>(
-          items: const ['Daily', 'Weekly', 'Monthly'],
-          selectedValue: _recurrencePattern,
-          labelBuilder: _recurrencePatternArabic,
-          onChanged: (value) =>
-              setState(() => _recurrencePattern = value),
-        ),
-        SizedBox(height: AppSizes.lg),
-
-        // Start Date
-        _buildSectionLabel(AppStrings.recurrenceStartDate),
-        SizedBox(height: AppSizes.sm),
-        _buildRecurrenceDatePicker(
-          value: _recurrenceStartDate,
-          isDark: isDark,
-          onPick: () => _pickRecurrenceDate(isStart: true),
-          onClear: () => setState(() => _recurrenceStartDate = null),
-        ),
-        SizedBox(height: AppSizes.lg),
-
-        // End Date
-        _buildSectionLabel(AppStrings.recurrenceEndDate),
-        SizedBox(height: AppSizes.sm),
-        _buildRecurrenceDatePicker(
-          value: _recurrenceEndDate,
-          isDark: isDark,
-          onPick: () => _pickRecurrenceDate(isStart: false),
-          onClear: () => setState(() => _recurrenceEndDate = null),
-        ),
-        SizedBox(height: AppSizes.lg),
-      ],
+      // (recurring fields moved to step 1)
 
       // Time Slots
       if (!_isEditMode) ...[
@@ -1541,7 +1656,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius.circular(AppSizes.radiusPill),
+                        BorderRadius.circular(AppSizes.chipRadius),
                   ),
                 );
               },
@@ -1677,6 +1792,57 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
       ],
     );
   }
+
+  // ───────────────── VOICE ENTRY TAB ─────────────────
+
+  Widget _buildVoiceEntryTab(bool isLoading, bool isDark) {
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.pagePadding),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Mic icon
+            Container(
+              width: Responsive.r(100),
+              height: Responsive.r(100),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                IconsaxPlusBold.microphone_2,
+                size: Responsive.r(48),
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(height: AppSizes.xxl),
+            Text(
+              'قول الطلب بصوتك',
+              style: AppTypography.titleLarge,
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(
+              'اضغط على المايك وقول بيانات الطلب\nزي: "طلب لمحمد، العنوان المعادي، المبلغ 150 جنيه"',
+              style: AppTypography.bodyMedium.copyWith(color: captionColor),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppSizes.xxl),
+            Text(
+              'الميزة دي جاية قريب',
+              style: AppTypography.caption.copyWith(
+                color: AppColors.warning,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 // ───────────────── CHIP SELECTOR ─────────────────
@@ -1716,7 +1882,7 @@ class _ChipSelector<T> extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.primary : surfaceColor,
-              borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+              borderRadius: BorderRadius.circular(AppSizes.chipRadius),
               border: Border.all(
                 color: isSelected ? AppColors.primary : borderColor,
                 width: 1.5,

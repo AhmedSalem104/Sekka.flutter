@@ -25,7 +25,7 @@ class AuthTabBar extends StatelessWidget {
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.border.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+        borderRadius: BorderRadius.circular(AppSizes.chipRadius),
       ),
       child: Row(
         children: List.generate(tabs.length, (index) {
@@ -41,7 +41,7 @@ class AuthTabBar extends StatelessWidget {
                   color: isSelected
                       ? AppColors.primary
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  borderRadius: BorderRadius.circular(AppSizes.chipRadius),
                 ),
                 alignment: Alignment.center,
                 child: Text(

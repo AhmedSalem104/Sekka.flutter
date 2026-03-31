@@ -15,6 +15,8 @@ import 'features/orders/data/datasources/order_remote_datasource.dart';
 import 'features/orders/data/repositories/order_repository_impl.dart';
 import 'features/orders/presentation/bloc/orders_bloc.dart';
 import 'features/partners/data/repositories/partner_repository.dart';
+import 'features/search/data/repositories/search_repository.dart';
+import 'features/search/presentation/bloc/search_bloc.dart';
 import 'features/settlements/data/datasources/settlement_remote_datasource.dart';
 import 'features/settlements/data/repositories/settlement_repository_impl.dart';
 import 'features/settlements/presentation/bloc/settlement_bloc.dart';
@@ -27,6 +29,10 @@ import 'features/profile/presentation/bloc/profile_bloc.dart';
 import 'features/settings/data/datasources/settings_remote_datasource.dart';
 import 'features/settings/data/repositories/settings_repository_impl.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/sync/data/datasources/sync_remote_datasource.dart';
+import 'features/sync/data/repositories/sync_repository_impl.dart';
+import 'features/sync/presentation/bloc/sync_bloc.dart';
+import 'features/sync/presentation/bloc/sync_event.dart';
 import 'features/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'features/wallet/data/repositories/wallet_repository_impl.dart';
 import 'features/wallet/presentation/bloc/wallet_bloc.dart';
@@ -103,6 +109,9 @@ void main() async {
   // Partners
   final partnerRepository = PartnerRepository(dioClient.dio);
 
+  // Search
+  final searchRepository = SearchRepository(dioClient.dio);
+
   // Wallet
   final walletDataSource = WalletRemoteDataSource(dioClient);
   final walletRepository =
@@ -122,6 +131,11 @@ void main() async {
   final settingsDataSource = SettingsRemoteDataSource(dioClient);
   final settingsRepository =
       SettingsRepositoryImpl(remoteDataSource: settingsDataSource);
+
+  // Sync
+  final syncDataSource = SyncRemoteDataSource(dioClient);
+  final syncRepository =
+      SyncRepositoryImpl(remoteDataSource: syncDataSource);
 
   // Create router
   final router = createAppRouter(authStatusNotifier);
@@ -156,7 +170,13 @@ void main() async {
             create: (_) => ProfileBloc(repository: profileRepository),
           ),
           BlocProvider(
-            create: (_) => OrdersBloc(repository: orderRepository),
+            create: (_) => OrdersBloc(
+              repository: orderRepository,
+              searchRepository: searchRepository,
+            ),
+          ),
+          BlocProvider(
+            create: (_) => SearchBloc(repository: searchRepository),
           ),
           BlocProvider(
             create: (_) => SettingsBloc(
@@ -164,6 +184,10 @@ void main() async {
               themeModeNotifier: themeModeNotifier,
               localeNotifier: localeNotifier,
             ),
+          ),
+          BlocProvider(
+            create: (_) => SyncBloc(repository: syncRepository)
+              ..add(const SyncStatusRequested()),
           ),
         ],
         child: SekkaApp(

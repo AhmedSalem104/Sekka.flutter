@@ -44,7 +44,7 @@ class SekkaBottomNav extends StatelessWidget {
         height: Responsive.h(60),
         decoration: BoxDecoration(
           color: isDark ? AppColors.surfaceDark : AppColors.surface,
-          borderRadius: BorderRadius.circular(Responsive.r(30)),
+          borderRadius: BorderRadius.circular(Responsive.r(16)),
           border: Border.all(
             color: isDark
                 ? AppColors.borderDark

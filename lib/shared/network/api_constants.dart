@@ -140,6 +140,9 @@ abstract final class ApiConstants {
   static String sosResolve(String id) => '$_sos/$id/resolve';
   static const String sosHistory = '$_sos/history';
 
+  // Search endpoint
+  static const String search = '$baseUrl/search';
+
   // Order endpoints
   static const String _orders = '$baseUrl/orders';
   static const String orders = _orders;
@@ -179,6 +182,13 @@ abstract final class ApiConstants {
   static String recurringOrderDetail(String id) => '$_orders/recurring/$id';
   static String recurringOrderPause(String id) => '$_orders/recurring/$id/pause';
   static String recurringOrderResume(String id) => '$_orders/recurring/$id/resume';
+
+  // Sync endpoints
+  static const String _sync = '$baseUrl/sync';
+  static const String syncPush = '$_sync/push';
+  static const String syncPull = '$_sync/pull';
+  static const String syncResolveConflict = '$_sync/resolve-conflict';
+  static const String syncStatus = '$_sync/status';
 
   // Timeline endpoints
   static const String _timeline = '$baseUrl/timeline';

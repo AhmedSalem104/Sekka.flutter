@@ -26,43 +26,51 @@ class SekkaSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      height: Responsive.h(48),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : AppColors.background,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(
-          color: isDark ? AppColors.borderDark : AppColors.border,
-          width: 1.5,
-        ),
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final labelText = hint ?? AppStrings.search;
+
+    return TextField(
+      controller: controller,
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      autofocus: autofocus,
+      textDirection: TextDirection.rtl,
+      style: AppTypography.bodyMedium.copyWith(
+        color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
       ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        onSubmitted: onSubmitted,
-        autofocus: autofocus,
-        textDirection: TextDirection.rtl,
-        style: AppTypography.bodyMedium.copyWith(
-          color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+      decoration: InputDecoration(
+        labelText: labelText,
+        labelStyle: AppTypography.bodyMedium.copyWith(color: captionColor),
+        floatingLabelStyle: AppTypography.bodySmall.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
         ),
-        decoration: InputDecoration(
-          hintText: hint ?? AppStrings.search,
-          hintStyle: AppTypography.bodyMedium.copyWith(
-            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-          ),
-          prefixIcon: Icon(
-            IconsaxPlusLinear.search_normal_1,
-            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-            size: Responsive.r(20),
-          ),
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: Responsive.w(16),
-            vertical: Responsive.h(12),
-          ),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        prefixIcon: Icon(
+          IconsaxPlusLinear.search_normal_1,
+          color: captionColor,
+          size: Responsive.r(20),
+        ),
+        filled: true,
+        fillColor: bgColor,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(color: borderColor, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(color: borderColor, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: Responsive.w(16),
+          vertical: Responsive.h(14),
         ),
       ),
     );

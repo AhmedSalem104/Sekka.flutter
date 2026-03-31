@@ -28,12 +28,15 @@ final class OrdersLoaded extends OrdersState {
     this.isActionInProgress = false,
     this.selectedOrder,
     this.actionMessage,
+    this.isActionError = false,
     this.timeSlots = const [],
     this.disclaimerData,
     this.disputes = const [],
     this.refunds = const [],
     this.priceCalculation,
     this.duplicateCheck,
+    this.recurringOrders,
+    this.isRecurringLoading = false,
   });
 
   final List<OrderModel> orders;
@@ -45,12 +48,15 @@ final class OrdersLoaded extends OrdersState {
   final bool isActionInProgress;
   final OrderModel? selectedOrder;
   final String? actionMessage;
+  final bool isActionError;
   final List<dynamic> timeSlots;
   final Map<String, dynamic>? disclaimerData;
   final List<dynamic> disputes;
   final List<dynamic> refunds;
   final Map<String, dynamic>? priceCalculation;
   final Map<String, dynamic>? duplicateCheck;
+  final List<Map<String, dynamic>>? recurringOrders;
+  final bool isRecurringLoading;
 
   OrdersLoaded copyWith({
     List<OrderModel>? orders,
@@ -62,12 +68,15 @@ final class OrdersLoaded extends OrdersState {
     bool? isActionInProgress,
     OrderModel? Function()? selectedOrder,
     String? Function()? actionMessage,
+    bool? isActionError,
     List<dynamic>? timeSlots,
     Map<String, dynamic>? Function()? disclaimerData,
     List<dynamic>? disputes,
     List<dynamic>? refunds,
     Map<String, dynamic>? Function()? priceCalculation,
     Map<String, dynamic>? Function()? duplicateCheck,
+    List<Map<String, dynamic>>? Function()? recurringOrders,
+    bool? isRecurringLoading,
   }) {
     return OrdersLoaded(
       orders: orders ?? this.orders,
@@ -82,6 +91,7 @@ final class OrdersLoaded extends OrdersState {
           selectedOrder != null ? selectedOrder() : this.selectedOrder,
       actionMessage:
           actionMessage != null ? actionMessage() : this.actionMessage,
+      isActionError: isActionError ?? this.isActionError,
       timeSlots: timeSlots ?? this.timeSlots,
       disclaimerData:
           disclaimerData != null ? disclaimerData() : this.disclaimerData,
@@ -91,6 +101,9 @@ final class OrdersLoaded extends OrdersState {
           priceCalculation != null ? priceCalculation() : this.priceCalculation,
       duplicateCheck:
           duplicateCheck != null ? duplicateCheck() : this.duplicateCheck,
+      recurringOrders:
+          recurringOrders != null ? recurringOrders() : this.recurringOrders,
+      isRecurringLoading: isRecurringLoading ?? this.isRecurringLoading,
     );
   }
 
@@ -105,12 +118,15 @@ final class OrdersLoaded extends OrdersState {
         isActionInProgress,
         selectedOrder,
         actionMessage,
+        isActionError,
         timeSlots,
         disclaimerData,
         disputes,
         refunds,
         priceCalculation,
         duplicateCheck,
+        recurringOrders,
+        isRecurringLoading,
       ];
 }
 

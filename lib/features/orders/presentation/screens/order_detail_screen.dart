@@ -40,8 +40,7 @@ import 'create_order_screen.dart';
 badge.OrderStatus _mapToBadgeStatus(OrderStatus s) => switch (s) {
       OrderStatus.pending || OrderStatus.retryPending => badge.OrderStatus.newOrder,
       OrderStatus.accepted || OrderStatus.pickedUp => badge.OrderStatus.newOrder,
-      OrderStatus.inTransit => badge.OrderStatus.onTheWay,
-      OrderStatus.arrivedAtDestination => badge.OrderStatus.arrived,
+      OrderStatus.inTransit || OrderStatus.arrivedAtDestination => badge.OrderStatus.onTheWay,
       OrderStatus.delivered => badge.OrderStatus.delivered,
       OrderStatus.failed => badge.OrderStatus.failed,
       OrderStatus.cancelled => badge.OrderStatus.cancelled,
@@ -55,8 +54,7 @@ badge.OrderStatus _mapToBadgeStatus(OrderStatus s) => switch (s) {
 Color _statusColor(OrderStatus s) => switch (s) {
       OrderStatus.pending || OrderStatus.retryPending => AppColors.statusNew,
       OrderStatus.accepted || OrderStatus.pickedUp => AppColors.statusNew,
-      OrderStatus.inTransit => AppColors.statusOnTheWay,
-      OrderStatus.arrivedAtDestination => AppColors.statusArrived,
+      OrderStatus.inTransit || OrderStatus.arrivedAtDestination => AppColors.statusOnTheWay,
       OrderStatus.delivered || OrderStatus.partiallyDelivered => AppColors.statusDelivered,
       OrderStatus.failed => AppColors.statusFailed,
       OrderStatus.cancelled => AppColors.statusCancelled,
@@ -301,17 +299,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   void _blocListener(BuildContext context, OrdersState state) {
     if (state is OrdersLoaded && state.actionMessage != null) {
       final msg = state.actionMessage!;
-      final isTerminalAction = msg == AppStrings.orderDeliveredSuccess ||
-          msg == AppStrings.orderCancelledSuccess ||
-          msg == AppStrings.orderDeletedSuccess ||
-          msg == AppStrings.partialDeliverySuccess;
+      final isError = state.isActionError;
 
-      final isSuccess = isTerminalAction ||
-          msg == AppStrings.orderStatusUpdatedSuccess ||
-          msg == AppStrings.addressSwappedSuccess ||
-          msg == AppStrings.waitingStarted ||
-          msg == AppStrings.waitingStopped ||
-          msg == AppStrings.photoUploadedSuccess;
+      final isTerminalAction = !isError &&
+          (msg == AppStrings.orderDeliveredSuccess ||
+              msg == AppStrings.orderCancelledSuccess ||
+              msg == AppStrings.orderDeletedSuccess ||
+              msg == AppStrings.partialDeliverySuccess);
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -321,9 +315,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               textDirection: TextDirection.rtl,
               child: Text(msg),
             ),
-            backgroundColor: isSuccess ? AppColors.success : AppColors.error,
+            backgroundColor: isError ? AppColors.error : AppColors.success,
           ),
         );
+
+      // امسح الرسالة عشان متتعرضش تاني
+      context.read<OrdersBloc>().add(const OrdersClearMessage());
 
       // لو تسليم/إلغاء/حذف → ارجع للقائمة
       if (isTerminalAction && mounted) {
@@ -341,6 +338,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   // ── Body ──────────────────────────────────────────────────────────────
 
+  /// Find recurring data for this order (if it's a recurring order).
   Widget _buildBody(OrderModel order, bool isActionInProgress) {
     return Column(
       children: [
@@ -349,12 +347,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             padding: EdgeInsets.all(AppSizes.pagePadding),
             children: [
               _StatusHeaderCard(order: order),
+              if (order.isRecurring) ...[
+                SizedBox(height: AppSizes.md),
+                _RecurringInfoCard(order: order),
+              ],
               SizedBox(height: AppSizes.md),
               _CustomerAddressCard(order: order),
               SizedBox(height: AppSizes.md),
               _FinancialCard(order: order),
               SizedBox(height: AppSizes.md),
               _DetailsCard(order: order),
+              if (order.photos.isNotEmpty) ...[
+                SizedBox(height: AppSizes.md),
+                _PhotosSection(photos: order.photos),
+              ],
               if (order.status == OrderStatus.inTransit ||
                   order.status == OrderStatus.arrivedAtDestination) ...[
                 SizedBox(height: AppSizes.md),
@@ -429,6 +435,193 @@ class _StatusHeaderCard extends StatelessWidget {
         Icon(icon, size: AppSizes.iconSm, color: AppColors.textCaption),
         SizedBox(width: AppSizes.sm),
         Text('$label: ', style: AppTypography.caption),
+        Expanded(
+          child: Text(value, style: AppTypography.bodySmall),
+        ),
+      ],
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  1b. RECURRING INFO CARD
+// ═══════════════════════════════════════════════════════════════════════════
+class _RecurringInfoCard extends StatelessWidget {
+  const _RecurringInfoCard({required this.order});
+
+  final OrderModel order;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final pattern = order.recurrencePattern ?? '';
+    final isPaused = order.isPaused;
+    final nextDate = order.nextScheduledDate ?? '';
+    final totalOccurrences = order.totalOccurrences ?? 0;
+
+    final patternLabel = switch (pattern) {
+      'Daily' => AppStrings.recurrenceDaily,
+      'Weekly' => AppStrings.recurrenceWeekly,
+      'Monthly' => AppStrings.recurrenceMonthly,
+      _ => pattern,
+    };
+
+    return SekkaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title row
+          Row(
+            children: [
+              Icon(IconsaxPlusLinear.repeat,
+                  size: AppSizes.iconSm, color: AppColors.primary),
+              SizedBox(width: AppSizes.sm),
+              Text(
+                AppStrings.orderTypeRecurring,
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+              const Spacer(),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.sm,
+                  vertical: AppSizes.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: isPaused
+                      ? AppColors.warning.withValues(alpha: 0.12)
+                      : AppColors.success.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
+                  isPaused ? AppStrings.pauseRecurring : AppStrings.resumeRecurring,
+                  style: AppTypography.captionSmall.copyWith(
+                    color: isPaused ? AppColors.warning : AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: AppSizes.md),
+
+          // Info rows
+          _recInfoRow(
+            icon: IconsaxPlusLinear.calendar_1,
+            label: AppStrings.recurrencePatternLabel,
+            value: patternLabel,
+            isDark: isDark,
+          ),
+          SizedBox(height: AppSizes.sm),
+          if (nextDate.isNotEmpty && !nextDate.startsWith('0001'))
+            _recInfoRow(
+              icon: IconsaxPlusLinear.calendar_tick,
+              label: AppStrings.nextScheduled,
+              value: nextDate.length >= 10 ? nextDate.substring(0, 10) : nextDate,
+              isDark: isDark,
+            ),
+          if (totalOccurrences > 0) ...[
+            SizedBox(height: AppSizes.sm),
+            _recInfoRow(
+              icon: IconsaxPlusLinear.chart,
+              label: AppStrings.totalOccurrences,
+              value: '$totalOccurrences',
+              isDark: isDark,
+            ),
+          ],
+
+          SizedBox(height: AppSizes.md),
+
+          // Pause/Resume + Delete buttons
+          Row(
+            children: [
+              Expanded(
+                child: SekkaButton(
+                  label: isPaused ? AppStrings.resumeRecurring : AppStrings.pauseRecurring,
+                  icon: isPaused ? IconsaxPlusLinear.play : IconsaxPlusLinear.pause,
+                  type: isPaused ? SekkaButtonType.primary : SekkaButtonType.secondary,
+                  onPressed: () {
+                    if (isPaused) {
+                      context.read<OrdersBloc>().add(
+                            RecurringOrderResumeRequested(orderId: order.id),
+                          );
+                    } else {
+                      context.read<OrdersBloc>().add(
+                            RecurringOrderPauseRequested(orderId: order.id),
+                          );
+                    }
+                  },
+                ),
+              ),
+              SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: SekkaButton(
+                  label: AppStrings.deleteRecurring,
+                  icon: IconsaxPlusLinear.trash,
+                  type: SekkaButtonType.text,
+                  onPressed: () => _confirmDelete(context, order.id),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String orderId) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          ),
+          title: Text(AppStrings.deleteRecurring,
+              style: AppTypography.titleMedium),
+          content: Text(AppStrings.confirmDeleteRecurring,
+              style: AppTypography.bodyMedium),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(AppStrings.cancel, style: AppTypography.bodyMedium),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                context.read<OrdersBloc>().add(
+                      RecurringOrderDeleteRequested(orderId: orderId),
+                    );
+                Navigator.of(context).pop(); // Close detail screen
+              },
+              child: Text(
+                AppStrings.deleteRecurring,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _recInfoRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: AppSizes.iconSm, color: AppColors.textCaption),
+        SizedBox(width: AppSizes.sm),
+        Text('$label: ',
+            style: AppTypography.caption),
         Expanded(
           child: Text(value, style: AppTypography.bodySmall),
         ),
@@ -528,28 +721,28 @@ class _CustomerAddressCard extends StatelessWidget {
                     ),
                   ),
                   SizedBox(width: AppSizes.sm),
-                  // واتساب
+                  // مراسلة
                   if (order.customerPhone != null &&
                       order.customerPhone!.isNotEmpty)
                     GestureDetector(
                       onTap: () =>
-                          _sendWhatsApp(order.customerPhone!, 'السلام عليكم، معاك سائق سِكّة'),
+                          _openMessagingApps(order.customerPhone!),
                       child: Container(
                         padding: EdgeInsets.all(Responsive.r(12)),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF25D366)
+                          color: AppColors.primary
                               .withValues(alpha: 0.1),
                           borderRadius:
                               BorderRadius.circular(AppSizes.radiusSm),
                           border: Border.all(
-                            color: const Color(0xFF25D366)
+                            color: AppColors.primary
                                 .withValues(alpha: 0.3),
                           ),
                         ),
                         child: Icon(
                           IconsaxPlusBold.message,
                           size: AppSizes.iconMd,
-                          color: const Color(0xFF25D366),
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -659,6 +852,7 @@ class _CustomerAddressCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) => QuickMessagesSheet(
         repository: MessageTemplateRepository(dio),
+        customerPhone: phone,
         onTemplateSelected: (messageText) {
           if (phone != null && phone.isNotEmpty) {
             _sendWhatsApp(phone, messageText);
@@ -679,6 +873,22 @@ class _CustomerAddressCard extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _openMessagingApps(String phone) async {
+    var normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (normalized.startsWith('0')) {
+      normalized = '+2$normalized';
+    } else if (!normalized.startsWith('+')) {
+      normalized = '+$normalized';
+    }
+    final uri = Uri(
+      scheme: 'sms',
+      path: normalized,
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   Future<void> _sendWhatsApp(String phone, String message) async {
@@ -875,6 +1085,155 @@ class _DetailsCard extends StatelessWidget {
 
   Widget _divider() {
     return const Divider(height: 1, color: AppColors.border);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  4b. PHOTOS SECTION
+// ═══════════════════════════════════════════════════════════════════════════
+class _PhotosSection extends StatelessWidget {
+  const _PhotosSection({required this.photos});
+  final List<OrderPhotoModel> photos;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return SekkaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                IconsaxPlusBold.gallery,
+                size: AppSizes.iconMd,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: AppSizes.sm),
+              Text(
+                'صور الطلب (${photos.length})',
+                style: AppTypography.titleMedium,
+              ),
+            ],
+          ),
+          SizedBox(height: AppSizes.md),
+          SizedBox(
+            height: Responsive.h(120),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              reverse: true,
+              itemCount: photos.length,
+              separatorBuilder: (_, __) => SizedBox(width: AppSizes.sm),
+              itemBuilder: (_, index) {
+                final photo = photos[index];
+                return GestureDetector(
+                  onTap: () => _openFullPhoto(context, photo),
+                  child: Column(
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusMd),
+                        child: Image.network(
+                          photo.fullUrl,
+                          width: Responsive.w(90),
+                          height: Responsive.h(90),
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: Responsive.w(90),
+                            height: Responsive.h(90),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.backgroundDark
+                                  : AppColors.background,
+                              borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd),
+                            ),
+                            child: Icon(
+                              IconsaxPlusLinear.gallery_slash,
+                              color: AppColors.textCaption,
+                              size: AppSizes.iconXl,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.xs),
+                      Text(
+                        photo.typeLabel,
+                        style: AppTypography.captionSmall,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openFullPhoto(BuildContext context, OrderPhotoModel photo) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: EdgeInsets.all(AppSizes.md),
+          child: Stack(
+            children: [
+              Center(
+                child: InteractiveViewer(
+                  child: Image.network(
+                    photo.fullUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Icon(
+                        IconsaxPlusLinear.gallery_slash,
+                        color: Colors.white54,
+                        size: Responsive.r(64),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: AppSizes.md,
+                right: AppSizes.md,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: EdgeInsets.all(AppSizes.sm),
+                    decoration: const BoxDecoration(
+                      color: Colors.white24,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: AppSizes.iconMd,
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: AppSizes.lg,
+                left: 0,
+                right: 0,
+                child: Text(
+                  photo.typeLabel,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -1148,16 +1507,9 @@ class _ActionArea extends StatelessWidget {
 
   Widget _buildActions(BuildContext context, OrderStatus status) {
     return switch (status) {
-      OrderStatus.pending || OrderStatus.retryPending => SekkaButton(
-          label: AppStrings.acceptOrder,
-          isLoading: isLoading,
-          onPressed: () => _dispatch(context, 1),
-        ),
-      OrderStatus.accepted => SekkaButton(
-          label: AppStrings.pickedUpOrder,
-          isLoading: isLoading,
-          onPressed: () => _dispatch(context, 2),
-        ),
+      OrderStatus.pending ||
+      OrderStatus.retryPending ||
+      OrderStatus.accepted ||
       OrderStatus.pickedUp => SekkaButton(
           label: AppStrings.startDelivery,
           isLoading: isLoading,
@@ -1233,7 +1585,6 @@ class _ActionArea extends StatelessWidget {
         value: context.read<OrdersBloc>(),
         child: _DeliverBottomSheet(
           orderId: orderId,
-          currentAmount: order.amount,
         ),
       ),
     );
@@ -1365,18 +1716,15 @@ class _ActionChip extends StatelessWidget {
 class _DeliverBottomSheet extends StatefulWidget {
   const _DeliverBottomSheet({
     required this.orderId,
-    required this.currentAmount,
   });
 
   final String orderId;
-  final double currentAmount;
 
   @override
   State<_DeliverBottomSheet> createState() => _DeliverBottomSheetState();
 }
 
 class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
-  late final TextEditingController _amountCtrl;
   final _notesCtrl = TextEditingController();
   int _rating = 5;
   double? _lat;
@@ -1385,9 +1733,6 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
   @override
   void initState() {
     super.initState();
-    _amountCtrl = TextEditingController(
-      text: widget.currentAmount.toStringAsFixed(0),
-    );
     _fetchLocation();
   }
 
@@ -1412,7 +1757,6 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
 
   @override
   void dispose() {
-    _amountCtrl.dispose();
     _notesCtrl.dispose();
     super.dispose();
   }
@@ -1435,13 +1779,6 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
                 SizedBox(height: AppSizes.lg),
                 Text(AppStrings.confirmDelivery, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
-                SekkaInputField(
-                  controller: _amountCtrl,
-                  hint: AppStrings.collectedAmount,
-                  keyboardType: TextInputType.number,
-                  prefixIcon: IconsaxPlusLinear.money_recive,
-                ),
-                SizedBox(height: AppSizes.md),
                 // Star rating
                 Text('قيّم العميل', style: AppTypography.titleMedium),
                 SizedBox(height: AppSizes.sm),
@@ -1473,11 +1810,9 @@ class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
                 SekkaButton(
                   label: AppStrings.confirmDelivery,
                   onPressed: () {
-                    final amount = double.tryParse(_amountCtrl.text);
                     context.read<OrdersBloc>().add(
                           OrderDeliverRequested(
                             orderId: widget.orderId,
-                            actualAmount: amount,
                             latitude: _lat,
                             longitude: _lng,
                             notes: _notesCtrl.text.isEmpty
@@ -2056,17 +2391,21 @@ class _DisclaimerBottomSheet extends StatefulWidget {
 }
 
 class _DisclaimerBottomSheetState extends State<_DisclaimerBottomSheet> {
-  final _contentCtrl = TextEditingController();
+  final _conditionCtrl = TextEditingController();
+  final _itemsCtrl = TextEditingController();
   bool _canSubmit = false;
 
   @override
   void dispose() {
-    _contentCtrl.dispose();
+    _conditionCtrl.dispose();
+    _itemsCtrl.dispose();
     super.dispose();
   }
 
-  void _onContentChanged(String value) {
-    final canNow = value.trim().isNotEmpty;
+  void _checkCanSubmit() {
+    final canNow =
+        _conditionCtrl.text.trim().isNotEmpty &&
+        _itemsCtrl.text.trim().isNotEmpty;
     if (canNow != _canSubmit) setState(() => _canSubmit = canNow);
   }
 
@@ -2089,10 +2428,19 @@ class _DisclaimerBottomSheetState extends State<_DisclaimerBottomSheet> {
                 Text('إخلاء مسؤولية', style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
-                  controller: _contentCtrl,
-                  hint: 'اكتب نص إخلاء المسؤولية',
-                  maxLines: 5,
-                  onChanged: _onContentChanged,
+                  controller: _conditionCtrl,
+                  hint: 'حالة الشحنة (مثلاً: مكسورة، مفتوحة)',
+                  label: 'حالة الشحنة',
+                  maxLines: 3,
+                  onChanged: (_) => _checkCanSubmit(),
+                ),
+                SizedBox(height: AppSizes.md),
+                SekkaInputField(
+                  controller: _itemsCtrl,
+                  hint: 'وصف المحتويات (مثلاً: 2 كرتونة، علبة)',
+                  label: 'وصف المحتويات',
+                  maxLines: 3,
+                  onChanged: (_) => _checkCanSubmit(),
                 ),
                 SizedBox(height: AppSizes.xl),
                 SekkaButton(
@@ -2103,7 +2451,10 @@ class _DisclaimerBottomSheetState extends State<_DisclaimerBottomSheet> {
                           context.read<OrdersBloc>().add(
                                 OrderDisclaimerPostRequested(
                                   orderId: widget.orderId,
-                                  data: {'content': _contentCtrl.text.trim()},
+                                  data: {
+                                    'condition': _conditionCtrl.text.trim(),
+                                    'itemsDescription': _itemsCtrl.text.trim(),
+                                  },
                                 ),
                               );
                           Navigator.pop(context);

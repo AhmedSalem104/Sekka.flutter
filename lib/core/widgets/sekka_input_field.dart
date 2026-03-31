@@ -26,6 +26,7 @@ class SekkaInputField extends StatelessWidget {
     this.onTap,
     this.textAlign = TextAlign.start,
     this.focusNode,
+    this.maxLength,
   });
 
   final TextEditingController? controller;
@@ -38,6 +39,7 @@ class SekkaInputField extends StatelessWidget {
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final int maxLines;
+  final int? maxLength;
   final String? errorText;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
@@ -50,78 +52,86 @@ class SekkaInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPhone = keyboardType == TextInputType.phone;
+    final effectiveMaxLength = isPhone ? (maxLength ?? 11) : maxLength;
+    final effectiveFormatters = isPhone
+        ? [FilteringTextInputFormatter.digitsOnly, ...?inputFormatters]
+        : inputFormatters;
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
     final borderColor = isDark ? AppColors.borderDark : AppColors.border;
     final iconColor = isDark ? AppColors.textCaptionDark : AppColors.textCaption;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (label != null) ...[
-          Text(label!, style: AppTypography.titleMedium),
-          SizedBox(height: AppSizes.sm),
-        ],
-        TextField(
-          controller: controller,
-          focusNode: focusNode,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          textInputAction: textInputAction,
-          maxLines: maxLines,
-          onChanged: onChanged,
-          onSubmitted: onSubmitted,
-          inputFormatters: inputFormatters,
-          autofocus: autofocus,
-          readOnly: readOnly,
-          onTap: onTap,
-          textAlign: textAlign,
-          textDirection: TextDirection.rtl,
-          style: AppTypography.bodyLarge,
-          decoration: InputDecoration(
-            hintText: hint,
-            errorText: errorText,
-            errorMaxLines: 2,
-            filled: true,
-            fillColor: bgColor,
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: AppSizes.lg,
-              vertical: AppSizes.lg,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-              borderSide: BorderSide(color: borderColor, width: 1.5),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-              borderSide: BorderSide(color: borderColor, width: 1.5),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-              borderSide: const BorderSide(color: AppColors.error),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-              borderSide: const BorderSide(color: AppColors.error, width: 2),
-            ),
-            prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: AppSizes.iconLg, color: iconColor)
-                : null,
-            suffixIcon: suffixIcon != null
-                ? IconButton(
-                    icon: Icon(suffixIcon, size: AppSizes.iconLg, color: iconColor),
-                    onPressed: onSuffixTap,
-                  )
-                : null,
-          ),
+    final floatingLabel = hint ?? label;
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      maxLines: maxLines,
+      maxLength: effectiveMaxLength,
+      buildCounter: effectiveMaxLength != null
+          ? (_, {required currentLength, required isFocused, required maxLength}) => null
+          : null,
+      onChanged: onChanged,
+      onSubmitted: onSubmitted,
+      inputFormatters: effectiveFormatters,
+      autofocus: autofocus,
+      readOnly: readOnly,
+      onTap: onTap,
+      textAlign: textAlign,
+      textDirection: TextDirection.rtl,
+      style: AppTypography.bodyLarge,
+      decoration: InputDecoration(
+        labelText: floatingLabel,
+        labelStyle: AppTypography.bodyLarge.copyWith(color: iconColor),
+        floatingLabelStyle: AppTypography.bodySmall.copyWith(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
         ),
-      ],
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
+        errorText: errorText,
+        errorMaxLines: 2,
+        filled: true,
+        fillColor: bgColor,
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: AppSizes.lg,
+          vertical: AppSizes.lg,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          borderSide: BorderSide(color: borderColor, width: 1.5),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          borderSide: BorderSide(color: borderColor, width: 1.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          borderSide: const BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
+        ),
+        prefixIcon: prefixIcon != null
+            ? Icon(prefixIcon, size: AppSizes.iconLg, color: iconColor)
+            : null,
+        suffixIcon: suffixIcon != null
+            ? IconButton(
+                icon: Icon(suffixIcon, size: AppSizes.iconLg, color: iconColor),
+                onPressed: onSuffixTap,
+              )
+            : null,
+      ),
     );
   }
 }

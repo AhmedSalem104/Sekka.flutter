@@ -8,6 +8,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
+import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
@@ -91,6 +92,8 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
   int _commissionType = 0;
   int _paymentMethod = 0;
   bool _isLoading = false;
+  double? _addressLat;
+  double? _addressLng;
 
   @override
   void dispose() {
@@ -105,6 +108,26 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
   bool get _isValid =>
       _nameController.text.trim().isNotEmpty &&
       _phoneController.text.trim().isNotEmpty;
+
+  Future<void> _openMapPicker() async {
+    final result = await SekkaMapPicker.show(
+      context,
+      initialLatitude: _addressLat,
+      initialLongitude: _addressLng,
+      title: AppStrings.partnerAddress,
+    );
+
+    if (result == null || !mounted) return;
+
+    final addressText = result.address ??
+        '${result.latitude.toStringAsFixed(5)}, ${result.longitude.toStringAsFixed(5)}';
+
+    setState(() {
+      _addressLat = result.latitude;
+      _addressLng = result.longitude;
+      _addressController.text = addressText;
+    });
+  }
 
   Future<void> _submit() async {
     if (!_isValid) return;
@@ -218,13 +241,8 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
                 ),
                 SizedBox(height: AppSizes.lg),
 
-                // Address
-                SekkaInputField(
-                  controller: _addressController,
-                  label: AppStrings.partnerAddress,
-                  hint: AppStrings.partnerAddress,
-                  prefixIcon: IconsaxPlusLinear.location,
-                ),
+                // Address (map picker)
+                _buildAddressField(isDark),
                 SizedBox(height: AppSizes.lg),
 
                 // Partner type
@@ -289,6 +307,83 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAddressField(bool isDark) {
+    final hasCoords = _addressLat != null && _addressLng != null;
+    final borderColor = isDark ? AppColors.borderDark : AppColors.border;
+    final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppStrings.partnerAddress,
+          style: AppTypography.titleMedium.copyWith(
+            color: isDark
+                ? AppColors.textHeadlineDark
+                : AppColors.textHeadline,
+          ),
+        ),
+        SizedBox(height: AppSizes.sm),
+        GestureDetector(
+          onTap: _openMapPicker,
+          child: Container(
+            constraints: BoxConstraints(minHeight: AppSizes.inputHeight),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.md,
+            ),
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+              border: Border.all(
+                color: hasCoords ? AppColors.success : borderColor,
+                width: hasCoords ? 2 : 1.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  IconsaxPlusLinear.location,
+                  size: AppSizes.iconLg,
+                  color: hasCoords ? AppColors.success : captionColor,
+                ),
+                SizedBox(width: AppSizes.md),
+                Expanded(
+                  child: Text(
+                    _addressController.text.isNotEmpty
+                        ? _addressController.text
+                        : AppStrings.partnerAddress,
+                    style: _addressController.text.isNotEmpty
+                        ? AppTypography.bodyMedium
+                        : AppTypography.bodyMedium
+                            .copyWith(color: captionColor),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: AppSizes.sm),
+                if (hasCoords)
+                  Icon(
+                    Icons.check_circle,
+                    size: AppSizes.iconMd,
+                    color: AppColors.success,
+                  )
+                else
+                  Icon(
+                    IconsaxPlusLinear.map,
+                    size: AppSizes.iconMd,
+                    color: AppColors.primary,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 

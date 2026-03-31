@@ -48,7 +48,7 @@ class _MainShellState extends State<MainShell> {
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.profile_2user,
       activeIcon: IconsaxPlusBold.profile_2user,
-      label: 'جهات الاتصال',
+      label: 'جهاتي',
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.wallet_2,
@@ -64,24 +64,32 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          IndexedStack(
-            index: _currentIndex,
-            children: _screens,
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: SekkaBottomNav(
-              currentIndex: _currentIndex,
-              onTap: (index) => setState(() => _currentIndex = index),
-              items: _navItems,
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          setState(() => _currentIndex = 0);
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            IndexedStack(
+              index: _currentIndex,
+              children: _screens,
             ),
-          ),
-        ],
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SekkaBottomNav(
+                currentIndex: _currentIndex,
+                onTap: (index) => setState(() => _currentIndex = index),
+                items: _navItems,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
