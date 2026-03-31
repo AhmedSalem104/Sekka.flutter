@@ -34,3 +34,21 @@ final class AuthUnauthenticated extends AuthState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Emitted after DELETE /auth/account succeeds — OTP was sent to phone.
+final class AuthDeletionOtpSent extends AuthState {
+  const AuthDeletionOtpSent();
+}
+
+/// Emitted when an API error occurs during the deletion flow, while the
+/// session is still valid. Carries the error message + the current driver
+/// so the profile screen can restore context.
+final class AuthDeletionError extends AuthState {
+  const AuthDeletionError({required this.message, required this.driver});
+
+  final String message;
+  final DriverEntity driver;
+
+  @override
+  List<Object?> get props => [message, driver];
+}

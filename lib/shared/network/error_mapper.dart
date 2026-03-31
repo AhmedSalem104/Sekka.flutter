@@ -34,7 +34,11 @@ abstract final class ErrorMapper {
     }
 
     // OTP errors
-    if (lower.contains('كود التحقق غير صحيح') || lower.contains('invalid otp')) {
+    if (lower.contains('كود التحقق غير صحيح') ||
+        lower.contains('كود التأكيد غير صحيح') ||
+        lower.contains('invalid otp') ||
+        lower.contains('invalid confirmation') ||
+        lower.contains('invalid code')) {
       return 'الكود غلط، تأكد منه وجرّب تاني';
     }
     if (lower.contains('منتهي الصلاحية') || lower.contains('expired')) {

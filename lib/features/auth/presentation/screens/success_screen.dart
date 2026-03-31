@@ -17,6 +17,7 @@ class SuccessScreen extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
@@ -40,7 +41,11 @@ class SuccessScreen extends StatelessWidget {
               SizedBox(height: AppSizes.xxxl),
               Text(
                 AppStrings.accountCreated,
-                style: AppTypography.headlineLarge,
+                style: AppTypography.headlineLarge.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                ),
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: AppSizes.md),

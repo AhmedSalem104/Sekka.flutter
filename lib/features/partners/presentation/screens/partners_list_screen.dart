@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -28,6 +30,7 @@ class PartnersListScreen extends StatefulWidget {
 class _PartnersListScreenState extends State<PartnersListScreen> {
   late final PartnerRepository _repository;
   late final PartnersBloc _bloc;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -40,6 +43,7 @@ class _PartnersListScreenState extends State<PartnersListScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _bloc.close();
     super.dispose();
   }
@@ -79,7 +83,10 @@ class _PartnersListScreenState extends State<PartnersListScreen> {
                 child: SekkaSearchBar(
                   hint: AppStrings.searchPartner,
                   onChanged: (value) {
-                    _bloc.add(PartnersSearchChanged(value));
+                    _debounce?.cancel();
+                    _debounce = Timer(const Duration(milliseconds: 300), () {
+                      _bloc.add(PartnersSearchChanged(value));
+                    });
                   },
                 ),
               ),

@@ -109,11 +109,35 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             children: [
               _buildHandle(),
               SizedBox(height: AppSizes.md),
-              Text('اختار نوع الصورة', style: AppTypography.headlineSmall),
+              Builder(
+                builder: (ctx) {
+                  final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                  return Text(
+                    'اختار نوع الصورة',
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
+                    ),
+                  );
+                },
+              ),
               SizedBox(height: AppSizes.md),
               ...PhotoType.values.map(
                 (pt) => ListTile(
-                  title: Text(pt.arabic, style: AppTypography.bodyLarge),
+                  title: Builder(
+                    builder: (ctx) {
+                      final isDark = Theme.of(ctx).brightness == Brightness.dark;
+                      return Text(
+                        pt.arabic,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                      );
+                    },
+                  ),
                   onTap: () {
                     Navigator.pop(context);
                     _pickAndUploadPhoto(pt);
@@ -192,11 +216,20 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.backgroundDark
+          : AppColors.surface,
       elevation: 0,
       centerTitle: true,
       leading: const SekkaBackButton(),
-      title: Text(AppStrings.orderDetails, style: AppTypography.headlineSmall),
+      title: Text(
+        AppStrings.orderDetails,
+        style: AppTypography.headlineSmall.copyWith(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.textHeadlineDark
+              : AppColors.textHeadline,
+        ),
+      ),
       actions: [
         BlocBuilder<OrdersBloc, OrdersState>(
           builder: (context, state) {
@@ -424,15 +457,37 @@ class _StatusHeaderCard extends StatelessWidget {
   }
 
   Widget _infoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: AppSizes.iconSm, color: AppColors.textCaption),
-        SizedBox(width: AppSizes.sm),
-        Text('$label: ', style: AppTypography.caption),
-        Expanded(
-          child: Text(value, style: AppTypography.bodySmall),
-        ),
-      ],
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Row(
+          children: [
+            Icon(
+              icon,
+              size: AppSizes.iconSm,
+              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+            ),
+            SizedBox(width: AppSizes.sm),
+            Text(
+              '$label: ',
+              style: AppTypography.caption.copyWith(
+                color: isDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                value,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -846,35 +901,74 @@ class _DetailsCard extends StatelessWidget {
   }
 
   Widget _detailRow(String label, String value, {bool multiLine = false}) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
-      child: multiLine
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: AppTypography.caption),
-                SizedBox(height: AppSizes.xs),
-                Text(value, style: AppTypography.bodyMedium),
-              ],
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(label, style: AppTypography.caption),
-                Flexible(
-                  child: Text(
-                    value,
-                    style: AppTypography.bodyMedium,
-                    textAlign: TextAlign.end,
-                  ),
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Padding(
+          padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
+          child: multiLine
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.caption.copyWith(
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                    SizedBox(height: AppSizes.xs),
+                    Text(
+                      value,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.textBodyDark
+                            : AppColors.textBody,
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.caption.copyWith(
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                    Flexible(
+                      child: Text(
+                        value,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+        );
+      },
     );
   }
 
   Widget _divider() {
-    return const Divider(height: 1, color: AppColors.border);
+    return Builder(
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Divider(
+          height: 1,
+          color: isDark ? AppColors.borderDark : AppColors.border,
+        );
+      },
+    );
   }
 }
 

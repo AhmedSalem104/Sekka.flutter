@@ -102,17 +102,28 @@ class _SosScreenState extends State<SosScreen> {
   Future<void> _dismiss() async {
     if (_activeSos == null) return;
 
+    final isDlgDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDlgDark ? AppColors.surfaceDark : AppColors.surface,
         title: Text(
           AppStrings.sosDismiss,
-          style: AppTypography.titleLarge,
+          style: AppTypography.titleLarge.copyWith(
+            color: isDlgDark
+                ? AppColors.textHeadlineDark
+                : AppColors.textHeadline,
+          ),
           textAlign: TextAlign.center,
         ),
         content: Text(
           AppStrings.sosDismissConfirm,
-          style: AppTypography.bodyMedium,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDlgDark
+                ? AppColors.textBodyDark
+                : AppColors.textBody,
+          ),
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -122,7 +133,9 @@ class _SosScreenState extends State<SosScreen> {
             child: Text(
               AppStrings.cancel,
               style: AppTypography.button.copyWith(
-                color: AppColors.textCaption,
+                color: isDlgDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
               ),
             ),
           ),

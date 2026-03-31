@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -27,6 +29,7 @@ class CustomersListScreen extends StatefulWidget {
 class _CustomersListScreenState extends State<CustomersListScreen> {
   late final TextEditingController _searchController;
   late final CustomersBloc _bloc;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _bloc.close();
     super.dispose();
@@ -80,7 +84,10 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                 controller: _searchController,
                 hint: AppStrings.searchCustomer,
                 onChanged: (value) {
-                  _bloc.add(CustomersSearchChanged(value));
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), () {
+                    _bloc.add(CustomersSearchChanged(value));
+                  });
                 },
               ),
             ),

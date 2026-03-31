@@ -33,6 +33,7 @@ final class AuthRegisterRequested extends AuthEvent {
     required this.name,
     required this.vehicleType,
     this.email,
+    this.referralCode,
   });
 
   final String phoneNumber;
@@ -42,6 +43,7 @@ final class AuthRegisterRequested extends AuthEvent {
   final String name;
   final int vehicleType;
   final String? email;
+  final String? referralCode;
 
   @override
   List<Object?> get props => [
@@ -61,4 +63,22 @@ final class AuthLogoutRequested extends AuthEvent {
 
 final class AuthSessionExpired extends AuthEvent {
   const AuthSessionExpired();
+}
+
+final class AuthDeleteAccountRequested extends AuthEvent {
+  const AuthDeleteAccountRequested({this.reason});
+
+  final String? reason;
+
+  @override
+  List<Object?> get props => [reason];
+}
+
+final class AuthConfirmDeletionRequested extends AuthEvent {
+  const AuthConfirmDeletionRequested({required this.otpCode});
+
+  final String otpCode;
+
+  @override
+  List<Object?> get props => [otpCode];
 }

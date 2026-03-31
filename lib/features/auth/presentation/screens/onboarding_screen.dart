@@ -181,7 +181,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       child: Text(
                         'جرّب بدون تسجيل',
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.textCaption,
+                          color: isDark
+                              ? AppColors.textCaptionDark
+                              : AppColors.textCaption,
                         ),
                       ),
                     ),

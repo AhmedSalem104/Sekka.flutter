@@ -8,6 +8,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
+import '../../../../core/widgets/sekka_hint_tip.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../bloc/wallet_bloc.dart';
@@ -75,11 +76,18 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildError(String message) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(message, style: AppTypography.bodyMedium),
+          Text(
+            message,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
+          ),
           SizedBox(height: AppSizes.lg),
           TextButton(
             onPressed: () =>
@@ -114,13 +122,28 @@ class _WalletScreenState extends State<WalletScreen> {
         children: [
           SizedBox(height: AppSizes.lg),
           BalanceCard(balance: state.balance),
+          SizedBox(height: AppSizes.sm),
+          SekkaHintTip(
+            hintKey: 'wallet_balance',
+            message: AppStrings.hintWalletBalance,
+          ),
           SizedBox(height: AppSizes.lg),
           CashStatusBar(
             status: state.cashStatus,
             onSettleTap: () => context.push(RouteNames.settlements),
           ),
+          SizedBox(height: AppSizes.sm),
+          SekkaHintTip(
+            hintKey: 'wallet_cash_status',
+            message: AppStrings.hintCashStatus,
+          ),
           SizedBox(height: AppSizes.lg),
           WalletSummaryRow(summary: state.summary),
+          SizedBox(height: AppSizes.sm),
+          SekkaHintTip(
+            hintKey: 'wallet_summary',
+            message: AppStrings.hintWalletSummary,
+          ),
           SizedBox(height: AppSizes.xxl),
 
           // Filter tabs
@@ -186,7 +209,11 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Center(
                 child: Text(
                   AppStrings.noTransactions,
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textBodyDark
+                        : AppColors.textBody,
+                  ),
                 ),
               ),
             )

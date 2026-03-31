@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/app_colors.dart';
@@ -21,13 +22,19 @@ abstract final class PhoneLauncher {
   /// Opens WhatsApp chat with the given number.
   static Future<void> whatsApp(String phoneNumber, {String? message}) async {
     final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');
-    final phone = cleaned.startsWith('+') ? cleaned : '+2$cleaned';
-    final uri = Uri.parse(
-      'https://wa.me/$phone${message != null ? '?text=${Uri.encodeComponent(message)}' : ''}',
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    // Ensure number has country code for wa.me
+    String phone = cleaned;
+    if (phone.startsWith('01')) {
+      phone = '20${phone.substring(1)}'; // 01x -> 201x
+    } else if (phone.startsWith('+')) {
+      phone = phone.substring(1); // remove +
     }
+
+    final url = message != null
+        ? 'https://wa.me/$phone?text=${Uri.encodeComponent(message)}'
+        : 'https://wa.me/$phone';
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   /// Copies phone number to clipboard and shows feedback.
@@ -92,7 +99,7 @@ abstract final class PhoneLauncher {
                 SizedBox(height: AppSizes.lg),
               ],
               _OptionTile(
-                icon: Icons.call_outlined,
+                icon: IconsaxPlusLinear.call,
                 label: AppStrings.callNow,
                 color: AppColors.success,
                 onTap: () {
@@ -101,7 +108,7 @@ abstract final class PhoneLauncher {
                 },
               ),
               _OptionTile(
-                icon: Icons.chat_outlined,
+                icon: IconsaxPlusLinear.message,
                 label: AppStrings.sendWhatsApp,
                 color: AppColors.success,
                 onTap: () {
@@ -110,7 +117,7 @@ abstract final class PhoneLauncher {
                 },
               ),
               _OptionTile(
-                icon: Icons.copy_outlined,
+                icon: IconsaxPlusLinear.copy,
                 label: AppStrings.copyNumber,
                 color: isDark ? AppColors.textBodyDark : AppColors.textBody,
                 onTap: () {

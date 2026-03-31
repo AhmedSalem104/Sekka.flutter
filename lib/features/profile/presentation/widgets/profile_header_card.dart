@@ -14,10 +14,12 @@ class ProfileHeaderCard extends StatelessWidget {
     super.key,
     required this.profile,
     this.onEditTap,
+    this.onAvatarTap,
   });
 
   final ProfileEntity profile;
   final VoidCallback? onEditTap;
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +38,32 @@ class ProfileHeaderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          SekkaAvatar(
-            imageUrl: profile.profileImageUrl,
-            size: 80,
+          GestureDetector(
+            onTap: onAvatarTap,
+            child: Stack(
+              children: [
+                SekkaAvatar(
+                  imageUrl: profile.profileImageUrl,
+                  size: 80,
+                ),
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  child: Container(
+                    padding: EdgeInsets.all(AppSizes.xs),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconsaxPlusBold.camera,
+                      size: Responsive.r(14),
+                      color: AppColors.textOnPrimary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           SizedBox(height: AppSizes.md),
           Text(

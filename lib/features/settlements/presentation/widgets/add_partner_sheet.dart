@@ -8,6 +8,7 @@ import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
+import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
@@ -224,6 +225,17 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
                   label: AppStrings.partnerAddress,
                   hint: AppStrings.partnerAddress,
                   prefixIcon: IconsaxPlusLinear.location,
+                  suffixIcon: IconsaxPlusLinear.map,
+                  onSuffixTap: () async {
+                    final result = await SekkaMapPicker.show(
+                      context,
+                      title: AppStrings.partnerAddress,
+                    );
+                    if (result != null && result.address != null) {
+                      _addressController.text = result.address!;
+                    }
+                  },
+                  readOnly: false,
                 ),
                 SizedBox(height: AppSizes.lg),
 

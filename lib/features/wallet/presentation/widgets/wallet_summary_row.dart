@@ -89,7 +89,14 @@ class _SummaryTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Text(label, style: AppTypography.captionSmall),
+            Text(
+              label,
+              style: AppTypography.captionSmall.copyWith(
+                color: isDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
+              ),
+            ),
           ],
         ),
       ),

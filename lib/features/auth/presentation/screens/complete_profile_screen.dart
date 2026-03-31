@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
@@ -37,6 +38,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _emailController = TextEditingController();
+  final _inviteCodeController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
@@ -60,6 +62,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _emailController.dispose();
+    _inviteCodeController.dispose();
     super.dispose();
   }
 
@@ -92,6 +95,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
     final email = _emailController.text.trim();
 
+    final inviteCode = _inviteCodeController.text.trim();
+
     context.read<AuthBloc>().add(AuthRegisterRequested(
           phoneNumber: widget.args.phoneNumber,
           otpCode: widget.args.otpCode,
@@ -100,6 +105,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
           name: _nameController.text.trim(),
           vehicleType: _selectedVehicleType!,
           email: email.isEmpty ? null : email,
+          referralCode: inviteCode.isEmpty ? null : inviteCode,
         ));
   }
 
@@ -114,6 +120,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         }
       },
       child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.backgroundDark
+            : AppColors.background,
         appBar: AppBar(
           leading: SekkaBackButton(onPressed: () => context.pop()),
         ),
@@ -227,6 +236,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             },
                           );
                         },
+                      ),
+                      SizedBox(height: AppSizes.lg),
+
+                      // Invite Code (optional)
+                      SekkaInputField(
+                        controller: _inviteCodeController,
+                        hint: AppStrings.enterInviteCode,
+                        label: AppStrings.haveInviteCode,
+                        prefixIcon: Icons.card_giftcard_rounded,
+                        textInputAction: TextInputAction.done,
                       ),
                       SizedBox(height: AppSizes.xxl),
                     ],

@@ -68,6 +68,8 @@ class _SettlementOnboardingOverlayState
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return FadeTransition(
       opacity: _fadeAnim,
       child: Material(
@@ -79,7 +81,7 @@ class _SettlementOnboardingOverlayState
               margin: EdgeInsets.symmetric(horizontal: AppSizes.xxl),
               padding: EdgeInsets.all(AppSizes.xxl),
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: isDark ? AppColors.surfaceDark : AppColors.surface,
                 borderRadius: BorderRadius.circular(AppSizes.radiusLg),
               ),
               child: Column(
@@ -106,7 +108,9 @@ class _SettlementOnboardingOverlayState
                   Text(
                     AppStrings.onboardingHandoverTitle,
                     style: AppTypography.headlineSmall.copyWith(
-                      color: AppColors.textHeadline,
+                      color: isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -116,7 +120,9 @@ class _SettlementOnboardingOverlayState
                   Text(
                     AppStrings.onboardingHandoverDesc,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textBody,
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -170,6 +176,8 @@ class _StepRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Row(
       children: [
         Container(
@@ -194,7 +202,7 @@ class _StepRow extends StatelessWidget {
           child: Text(
             text,
             style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textBody,
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
             ),
           ),
         ),

@@ -116,6 +116,9 @@ class _AuthScreenState extends State<AuthScreen> {
         ),
       ],
       child: Scaffold(
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.backgroundDark
+            : AppColors.background,
         body: SafeArea(
           child: SingleChildScrollView(
             padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),

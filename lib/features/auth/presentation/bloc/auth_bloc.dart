@@ -24,6 +24,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthRegisterRequested>(_onRegister);
     on<AuthLogoutRequested>(_onLogout);
     on<AuthSessionExpired>(_onSessionExpired);
+    on<AuthDeleteAccountRequested>(_onDeleteAccount);
+    on<AuthConfirmDeletionRequested>(_onConfirmDeletion);
   }
 
   final AuthRepository _repository;
@@ -82,6 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         name: event.name,
         vehicleType: event.vehicleType,
         email: event.email,
+        referralCode: event.referralCode,
       );
       authStatusNotifier.value = true;
       emit(AuthAuthenticated(authTokens.driver));
@@ -113,5 +116,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await _userStorage.clearDriver();
     authStatusNotifier.value = false;
     emit(const AuthUnauthenticated(message: 'انتهت الجلسة، سجّل دخولك تاني'));
+  }
+
+  Future<void> _onDeleteAccount(
+    AuthDeleteAccountRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final currentState = state;
+    emit(const AuthLoading());
+    try {
+      await _repository.deleteAccount(reason: event.reason);
+      emit(const AuthDeletionOtpSent());
+    } on ApiException catch (e) {
+      // Restore the previous authenticated state with the error
+      if (currentState is AuthAuthenticated) {
+        emit(AuthDeletionError(message: e.message, driver: currentState.driver));
+      } else {
+        emit(AuthUnauthenticated(message: e.message));
+      }
+    }
+  }
+
+  Future<void> _onConfirmDeletion(
+    AuthConfirmDeletionRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    final driverJson = _userStorage.getDriver();
+    final savedDriver =
+        driverJson != null ? DriverModel.fromJson(driverJson) : null;
+    emit(const AuthLoading());
+    try {
+      await _repository.confirmDeletion(event.otpCode);
+      await _tokenStorage.clearTokens();
+      await _userStorage.clearDriver();
+      authStatusNotifier.value = false;
+      emit(const AuthUnauthenticated());
+    } on ApiException catch (e) {
+      if (savedDriver != null) {
+        emit(AuthDeletionError(message: e.message, driver: savedDriver));
+      } else {
+        emit(const AuthDeletionOtpSent());
+      }
+    }
   }
 }

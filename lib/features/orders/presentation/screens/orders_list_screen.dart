@@ -121,6 +121,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       floatingActionButton: Padding(
         padding: EdgeInsets.only(bottom: AppSizes.bottomNavHeight + AppSizes.md),
         child: FloatingActionButton.extended(
+          heroTag: 'orders_fab',
           onPressed: _navigateToCreateOrder,
           backgroundColor: AppColors.primary,
           shape: RoundedRectangleBorder(

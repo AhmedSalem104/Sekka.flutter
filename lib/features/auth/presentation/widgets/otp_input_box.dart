@@ -82,13 +82,20 @@ class OtpInputBoxState extends State<OtpInputBox> {
     // OTP digits flow left-to-right regardless of app direction
     return Directionality(
       textDirection: TextDirection.ltr,
-      child: Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final gap = AppSizes.sm;
+          final totalGaps = gap * 2 * widget.length;
+          final boxSize = ((constraints.maxWidth - totalGaps) / widget.length)
+              .clamp(36.0, AppSizes.buttonHeight);
+
+          return Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(widget.length, (index) {
           return Container(
-            width: AppSizes.buttonHeight,
-            height: AppSizes.buttonHeight,
-            margin: EdgeInsets.symmetric(horizontal: AppSizes.sm),
+            width: boxSize,
+            height: boxSize,
+            margin: EdgeInsets.symmetric(horizontal: gap),
             child: KeyboardListener(
               focusNode: FocusNode(),
               onKeyEvent: (event) => _onKeyEvent(index, event),
@@ -98,7 +105,11 @@ class OtpInputBoxState extends State<OtpInputBox> {
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 maxLength: 1,
-                style: AppTypography.headlineMedium,
+                style: AppTypography.headlineMedium.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                ),
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   counterText: '',
@@ -142,6 +153,8 @@ class OtpInputBoxState extends State<OtpInputBox> {
             ),
           );
         }),
+      );
+        },
       ),
     );
   }

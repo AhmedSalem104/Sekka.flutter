@@ -83,6 +83,7 @@ class AuthRemoteDataSource {
     required String name,
     required int vehicleType,
     String? email,
+    String? referralCode,
   }) async {
     try {
       final json = await _post(
@@ -95,6 +96,8 @@ class AuthRemoteDataSource {
           'name': name,
           'vehicleType': vehicleType,
           if (email != null && email.isNotEmpty) 'email': email,
+          if (referralCode != null && referralCode.isNotEmpty)
+            'referralCode': referralCode,
         },
       );
       final apiResponse = ApiResponse<AuthResponseModel>.fromJson(
@@ -267,10 +270,11 @@ class AuthRemoteDataSource {
 
   Future<void> deleteAccount({String? reason}) async {
     try {
-      await _dio.delete<Map<String, dynamic>>(
+      final json = await _delete(
         ApiConstants.deleteAccount,
-        data: {if (reason != null) 'reason': reason},
+        data: {'reason': reason ?? ''},
       );
+      _ensureSuccess(ApiResponse<void>.fromJson(json));
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

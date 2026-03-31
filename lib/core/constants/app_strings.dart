@@ -102,6 +102,22 @@ abstract final class AppStrings {
       _isAr ? 'قولنا السبب (اختياري)' : 'Reason (optional)';
   static String get confirmDeletion =>
       _isAr ? 'أيوا امسح' : 'Yes, delete';
+  static String get deleteAccountTitle =>
+      _isAr ? 'حذف الحساب نهائياً' : 'Delete Account Permanently';
+  static String get deleteAccountDesc =>
+      _isAr
+          ? 'لو مسحت حسابك هيبقى موقوف نهائياً ومش هتقدر ترجعه.'
+          : 'Your account will be permanently deactivated and cannot be recovered.';
+  static String get deleteAccountSendOtp =>
+      _isAr ? 'إبعت كود التأكيد' : 'Send Confirmation Code';
+  static String get deleteAccountOtpSent =>
+      _isAr ? 'بعتنالك كود تأكيد على رقمك' : 'We sent a confirmation code to your phone';
+  static String get deleteAccountOtpTitle =>
+      _isAr ? 'أدخل كود التأكيد' : 'Enter Confirmation Code';
+  static String get deleteAccountConfirm =>
+      _isAr ? 'امسح حسابي نهائياً' : 'Delete My Account';
+  static String get deleteAccountDeleted =>
+      _isAr ? 'اتمسح الحساب بنجاح' : 'Account successfully deleted';
 
   // Errors
   static String get networkError =>
@@ -166,103 +182,118 @@ abstract final class AppStrings {
   static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static String get walletTitle => _isAr ? 'المحفظة' : 'Wallet';
+  static String get walletTitle => _isAr ? 'جيبك' : 'Wallet';
   static String get currentBalance =>
-      _isAr ? 'رصيدك الحالي' : 'Current balance';
+      _isAr ? 'الفلوس اللي معاك' : 'Your money';
   static String get cashOnHand => _isAr ? 'كاش في إيدك' : 'Cash on hand';
-  static String get pendingAmount => _isAr ? 'معلّق' : 'Pending';
+  static String get pendingAmount => _isAr ? 'لسه مسلّمتوش' : 'Not settled';
   static String get todayCollected =>
-      _isAr ? 'تحصيل اليوم' : 'Collected today';
+      _isAr ? 'حصّلت النهارده' : 'Collected today';
   static String get todayCommissions =>
-      _isAr ? 'عمولات اليوم' : 'Today\'s commissions';
+      _isAr ? 'عمولتك النهارده' : 'Your commission today';
   static String get availableBalance =>
-      _isAr ? 'المتاح للسحب' : 'Available for withdrawal';
+      _isAr ? 'تقدر تسحب' : 'Available to withdraw';
   static String get newSettlement =>
-      _isAr ? 'تسوية جديدة' : 'New Settlement';
+      _isAr ? 'سلّم فلوس' : 'Settle Cash';
   static String get allTransactions => _isAr ? 'الكل' : 'All';
-  static String get incomeFilter => _isAr ? 'دخل' : 'Income';
-  static String get expenseFilter => _isAr ? 'مصاريف' : 'Expenses';
-  static String get settlementsFilter => _isAr ? 'تسويات' : 'Settlements';
+  static String get incomeFilter => _isAr ? 'داخل' : 'Income';
+  static String get expenseFilter => _isAr ? 'خارج' : 'Expenses';
+  static String get settlementsFilter => _isAr ? 'تسليمات' : 'Handovers';
   static String get noTransactions =>
-      _isAr ? 'مفيش معاملات لسه' : 'No transactions yet';
-  static String get cashStatusSafe => _isAr ? 'كاشك تمام' : 'Cash is good';
+      _isAr ? 'مفيش حركات لسه — لما تشتغل هتلاقيها هنا' : 'No transactions yet — they\'ll appear here once you start';
+  static String get cashStatusSafe =>
+      _isAr ? 'كاشك لسه في الأمان' : 'Your cash is safe';
   static String get cashStatusWarning =>
-      _isAr ? 'فكّر تسوّي قريب' : 'Consider settling soon';
+      _isAr ? 'الكاش بدأ يكتر، فكّر تسلّم' : 'Cash is piling up, consider settling';
   static String get cashStatusDanger =>
-      _isAr ? 'سوّي في أقرب وقت' : 'Settle as soon as possible';
+      _isAr ? 'الكاش كتر عندك، سلّم بسرعة!' : 'Too much cash! Settle soon!';
   static String get cashStatusCritical =>
-      _isAr ? 'لازم تسوّي دلوقتي!' : 'You must settle now!';
+      _isAr ? 'خطر! لازم تسلّم الفلوس دلوقتي!' : 'Danger! You must settle now!';
+
+  // Wallet — Hints
+  static String get hintWalletBalance =>
+      _isAr
+          ? 'ده كل اللي معاك — كاش + فلوس في المحفظة'
+          : 'This is everything you have — cash + wallet balance';
+  static String get hintCashStatus =>
+      _isAr
+          ? 'لما الشريط يوصل للأحمر يبقى عندك كاش كتير ومحتاج تسلّم'
+          : 'When the bar turns red, you have too much cash and need to settle';
+  static String get hintWalletSummary =>
+      _isAr
+          ? 'ده ملخص حركاتك — فلوس دخلت، فلوس طلعت، وفلوس سلّمتها'
+          : 'Your summary — money in, money out, and money settled';
 
   // Account Handover (Settlement)
   static String get accountHandover =>
       _isAr ? 'تسليم الحساب' : 'Account Handover';
   static String get accountHandoverSubtitle =>
-      _isAr ? 'سلّم حساب شركائك بسهولة' : 'Hand over partner accounts easily';
+      _isAr ? 'سلّم فلوس شركائك بسهولة' : 'Settle partner money easily';
   static String get settlementsTitle =>
-      _isAr ? 'التسويات' : 'Settlements';
+      _isAr ? 'التسليمات' : 'Handovers';
   static String get createSettlement =>
-      _isAr ? 'تسوية جديدة' : 'New Settlement';
+      _isAr ? 'سلّم فلوس' : 'Settle Cash';
   static String get newHandover =>
-      _isAr ? 'تسليم جديد' : 'New Handover';
-  static String get settlementAmount => _isAr ? 'المبلغ' : 'Amount';
+      _isAr ? 'سلّم فلوس' : 'Settle Cash';
+  static String get settlementAmount => _isAr ? 'هتسلّم كام؟' : 'Amount to settle';
   static String get settlementType =>
-      _isAr ? 'طريقة التسوية' : 'Settlement method';
-  static String get settlementPartner => _isAr ? 'الشريك' : 'Partner';
-  static String get settlementNotes => _isAr ? 'ملاحظات' : 'Notes';
+      _isAr ? 'هتسلّم إزاي؟' : 'How will you pay?';
+  static String get settlementPartner => _isAr ? 'هتسلّم لمين؟' : 'Settle to whom?';
+  static String get settlementNotes => _isAr ? 'عايز تضيف حاجة؟' : 'Any notes?';
   static String get orderCount => _isAr ? 'عدد الطلبات' : 'Order count';
   static String get sendWhatsApp =>
-      _isAr ? 'ابعت واتساب للشريك' : 'Send WhatsApp to partner';
-  static String get callNow => _isAr ? 'اتصل دلوقتي' : 'Call now';
-  static String get copyNumber => _isAr ? 'نسخ الرقم' : 'Copy number';
+      _isAr ? 'ابعتله واتساب' : 'Send WhatsApp';
+  static String get callNow => _isAr ? 'كلّمه دلوقتي' : 'Call now';
+  static String get copyNumber => _isAr ? 'انسخ الرقم' : 'Copy number';
   static String get uploadReceipt =>
-      _isAr ? 'ارفع الإيصال' : 'Upload receipt';
+      _isAr ? 'صوّر الوصل' : 'Upload receipt';
   static String get todaySettlements =>
-      _isAr ? 'تسويات اليوم' : 'Today\'s settlements';
+      _isAr ? 'سلّمت النهارده' : 'Settled today';
   static String get noSettlements =>
-      _isAr ? 'مفيش تسليمات لسه' : 'No handovers yet';
+      _isAr ? 'مسلّمتش حاجة لسه' : 'No handovers yet';
   static String get settlementCashToPartner =>
-      _isAr ? 'نقدي للشريك' : 'Cash to partner';
+      _isAr ? 'كاش في إيده' : 'Cash in hand';
   static String get settlementBankTransfer =>
-      _isAr ? 'تحويل بنكي' : 'Bank transfer';
+      _isAr ? 'حوالة بنكي' : 'Bank transfer';
   static String get settlementVodafoneCash =>
       _isAr ? 'فودافون كاش' : 'Vodafone Cash';
   static String get settlementInstapay =>
-      _isAr ? 'انستاباي' : 'InstaPay';
+      _isAr ? 'إنستاباي' : 'InstaPay';
   static String get settlementFawry => _isAr ? 'فوري' : 'Fawry';
 
   // Account Handover — Summary
   static String get dailySummary =>
-      _isAr ? 'ملخص اليوم' : 'Daily Summary';
+      _isAr ? 'يومك النهارده' : 'Today\'s Summary';
   static String get totalCollectedToday =>
-      _isAr ? 'إجمالي المحصّل' : 'Total collected';
+      _isAr ? 'حصّلت كام' : 'Collected';
   static String get totalSettledToday =>
-      _isAr ? 'إجمالي المسلّم' : 'Total settled';
+      _isAr ? 'سلّمت كام' : 'Settled';
   static String get remainingBalance =>
-      _isAr ? 'الرصيد المتبقي' : 'Remaining balance';
+      _isAr ? 'فاضلك كام' : 'Remaining';
   static String get pendingPartnersCount =>
-      _isAr ? 'شركاء في الانتظار' : 'Partners pending';
+      _isAr ? 'شركاء مستنيين' : 'Partners waiting';
   static String get settlementCountToday =>
-      _isAr ? 'عدد التسليمات' : 'Handover count';
+      _isAr ? 'كام تسليمة' : 'Handovers';
 
   // Account Handover — Partner Balance
   static String get partnerBalance =>
-      _isAr ? 'رصيد الشريك' : 'Partner balance';
+      _isAr ? 'حساب الشريك' : 'Partner balance';
   static String get pendingOrderCount =>
-      _isAr ? 'طلبات معلقة' : 'Pending orders';
+      _isAr ? 'طلبات لسه مخلصتش' : 'Unfinished orders';
   static String get pendingBalance =>
-      _isAr ? 'رصيد معلق' : 'Pending balance';
+      _isAr ? 'فلوسه عندك' : 'Owed to partner';
   static String get noPartnerBalances =>
-      _isAr ? 'مفيش شركاء عندهم رصيد' : 'No partners with balance';
+      _isAr ? 'مفيش فلوس عند حد — كلها متسلّمة' : 'All clear — nothing owed';
 
   // Account Handover — Actions
   static String get selectPartner =>
       _isAr ? 'اختار الشريك' : 'Select partner';
   static String get swipeToConfirmHandover =>
-      _isAr ? 'اسحب عشان تأكد التسليم' : 'Swipe to confirm handover';
+      _isAr ? 'اسحب عشان تأكد التسليم' : 'Swipe to confirm';
   static String get handoverSuccess =>
-      _isAr ? 'تم تسليم الحساب بنجاح!' : 'Handover completed successfully!';
+      _isAr ? 'تمام! اتسلّم بنجاح' : 'Handover complete!';
   static String get handoverHistory =>
-      _isAr ? 'سجل التسليمات' : 'Handover history';
+      _isAr ? 'التسليمات اللي فاتت' : 'Past handovers';
 
   // Account Handover — Filters
   static String get filterByPartner =>
@@ -276,18 +307,32 @@ abstract final class AppStrings {
 
   // Account Handover — Onboarding
   static String get onboardingHandoverTitle =>
-      _isAr ? 'ايه هو تسليم الحساب؟' : 'What is Account Handover?';
+      _isAr ? 'إيه الحكاية هنا؟' : 'What\'s this about?';
   static String get onboardingHandoverDesc =>
       _isAr
-          ? 'من هنا تقدر تسلّم فلوس كل شريك بعد ما تخلص توصيلاته'
-          : 'Here you can hand over each partner\'s money after completing their deliveries';
+          ? 'بعد ما تخلّص توصيلات الشريك، بتسلّمه فلوسه من هنا.\nكده كل حاجة بتتسجّل وبتبقى مرتّبة.'
+          : 'After finishing deliveries, settle partner money here.\nEverything gets recorded and organized.';
   static String get onboardingStep1 =>
-      _isAr ? 'اختار الشريك اللي عايز تسلّمه' : 'Select the partner to hand over to';
+      _isAr ? 'اختار الشريك اللي هتسلّمه' : 'Pick the partner';
   static String get onboardingStep2 =>
-      _isAr ? 'اكتب المبلغ وعدد الطلبات' : 'Enter the amount and order count';
+      _isAr ? 'حط المبلغ وكام طلب سلّمت' : 'Enter amount & orders';
   static String get onboardingStep3 =>
-      _isAr ? 'اسحب عشان تأكد التسليم' : 'Swipe to confirm the handover';
-  static String get gotIt => _isAr ? 'فهمت!' : 'Got it!';
+      _isAr ? 'اسحب وخلاص — هيتسجّل تلقائي' : 'Swipe & done — auto-logged';
+  static String get gotIt => _isAr ? 'تمام فهمت!' : 'Got it!';
+
+  // Account Handover — Hints
+  static String get hintDailySummary =>
+      _isAr
+          ? 'ده ملخص يومك — حصّلت كام وسلّمت كام والباقي كام'
+          : 'Your daily overview — collected, settled, and remaining';
+  static String get hintPartnerBalance =>
+      _isAr
+          ? 'دي فلوس الشريك اللي عندك — لما تسلّمها هتنزل من هنا'
+          : 'Partner money you hold — it decreases as you settle';
+  static String get hintHandoverHistory =>
+      _isAr
+          ? 'كل تسليمة عملتها متسجّلة هنا عشان تبقى مرجع ليك'
+          : 'Every handover you made is logged here for your records';
 
   // Statistics
   static String get statsTitle => _isAr ? 'الإحصائيات' : 'Statistics';
@@ -584,10 +629,21 @@ abstract final class AppStrings {
   static String get online => _isAr ? 'متاح' : 'Online';
   static String get offline => _isAr ? 'غير متاح' : 'Offline';
   static String get referralCode =>
-      _isAr ? 'كود الإحالة' : 'Referral code';
+      _isAr ? 'ادعو سائق واكسب نقاط' : 'Invite a driver & earn points';
+  static String get referralCodeLabel =>
+      _isAr ? 'كود الدعوة' : 'Invite code';
+  static String get referralSubtitle =>
+      _isAr ? 'شارك الكود ده مع سائقين تانيين — لما حد يسجل بيه، هتكسبوا نقاط الاتنين!' : 'Share this code with other drivers — when someone signs up with it, you both earn points!';
   static String get copyCode => _isAr ? 'نسخ الكود' : 'Copy code';
+  static String get shareCode => _isAr ? 'شارك الكود' : 'Share code';
   static String get codeCopied =>
       _isAr ? 'تم نسخ الكود!' : 'Code copied!';
+  static String get haveInviteCode =>
+      _isAr ? 'عندك كود دعوة من سائق تاني؟' : 'Got an invite code from another driver?';
+  static String get enterInviteCode =>
+      _isAr ? 'اكتب كود الدعوة (اختياري)' : 'Enter invite code (optional)';
+  static String get inviteCodeHint =>
+      _isAr ? 'مثال: SEK-XXXXXXXX' : 'Example: SEK-XXXXXXXX';
   static String get detailedStats =>
       _isAr ? 'الإحصائيات التفصيلية' : 'Detailed statistics';
   static String get emergencyContacts =>
@@ -620,6 +676,8 @@ abstract final class AppStrings {
   static String get bestDay => _isAr ? 'أفضل يوم' : 'Best day';
   static String get uploadPhoto => _isAr ? 'ارفع صورة' : 'Upload photo';
   static String get changePhoto => _isAr ? 'غيّر الصورة' : 'Change photo';
+  static String get camera => _isAr ? 'الكاميرا' : 'Camera';
+  static String get gallery => _isAr ? 'المعرض' : 'Gallery';
   static String get removePhoto => _isAr ? 'امسح الصورة' : 'Remove photo';
   static String get uploadLicense =>
       _isAr ? 'ارفع صورة الرخصة' : 'Upload license photo';

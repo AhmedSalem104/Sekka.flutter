@@ -218,11 +218,14 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
     return BlocBuilder<SettlementBloc, SettlementState>(
       builder: (context, state) {
         final partners = state is SettlementLoaded ? state.partners : <PartnerModel>[];
-        final filtered = _searchQuery.isEmpty
+        final q = _searchQuery.trim().toLowerCase();
+        final filtered = q.isEmpty
             ? partners
-            : partners
-                .where((p) => p.name.contains(_searchQuery))
-                .toList();
+            : partners.where((p) {
+                final name = p.name.toLowerCase();
+                final phone = (p.phone ?? '').toLowerCase();
+                return name.contains(q) || phone.contains(q);
+              }).toList();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,

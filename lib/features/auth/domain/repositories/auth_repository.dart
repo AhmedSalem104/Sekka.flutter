@@ -15,6 +15,7 @@ abstract class AuthRepository {
     required String name,
     required int vehicleType,
     String? email,
+    String? referralCode,
   });
 
   Future<AuthTokens> login({

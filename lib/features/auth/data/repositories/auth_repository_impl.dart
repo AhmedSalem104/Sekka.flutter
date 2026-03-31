@@ -54,6 +54,7 @@ class AuthRepositoryImpl implements AuthRepository {
     required String name,
     required int vehicleType,
     String? email,
+    String? referralCode,
   }) async {
     final response = await _remote.register(
       phoneNumber: phoneNumber,
@@ -63,6 +64,7 @@ class AuthRepositoryImpl implements AuthRepository {
       name: name,
       vehicleType: vehicleType,
       email: email,
+      referralCode: referralCode,
     );
     return _persistAuth(response);
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -37,6 +39,7 @@ class _ContactsScreenState extends State<ContactsScreen>
   late final TextEditingController _searchController;
   late final CustomersBloc _customersBloc;
   late final PartnersBloc _partnersBloc;
+  Timer? _debounce;
 
   @override
   void initState() {
@@ -64,6 +67,7 @@ class _ContactsScreenState extends State<ContactsScreen>
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
@@ -83,6 +87,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           ? Padding(
               padding: EdgeInsets.only(bottom: Responsive.h(72)),
               child: FloatingActionButton.small(
+                heroTag: 'contacts_fab',
                 onPressed: () => showAddPartnerSheet(
                   context,
                   onPartnerCreated: () {
@@ -190,11 +195,14 @@ class _ContactsScreenState extends State<ContactsScreen>
                     ? AppStrings.searchCustomer
                     : AppStrings.searchPartner,
                 onChanged: (value) {
-                  if (_tabController.index == 0) {
-                    _customersBloc.add(CustomersSearchChanged(value));
-                  } else {
-                    _partnersBloc.add(PartnersSearchChanged(value));
-                  }
+                  _debounce?.cancel();
+                  _debounce = Timer(const Duration(milliseconds: 300), () {
+                    if (_tabController.index == 0) {
+                      _customersBloc.add(CustomersSearchChanged(value));
+                    } else {
+                      _partnersBloc.add(PartnersSearchChanged(value));
+                    }
+                  });
                 },
               ),
             ),

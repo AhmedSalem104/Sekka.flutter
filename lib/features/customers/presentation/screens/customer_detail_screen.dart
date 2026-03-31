@@ -1005,12 +1005,18 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   TextField(
                     controller: reasonController,
                     textDirection: TextDirection.rtl,
-                    style: AppTypography.bodyMedium,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
+                    ),
                     maxLines: 2,
                     decoration: InputDecoration(
                       hintText: AppStrings.blockReason,
                       hintStyle: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textCaption,
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
                       ),
                     ),
                   ),

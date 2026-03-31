@@ -241,14 +241,21 @@ class _RateCustomerSheetState extends State<RateCustomerSheet> {
     required bool isPositive,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final activeColor = isPositive ? AppColors.success : AppColors.error;
     final borderColor = isSelected
         ? activeColor
-        : AppColors.border;
+        : isDark
+            ? AppColors.borderDark
+            : AppColors.border;
     final backgroundColor = isSelected
         ? activeColor.withValues(alpha: 0.1)
         : Colors.transparent;
-    final textColor = isSelected ? activeColor : AppColors.textCaption;
+    final textColor = isSelected
+        ? activeColor
+        : isDark
+            ? AppColors.textCaptionDark
+            : AppColors.textCaption;
 
     return GestureDetector(
       onTap: onTap,

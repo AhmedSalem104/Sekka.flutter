@@ -19,6 +19,8 @@ class CountdownTimerText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (canResend) {
       return GestureDetector(
         onTap: onResend,
@@ -34,7 +36,9 @@ class CountdownTimerText extends StatelessWidget {
     return Text.rich(
       TextSpan(
         text: '${AppStrings.resendIn} ',
-        style: AppTypography.bodyMedium,
+        style: AppTypography.bodyMedium.copyWith(
+          color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+        ),
         children: [
           TextSpan(
             text: secondsRemaining.toString().toArabicNumbers,
@@ -44,7 +48,9 @@ class CountdownTimerText extends StatelessWidget {
           ),
           TextSpan(
             text: ' ${AppStrings.seconds}',
-            style: AppTypography.bodyMedium,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
           ),
         ],
       ),

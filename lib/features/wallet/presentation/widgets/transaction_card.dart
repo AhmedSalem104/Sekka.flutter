@@ -81,7 +81,11 @@ class TransactionCard extends StatelessWidget {
                 SizedBox(height: AppSizes.xs),
                 Text(
                   _formatTime(transaction.createdAt),
-                  style: AppTypography.captionSmall,
+                  style: AppTypography.captionSmall.copyWith(
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
+                  ),
                 ),
               ],
             ),

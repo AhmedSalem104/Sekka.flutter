@@ -33,6 +33,7 @@ export 'widgets/sekka_avatar.dart';
 export 'widgets/sekka_progress_bar.dart';
 export 'widgets/sekka_expandable_section.dart';
 export 'widgets/sekka_toggle_tile.dart';
+export 'widgets/sekka_hint_tip.dart';
 
 // Extensions
 export 'extensions/context_extensions.dart';

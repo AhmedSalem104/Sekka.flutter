@@ -98,17 +98,26 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
   // ── Endpoint 5: PUT /conversations/{id}/close ──
 
   Future<void> _closeConversation() async {
+    final isDlgDark = Theme.of(context).brightness == Brightness.dark;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: isDlgDark ? AppColors.surfaceDark : AppColors.surface,
         title: Text(
           AppStrings.chatCloseConversation,
-          style: AppTypography.titleLarge,
+          style: AppTypography.titleLarge.copyWith(
+            color: isDlgDark
+                ? AppColors.textHeadlineDark
+                : AppColors.textHeadline,
+          ),
           textAlign: TextAlign.center,
         ),
         content: Text(
           AppStrings.chatCloseConfirm,
-          style: AppTypography.bodyMedium,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDlgDark ? AppColors.textBodyDark : AppColors.textBody,
+          ),
           textAlign: TextAlign.center,
         ),
         actionsAlignment: MainAxisAlignment.center,
@@ -117,7 +126,11 @@ class _ChatMessagesScreenState extends State<ChatMessagesScreen> {
             onPressed: () => Navigator.pop(ctx, false),
             child: Text(
               AppStrings.cancel,
-              style: AppTypography.button.copyWith(color: AppColors.textCaption),
+              style: AppTypography.button.copyWith(
+                color: isDlgDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
+              ),
             ),
           ),
           TextButton(

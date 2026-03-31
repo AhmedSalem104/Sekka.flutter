@@ -1424,7 +1424,15 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   // ───────────────── SHARED BUILDERS ─────────────────
 
   Widget _buildSectionLabel(String label) {
-    return Text(label, style: AppTypography.titleMedium);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Text(
+      label,
+      style: AppTypography.titleMedium.copyWith(
+        color: isDark
+            ? AppColors.textHeadlineDark
+            : AppColors.textHeadline,
+      ),
+    );
   }
 
   Widget _buildDatePicker(bool isDark) {
@@ -1489,7 +1497,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         Row(
           textDirection: TextDirection.rtl,
           children: [
-            Text(AppStrings.availableSlots, style: AppTypography.titleMedium),
+            Text(
+              AppStrings.availableSlots,
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () => context
@@ -1561,7 +1576,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         Row(
           textDirection: TextDirection.rtl,
           children: [
-            Text(AppStrings.suggestedDeliveryPrice, style: AppTypography.titleMedium),
+            Text(
+              AppStrings.suggestedDeliveryPrice,
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
             const Spacer(),
             GestureDetector(
               onTap: () {
@@ -1598,7 +1620,11 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
               children: [
                 Text(
                   AppStrings.suggestedPrice,
-                  style: AppTypography.bodyMedium,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textBodyDark
+                        : AppColors.textBody,
+                  ),
                 ),
                 Text(
                   '${priceData['suggestedPrice'] ?? '—'} ج.م',

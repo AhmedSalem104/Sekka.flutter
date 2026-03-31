@@ -66,6 +66,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: SekkaAppBar(title: AppStrings.emergencyContacts),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'emergency_fab',
         onPressed: () => _showAddDialog(context),
         backgroundColor: AppColors.primary,
         child: const Icon(IconsaxPlusLinear.add, color: AppColors.textOnPrimary),
@@ -77,7 +78,14 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_error!, style: AppTypography.bodyMedium),
+                      Text(
+                        _error!,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                      ),
                       SizedBox(height: AppSizes.lg),
                       TextButton(
                         onPressed: _loadContacts,
@@ -152,7 +160,14 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppStrings.addContact, style: AppTypography.headlineSmall),
+            Text(
+              AppStrings.addContact,
+              style: AppTypography.headlineSmall.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
             SizedBox(height: AppSizes.xl),
             SekkaInputField(
               controller: nameCtrl,

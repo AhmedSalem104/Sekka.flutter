@@ -14,6 +14,7 @@ class SekkaButton extends StatelessWidget {
     this.isLoading = false,
     this.icon,
     this.width,
+    this.backgroundColor,
   });
 
   final String label;
@@ -22,6 +23,8 @@ class SekkaButton extends StatelessWidget {
   final bool isLoading;
   final IconData? icon;
   final double? width;
+  /// Override for primary button background (e.g. AppColors.error for danger).
+  final Color? backgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +40,13 @@ class SekkaButton extends StatelessWidget {
   }
 
   Widget _buildPrimary() {
+    final bg = backgroundColor ?? AppColors.primary;
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: bg,
         foregroundColor: AppColors.textOnPrimary,
-        disabledBackgroundColor: AppColors.primary.withValues(alpha: 0.5),
+        disabledBackgroundColor: bg.withValues(alpha: 0.5),
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.buttonRadius),

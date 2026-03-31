@@ -77,13 +77,20 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       (3, AppStrings.chatTypeGeneral),
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return showDialog<(int, String)>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
           title: Text(
             AppStrings.chatNewConversation,
-            style: AppTypography.headlineSmall,
+            style: AppTypography.headlineSmall.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+            ),
             textAlign: TextAlign.center,
           ),
           content: Column(
@@ -129,15 +136,25 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 controller: messageController,
                 textDirection: TextDirection.rtl,
                 maxLines: 3,
-                style: AppTypography.bodyMedium,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                ),
                 decoration: InputDecoration(
                   hintText: AppStrings.chatMessageHint,
                   hintStyle: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textCaption,
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(Responsive.r(12)),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderSide: BorderSide(
+                      color: isDark
+                          ? AppColors.borderDark
+                          : AppColors.border,
+                    ),
                   ),
                   contentPadding: EdgeInsets.all(Responsive.w(12)),
                 ),
@@ -194,6 +211,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: SekkaAppBar(title: AppStrings.chatTitle),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'chat_fab',
         onPressed: _createConversation,
         backgroundColor: AppColors.primary,
         child: Icon(

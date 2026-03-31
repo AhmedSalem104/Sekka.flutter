@@ -10,6 +10,7 @@ import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
+import '../../../../core/widgets/sekka_hint_tip.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../bloc/settlement_bloc.dart';
@@ -74,6 +75,7 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
           floatingActionButton: Padding(
             padding: EdgeInsets.only(bottom: AppSizes.bottomNavHeight + 8),
             child: FloatingActionButton.extended(
+              heroTag: 'settlements_fab',
               onPressed: () => context.push(RouteNames.createSettlement),
               backgroundColor: AppColors.primary,
               icon: const Icon(IconsaxPlusLinear.add, color: AppColors.textOnPrimary),
@@ -120,11 +122,18 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
   }
 
   Widget _buildError(String message) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(message, style: AppTypography.bodyMedium),
+          Text(
+            message,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
+          ),
           SizedBox(height: AppSizes.lg),
           TextButton(
             onPressed: () => context
@@ -157,6 +166,11 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
 
           // Daily summary
           DailySummaryCard(summary: state.summary),
+          SizedBox(height: AppSizes.sm),
+          SekkaHintTip(
+            hintKey: 'settlement_daily_summary',
+            message: AppStrings.hintDailySummary,
+          ),
           SizedBox(height: AppSizes.xxl),
 
           // Partners section
@@ -203,6 +217,10 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
           ),
           SizedBox(height: AppSizes.md),
           if (state.partners.isNotEmpty) ...[
+            SekkaHintTip(
+              hintKey: 'settlement_partner_balance',
+              message: AppStrings.hintPartnerBalance,
+            ),
             ...state.partners.map(
               (partner) => Padding(
                 padding: EdgeInsets.only(bottom: AppSizes.sm),
@@ -234,6 +252,11 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
               color:
                   isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
             ),
+          ),
+          SizedBox(height: AppSizes.sm),
+          SekkaHintTip(
+            hintKey: 'settlement_history',
+            message: AppStrings.hintHandoverHistory,
           ),
           SizedBox(height: AppSizes.md),
 

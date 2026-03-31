@@ -103,6 +103,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: SekkaAppBar(title: AppStrings.expenses),
       floatingActionButton: FloatingActionButton(
+        heroTag: 'expenses_fab',
         onPressed: () => _showAddDialog(context),
         backgroundColor: AppColors.primary,
         child: const Icon(IconsaxPlusLinear.add, color: AppColors.textOnPrimary),
@@ -114,7 +115,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(_error!, style: AppTypography.bodyMedium),
+                      Text(
+                        _error!,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                      ),
                       SizedBox(height: AppSizes.lg),
                       TextButton(
                         onPressed: _loadExpenses,
@@ -186,7 +194,14 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(AppStrings.addExpense, style: AppTypography.headlineSmall),
+            Text(
+              AppStrings.addExpense,
+              style: AppTypography.headlineSmall.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
             SizedBox(height: AppSizes.xl),
             SekkaInputField(
               controller: categoryCtrl,
