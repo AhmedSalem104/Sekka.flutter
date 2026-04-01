@@ -147,8 +147,18 @@ class CustomerRepository {
   Future<ApiResult<CustomerInterestsModel>> getInterests(String id) async {
     return ApiHelper.execute(
       () => _dio.get(ApiConstants.customerInterests(id)),
-      parser: (data) =>
-          CustomerInterestsModel.fromJson(data as Map<String, dynamic>),
+      parser: (data) {
+        // API may return [] (array) or {} (object)
+        if (data is Map<String, dynamic>) {
+          return CustomerInterestsModel.fromJson(data);
+        }
+        return const CustomerInterestsModel(
+          topCategories: [],
+          preferredPartners: [],
+          preferredDeliveryTimes: [],
+          averageOrderValue: 0,
+        );
+      },
     );
   }
 

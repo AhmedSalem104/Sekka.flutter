@@ -553,6 +553,34 @@ abstract final class AppStrings {
   static const String manualEntry = 'اكتب بإيدك';
   static const String bulkImport = 'الصق طلبات';
   static const String voiceEntry = 'قول بصوتك';
+  static const String ocrEntry = 'صوّر فاتورة';
+
+  // OCR Tab strings
+  static const String ocrTabTitle = 'مسح فاتورة بالكاميرا';
+  static const String ocrScanSingle = 'صوّر فاتورة';
+  static const String ocrScanDirect = 'إنشاء فوري';
+  static const String ocrScanBatch = 'مسح مجمّع';
+  static const String ocrScanSingleDesc = 'صوّر الفاتورة وراجع البيانات قبل ما تعمل الطلب';
+  static const String ocrScanDirectDesc = 'صوّر الفاتورة والطلب يتعمل أوتوماتيك';
+  static const String ocrScanBatchDesc = 'صوّر كذا فاتورة مرة واحدة';
+  static const String ocrScanning = 'جاري المسح...';
+  static const String ocrReviewData = 'راجع البيانات';
+  static const String ocrConfirmOrder = 'أكّد وأنشئ الطلب';
+  static const String ocrPickImage = 'اختار صورة';
+  static const String ocrTakePhoto = 'صوّر بالكاميرا';
+  static const String ocrChooseGallery = 'اختار من المعرض';
+  static const String ocrNoDataFound = 'مقدرش أقرأ بيانات من الصورة دي';
+  static const String ocrScanSuccess = 'تمام! الفاتورة اتقرأت';
+  static const String ocrDirectSuccess = 'تمام! الطلب اتعمل من الفاتورة';
+  static const String ocrBatchSuccess = 'تمام! الفواتير اتقرأت';
+  static const String ocrSelectImages = 'اختار الصور';
+  static const String ocrImageCount = 'صورة';
+  static const String ocrExtractedData = 'البيانات المستخرجة';
+  static const String ocrCustomerName = 'اسم العميل';
+  static const String ocrAddress = 'العنوان';
+  static const String ocrAmount = 'المبلغ';
+  static const String ocrItems = 'الأصناف';
+  static const String ocrConfidence = 'نسبة الدقة';
   static const String availableSlots = 'المواعيد اللي متاحة';
   static const String loadSlots = 'حمّل المواعيد';
   static const String loadSlotsHint = 'اضغط "حمّل المواعيد" عشان تشوف المتاح';
@@ -869,6 +897,45 @@ abstract final class AppStrings {
   static String get interests => _isAr ? 'الاهتمامات' : 'Interests';
   static String get engagement =>
       _isAr ? 'مستوى التفاعل' : 'Engagement level';
+  static String get insightsProfile =>
+      _isAr ? 'ملف التحليلات' : 'Insights Profile';
+  static String get rfmScore => _isAr ? 'تحليل RFM' : 'RFM Score';
+  static String get recency => _isAr ? 'الحداثة' : 'Recency';
+  static String get frequency => _isAr ? 'التكرار' : 'Frequency';
+  static String get monetary => _isAr ? 'القيمة' : 'Monetary';
+  static String get customerSegment =>
+      _isAr ? 'شريحة العميل' : 'Customer Segment';
+  static String get recommendations =>
+      _isAr ? 'التوصيات' : 'Recommendations';
+  static String get markAsRead => _isAr ? 'قرأت' : 'Read';
+  static String get dismiss => _isAr ? 'تجاهل' : 'Dismiss';
+  static String get actOnIt => _isAr ? 'نفّذ' : 'Act';
+  static String get recentOrders =>
+      _isAr ? 'آخر الطلبات' : 'Recent Orders';
+  static String get engagementScore =>
+      _isAr ? 'نقاط التفاعل' : 'Engagement Score';
+  static String get lastInteraction =>
+      _isAr ? 'آخر تفاعل' : 'Last Interaction';
+  static String get daysSinceLastOrder =>
+      _isAr ? 'أيام من آخر طلب' : 'Days Since Last Order';
+  static String get lifetimeValue =>
+      _isAr ? 'القيمة الكلية' : 'Lifetime Value';
+  static String get noRecommendations =>
+      _isAr ? 'مفيش توصيات دلوقتي' : 'No recommendations';
+  static String get behaviorAnalysis =>
+      _isAr ? 'تحليل السلوك' : 'Behavior Analysis';
+  static String get preferredOrderTime =>
+      _isAr ? 'وقت الطلب المفضل' : 'Preferred Order Time';
+  static String get preferredDay =>
+      _isAr ? 'اليوم المفضل' : 'Preferred Day';
+  static String get orderFrequency =>
+      _isAr ? 'معدل الطلب/شهر' : 'Orders/Month';
+  static String get spendingTier =>
+      _isAr ? 'مستوى الإنفاق' : 'Spending Tier';
+  static String get preferredAreas =>
+      _isAr ? 'المناطق المفضلة' : 'Preferred Areas';
+  static String get insightsInterests =>
+      _isAr ? 'اهتمامات العميل' : 'Customer Insights Interests';
 
   // Rating Tags
   static String get quickResponse => _isAr ? 'رد سريع' : 'Quick response';
@@ -1203,4 +1270,20 @@ abstract final class AppStrings {
       _isAr ? 'أنا سائق موثّق في سِكّة!' : 'I am a verified Sekka driver!';
   static String get badgeSectionLabel =>
       _isAr ? 'بطاقتي الرقمية' : 'My Digital Badge';
+
+  // ── Parking ──
+  static const String nearbyParking = 'أماكن ركن قريبة';
+  static const String myParkingSpots = 'أماكن الركن المحفوظة';
+  static const String addParkingSpot = 'حفظ مكان ركن';
+  static const String noParkingSpots = 'مفيش أماكن ركن';
+  static const String noParkingSpotsHint = 'احفظ أماكن الركن اللي بتستخدمها عشان ترجعلها بسهولة';
+  static const String parkingPaid = 'مدفوع';
+  static const String parkingFree = 'مجاني';
+  static const String parkingSaved = 'تم حفظ مكان الركن';
+  static const String parkingDeleted = 'تم حذف مكان الركن';
+  static const String parkingAddress = 'عنوان المكان';
+  static const String parkingRating = 'تقييم المكان';
+  static const String parkingIsPaid = 'مكان مدفوع؟';
+  static const String deleteParkingConfirm = 'متأكد إنك عايز تمسح المكان ده؟';
+  static const String usageCount = 'مرات الاستخدام';
 }

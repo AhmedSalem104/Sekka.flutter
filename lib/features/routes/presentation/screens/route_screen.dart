@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -11,12 +12,19 @@ import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
+import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../orders/data/models/order_model.dart';
 import '../../../orders/presentation/bloc/orders_bloc.dart';
 import '../../../orders/presentation/bloc/orders_state.dart';
+import '../../../parking/data/datasources/parking_remote_datasource.dart';
+import '../../../parking/data/models/parking_model.dart';
+import '../../../parking/data/repositories/parking_repository_impl.dart';
+import '../../../parking/presentation/bloc/parking_bloc.dart';
+import '../../../parking/presentation/bloc/parking_event.dart';
+import '../../../parking/presentation/bloc/parking_state.dart';
 import '../../data/datasources/route_remote_datasource.dart';
 import '../../data/models/route_model.dart';
 import '../../data/repositories/route_repository_impl.dart';
@@ -201,6 +209,58 @@ class _ActiveRouteView extends StatelessWidget {
           ),
           child: _RouteStatsCard(route: route, isDark: isDark),
         ),
+
+        // Nearby parking button
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
+          child: GestureDetector(
+            onTap: () => _showParkingSheet(context, isDark),
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSizes.lg,
+                vertical: AppSizes.md,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.info.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                border: Border.all(
+                  color: AppColors.info.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: EdgeInsets.all(Responsive.r(8)),
+                    decoration: BoxDecoration(
+                      color: AppColors.info.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconsaxPlusLinear.car,
+                      size: AppSizes.iconMd,
+                      color: AppColors.info,
+                    ),
+                  ),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      AppStrings.nearbyParking,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: AppColors.info,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    IconsaxPlusLinear.arrow_left_2,
+                    size: AppSizes.iconSm,
+                    color: AppColors.info,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: AppSizes.md),
 
         // Orders header + add button
         Padding(
@@ -769,11 +829,52 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
   final _selectedIds = <String>{};
   String _optimizationType = 'fastest';
   MapPickerResult? _startPoint;
+  bool _loadingGps = false;
 
-  Future<void> _pickStartPoint() async {
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentLocation();
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    setState(() => _loadingGps = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          _startPoint = MapPickerResult(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+        });
+      }
+    } catch (_) {
+      // GPS مش متاح — المستخدم يختار من الماب
+    } finally {
+      if (mounted) setState(() => _loadingGps = false);
+    }
+  }
+
+  Future<void> _pickStartPointFromMap() async {
     final result = await SekkaMapPicker.show(
       context,
       title: AppStrings.startPoint,
+      initialLatitude: _startPoint?.latitude,
+      initialLongitude: _startPoint?.longitude,
     );
     if (result != null && mounted) {
       setState(() => _startPoint = result);
@@ -997,7 +1098,7 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
         vertical: AppSizes.sm,
       ),
       child: GestureDetector(
-        onTap: _pickStartPoint,
+        onTap: _pickStartPointFromMap,
         child: Container(
           padding: EdgeInsets.all(AppSizes.md),
           decoration: BoxDecoration(
@@ -1009,11 +1110,23 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
           ),
           child: Row(
             children: [
-              Icon(
-                hasPoint ? IconsaxPlusBold.location : IconsaxPlusLinear.location,
-                size: AppSizes.iconMd,
-                color: color,
-              ),
+              if (_loadingGps)
+                SizedBox(
+                  width: AppSizes.iconMd,
+                  height: AppSizes.iconMd,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                )
+              else
+                Icon(
+                  hasPoint
+                      ? IconsaxPlusBold.location
+                      : IconsaxPlusLinear.location,
+                  size: AppSizes.iconMd,
+                  color: color,
+                ),
               SizedBox(width: AppSizes.md),
               Expanded(
                 child: Column(
@@ -1027,9 +1140,12 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
                       ),
                     ),
                     Text(
-                      hasPoint
-                          ? (_startPoint!.address ?? AppStrings.yourCurrentLocation)
-                          : AppStrings.pickLocationOnMap,
+                      _loadingGps
+                          ? 'جاري تحديد موقعك...'
+                          : hasPoint
+                              ? (_startPoint!.address ??
+                                  AppStrings.yourCurrentLocation)
+                              : AppStrings.pickLocationOnMap,
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark
                             ? AppColors.textBodyDark
@@ -1041,13 +1157,13 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
                   ],
                 ),
               ),
-              if (hasPoint)
+              if (hasPoint && !_loadingGps)
                 Icon(
                   Icons.check_circle,
                   size: AppSizes.iconMd,
                   color: AppColors.success,
                 )
-              else
+              else if (!_loadingGps)
                 Icon(
                   IconsaxPlusLinear.arrow_left_2,
                   size: AppSizes.iconMd,
@@ -1459,4 +1575,689 @@ void _showAddOrderSheet(
       ),
     ),
   );
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  PARKING SHEET — أماكن الركن
+// ══════════════════════════════════════════════════════════════════════════
+
+void _showParkingSheet(BuildContext context, bool isDark) {
+  final dioClient = context.read<DioClient>();
+  final datasource = ParkingRemoteDataSource(dioClient);
+  final repo = ParkingRepositoryImpl(remoteDataSource: datasource);
+
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (_) => BlocProvider(
+      create: (_) =>
+          ParkingBloc(repository: repo)..add(const ParkingLoadRequested()),
+      child: _ParkingSheetBody(isDark: isDark),
+    ),
+  );
+}
+
+class _ParkingSheetBody extends StatelessWidget {
+  const _ParkingSheetBody({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: Responsive.screenHeight * 0.7,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(Responsive.r(20)),
+        ),
+      ),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              margin: EdgeInsets.only(top: Responsive.h(10)),
+              width: Responsive.w(40),
+              height: Responsive.h(4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.borderDark : AppColors.border,
+                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+              ),
+            ),
+
+            // Title + add button
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSizes.pagePadding,
+                AppSizes.lg,
+                AppSizes.pagePadding,
+                AppSizes.md,
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    AppStrings.myParkingSpots,
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => _showCreateParkingSheet(context, isDark),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSizes.md,
+                        vertical: AppSizes.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusPill),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            IconsaxPlusLinear.add,
+                            size: AppSizes.iconSm,
+                            color: AppColors.primary,
+                          ),
+                          SizedBox(width: AppSizes.xs),
+                          Text(
+                            AppStrings.addParkingSpot,
+                            style: AppTypography.captionSmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Content
+            Expanded(
+              child: BlocConsumer<ParkingBloc, ParkingState>(
+                listener: (context, state) {
+                  if (state is ParkingLoaded && state.actionMessage != null) {
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: Directionality(
+                            textDirection: TextDirection.rtl,
+                            child: Text(
+                              state.actionMessage!,
+                              style: AppTypography.bodyMedium
+                                  .copyWith(color: AppColors.textOnPrimary),
+                            ),
+                          ),
+                          backgroundColor: state.isActionError
+                              ? AppColors.error
+                              : AppColors.success,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusMd),
+                          ),
+                        ),
+                      );
+                    context
+                        .read<ParkingBloc>()
+                        .add(const ParkingClearMessage());
+                  }
+                },
+                builder: (context, state) => switch (state) {
+                  ParkingInitial() || ParkingLoading() => const Center(
+                      child: SekkaLoading(),
+                    ),
+                  ParkingLoaded(:final spots) => spots.isEmpty
+                      ? Padding(
+                          padding: EdgeInsets.all(AppSizes.pagePadding),
+                          child: const SekkaEmptyState(
+                            icon: IconsaxPlusLinear.car,
+                            title: AppStrings.noParkingSpots,
+                            description: AppStrings.noParkingSpotsHint,
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSizes.pagePadding,
+                          ),
+                          itemCount: spots.length,
+                          separatorBuilder: (_, __) =>
+                              SizedBox(height: AppSizes.sm),
+                          itemBuilder: (context, index) => _ParkingSpotTile(
+                            spot: spots[index],
+                            isDark: isDark,
+                          ),
+                        ),
+                  ParkingError(:final message) => Center(
+                      child: Text(
+                        message,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color:
+                              isDark ? AppColors.textBodyDark : AppColors.textBody,
+                        ),
+                      ),
+                    ),
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  PARKING SPOT TILE
+// ══════════════════════════════════════════════════════════════════════════
+
+class _ParkingSpotTile extends StatelessWidget {
+  const _ParkingSpotTile({required this.spot, required this.isDark});
+
+  final ParkingModel spot;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return SekkaCard(
+      child: Row(
+        children: [
+          // Location icon
+          Container(
+            width: Responsive.w(40),
+            height: Responsive.w(40),
+            decoration: BoxDecoration(
+              color: AppColors.info.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              IconsaxPlusLinear.car,
+              size: AppSizes.iconMd,
+              color: AppColors.info,
+            ),
+          ),
+          SizedBox(width: AppSizes.md),
+
+          // Info
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  spot.address ?? '${spot.latitude.toStringAsFixed(4)}, ${spot.longitude.toStringAsFixed(4)}',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: Responsive.h(4)),
+                Row(
+                  children: [
+                    // Rating stars
+                    ...List.generate(
+                      5,
+                      (i) => Icon(
+                        i < spot.qualityRating
+                            ? IconsaxPlusBold.star_1
+                            : IconsaxPlusLinear.star_1,
+                        size: Responsive.r(14),
+                        color: i < spot.qualityRating
+                            ? AppColors.warning
+                            : (isDark
+                                ? AppColors.textCaptionDark
+                                : AppColors.textCaption),
+                      ),
+                    ),
+                    SizedBox(width: AppSizes.sm),
+                    // Paid/Free badge
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: AppSizes.sm,
+                        vertical: Responsive.h(2),
+                      ),
+                      decoration: BoxDecoration(
+                        color: spot.isPaid
+                            ? AppColors.warning.withValues(alpha: 0.1)
+                            : AppColors.success.withValues(alpha: 0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusPill),
+                      ),
+                      child: Text(
+                        spot.isPaid
+                            ? AppStrings.parkingPaid
+                            : AppStrings.parkingFree,
+                        style: AppTypography.captionSmall.copyWith(
+                          color: spot.isPaid
+                              ? AppColors.warning
+                              : AppColors.success,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: AppSizes.sm),
+                    // Usage count
+                    Text(
+                      '${spot.usageCount}×',
+                      style: AppTypography.captionSmall.copyWith(
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Delete button
+          GestureDetector(
+            onTap: () => _confirmDelete(context, spot.id, isDark),
+            child: Padding(
+              padding: EdgeInsets.all(AppSizes.sm),
+              child: Icon(
+                IconsaxPlusLinear.trash,
+                size: AppSizes.iconSm,
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, String id, bool isDark) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          ),
+          title: Text(
+            AppStrings.parkingDeleted,
+            style: AppTypography.headlineSmall.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+            ),
+          ),
+          content: Text(
+            AppStrings.deleteParkingConfirm,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                AppStrings.cancel,
+                style: AppTypography.titleMedium.copyWith(
+                  color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                context
+                    .read<ParkingBloc>()
+                    .add(ParkingDeleteRequested(id: id));
+              },
+              child: Text(
+                AppStrings.confirm,
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.error,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  CREATE PARKING SHEET — حفظ مكان ركن جديد
+// ══════════════════════════════════════════════════════════════════════════
+
+void _showCreateParkingSheet(BuildContext context, bool isDark) {
+  final bloc = context.read<ParkingBloc>();
+
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (_) => BlocProvider.value(
+      value: bloc,
+      child: _CreateParkingSheetBody(isDark: isDark),
+    ),
+  );
+}
+
+class _CreateParkingSheetBody extends StatefulWidget {
+  const _CreateParkingSheetBody({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  State<_CreateParkingSheetBody> createState() =>
+      _CreateParkingSheetBodyState();
+}
+
+class _CreateParkingSheetBodyState extends State<_CreateParkingSheetBody> {
+  final _addressController = TextEditingController();
+  MapPickerResult? _location;
+  int _rating = 3;
+  bool _isPaid = false;
+  bool _loadingGps = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentLocation();
+  }
+
+  Future<void> _fetchCurrentLocation() async {
+    setState(() => _loadingGps = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      if (mounted) {
+        setState(() {
+          _location = MapPickerResult(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          );
+        });
+      }
+    } catch (_) {
+      // GPS failed — user can pick manually
+    } finally {
+      if (mounted) setState(() => _loadingGps = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(Responsive.r(20)),
+          ),
+        ),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.fromLTRB(
+              AppSizes.pagePadding,
+              AppSizes.md,
+              AppSizes.pagePadding,
+              AppSizes.lg + MediaQuery.of(context).padding.bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Handle
+                Center(
+                  child: Container(
+                    width: Responsive.w(40),
+                    height: Responsive.h(4),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppColors.borderDark : AppColors.border,
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusPill),
+                    ),
+                  ),
+                ),
+                SizedBox(height: AppSizes.lg),
+
+                // Title
+                Text(
+                  AppStrings.addParkingSpot,
+                  style: AppTypography.headlineSmall.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
+                SizedBox(height: AppSizes.lg),
+
+                // Location
+                SekkaCard(
+                  onTap: () async {
+                    final result = await showModalBottomSheet<MapPickerResult>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => SizedBox(
+                        height: Responsive.screenHeight * 0.85,
+                        child: SekkaMapPicker(
+                          initialLatitude: _location?.latitude,
+                          initialLongitude: _location?.longitude,
+                        ),
+                      ),
+                    );
+                    if (result != null && mounted) {
+                      setState(() => _location = result);
+                    }
+                  },
+                  child: Row(
+                    children: [
+                      Icon(
+                        IconsaxPlusLinear.location,
+                        size: AppSizes.iconMd,
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: _loadingGps
+                            ? Text(
+                                '...',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: isDark
+                                      ? AppColors.textBodyDark
+                                      : AppColors.textBody,
+                                ),
+                              )
+                            : Text(
+                                _location != null
+                                    ? '${_location!.latitude.toStringAsFixed(4)}, ${_location!.longitude.toStringAsFixed(4)}'
+                                    : AppStrings.pickLocationOnMap,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: _location != null
+                                      ? (isDark
+                                          ? AppColors.textHeadlineDark
+                                          : AppColors.textHeadline)
+                                      : (isDark
+                                          ? AppColors.textCaptionDark
+                                          : AppColors.textCaption),
+                                ),
+                              ),
+                      ),
+                      Icon(
+                        IconsaxPlusLinear.arrow_left_2,
+                        size: AppSizes.iconSm,
+                        color:
+                            isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: AppSizes.md),
+
+                // Address
+                SekkaInputField(
+                  controller: _addressController,
+                  label: AppStrings.parkingAddress,
+                  hint: AppStrings.parkingAddress,
+                ),
+                SizedBox(height: AppSizes.md),
+
+                // Rating
+                Text(
+                  AppStrings.parkingRating,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
+                SizedBox(height: AppSizes.sm),
+                Row(
+                  children: List.generate(
+                    5,
+                    (i) => GestureDetector(
+                      onTap: () => setState(() => _rating = i + 1),
+                      child: Padding(
+                        padding: EdgeInsets.only(left: AppSizes.xs),
+                        child: Icon(
+                          i < _rating
+                              ? IconsaxPlusBold.star_1
+                              : IconsaxPlusLinear.star_1,
+                          size: Responsive.r(28),
+                          color: i < _rating
+                              ? AppColors.warning
+                              : (isDark
+                                  ? AppColors.textCaptionDark
+                                  : AppColors.textCaption),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: AppSizes.md),
+
+                // Is paid toggle
+                GestureDetector(
+                  onTap: () => setState(() => _isPaid = !_isPaid),
+                  child: Row(
+                    children: [
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: Responsive.w(22),
+                        height: Responsive.w(22),
+                        decoration: BoxDecoration(
+                          color: _isPaid
+                              ? AppColors.primary
+                              : Colors.transparent,
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm),
+                          border: Border.all(
+                            color: _isPaid
+                                ? AppColors.primary
+                                : (isDark
+                                    ? AppColors.borderDark
+                                    : AppColors.border),
+                            width: 2,
+                          ),
+                        ),
+                        child: _isPaid
+                            ? Icon(
+                                Icons.check,
+                                size: Responsive.r(14),
+                                color: AppColors.textOnPrimary,
+                              )
+                            : null,
+                      ),
+                      SizedBox(width: AppSizes.md),
+                      Text(
+                        AppStrings.parkingIsPaid,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: AppSizes.xl),
+
+                // Save button
+                BlocBuilder<ParkingBloc, ParkingState>(
+                  builder: (context, state) {
+                    final isLoading = state is ParkingLoaded &&
+                        state.isActionInProgress;
+                    return SekkaButton(
+                      label: AppStrings.addParkingSpot,
+                      icon: IconsaxPlusLinear.car,
+                      isLoading: isLoading,
+                      onPressed: _location == null || isLoading
+                          ? null
+                          : () {
+                              context.read<ParkingBloc>().add(
+                                    ParkingCreateRequested(
+                                      latitude: _location!.latitude,
+                                      longitude: _location!.longitude,
+                                      address: _addressController.text
+                                              .trim()
+                                              .isEmpty
+                                          ? null
+                                          : _addressController.text.trim(),
+                                      qualityRating: _rating,
+                                      isPaid: _isPaid,
+                                    ),
+                                  );
+                              Navigator.pop(context);
+                            },
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

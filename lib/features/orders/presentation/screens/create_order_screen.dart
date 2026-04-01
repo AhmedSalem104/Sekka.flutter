@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -22,6 +25,7 @@ import '../../../../shared/network/dio_client.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../../../partners/data/models/pickup_point_model.dart';
 import '../../../partners/data/repositories/partner_repository.dart';
+import '../../data/models/ocr_result_model.dart';
 import '../../data/models/order_model.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
@@ -103,7 +107,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = _isEditMode ? null : TabController(length: 3, vsync: this);
+    _tabController = _isEditMode ? null : TabController(length: 4, vsync: this);
     _idempotencyKey = const Uuid().v4();
     _partnerRepo = PartnerRepository(context.read<DioClient>().dio);
 
@@ -649,6 +653,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                           ),
                           child: TabBar(
                             controller: _tabController,
+                            isScrollable: true,
+                            tabAlignment: TabAlignment.start,
                             indicator: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius:
@@ -664,12 +670,21 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                               fontWeight: FontWeight.w700,
                             ),
                             unselectedLabelStyle: AppTypography.titleMedium,
-                            labelPadding: EdgeInsets.zero,
-                            padding: EdgeInsets.all(Responsive.w(3)),
+                            labelPadding: EdgeInsets.symmetric(
+                              horizontal: Responsive.w(6),
+                            ),
+                            indicatorPadding: EdgeInsets.symmetric(
+                              horizontal: Responsive.w(1),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Responsive.w(2),
+                              vertical: Responsive.w(3),
+                            ),
                             tabs: const [
                               Tab(text: AppStrings.manualEntry),
                               Tab(text: AppStrings.bulkImport),
                               Tab(text: AppStrings.voiceEntry),
+                              Tab(text: AppStrings.ocrEntry),
                             ],
                           ),
                         ),
@@ -684,6 +699,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                             _buildSteppedForm(state, isLoading, isDark),
                             _buildBulkImportTab(isLoading, isDark),
                             _buildVoiceEntryTab(isLoading, isDark),
+                            _buildOcrTab(state, isLoading, isDark),
                           ],
                         ),
                       ),
@@ -1819,8 +1835,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
     );
   }
 
-  // ───────────────── VOICE ENTRY TAB ─────────────────
-
   Widget _buildVoiceEntryTab(bool isLoading, bool isDark) {
     final captionColor =
         isDark ? AppColors.textCaptionDark : AppColors.textCaption;
@@ -1868,6 +1882,665 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         ),
       ),
     );
+  }
+
+  // ── OCR Tab ──
+
+  int _ocrMode = 0; // 0: صوّر فاتورة, 1: إنشاء فوري, 2: مسح مجمّع
+  final _imagePicker = ImagePicker();
+
+  // كل وضع ليه الصورة الخاصة بيه
+  File? _ocrScanImage;
+  File? _ocrDirectImage;
+  List<File> _ocrBatchImages = [];
+
+  Future<File?> _pickImage(ImageSource source) async {
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      imageQuality: 85,
+    );
+    return picked != null ? File(picked.path) : null;
+  }
+
+  Future<void> _pickBatchImages() async {
+    final picked = await _imagePicker.pickMultiImage(imageQuality: 85);
+    if (picked.isNotEmpty) {
+      setState(() {
+        _ocrBatchImages = picked.map((x) => File(x.path)).toList();
+      });
+    }
+  }
+
+  void _showImageSourceSheet({required ValueChanged<File> onPicked}) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => Container(
+        padding: EdgeInsets.all(AppSizes.pagePadding),
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppSizes.radiusXl),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SekkaButton(
+              label: AppStrings.ocrTakePhoto,
+              icon: IconsaxPlusLinear.camera,
+              type: SekkaButtonType.secondary,
+              onPressed: () async {
+                Navigator.pop(context);
+                final file = await _pickImage(ImageSource.camera);
+                if (file != null) onPicked(file);
+              },
+            ),
+            SizedBox(height: AppSizes.md),
+            SekkaButton(
+              label: AppStrings.ocrChooseGallery,
+              icon: IconsaxPlusLinear.gallery,
+              type: SekkaButtonType.secondary,
+              onPressed: () async {
+                Navigator.pop(context);
+                final file = await _pickImage(ImageSource.gallery);
+                if (file != null) onPicked(file);
+              },
+            ),
+            SizedBox(height: AppSizes.lg),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static const _ocrModeLabels = [
+    AppStrings.ocrScanSingle,
+    AppStrings.ocrScanDirect,
+    AppStrings.ocrScanBatch,
+  ];
+
+  Widget _buildOcrTab(OrdersState state, bool isLoading, bool isDark) {
+    final isScanning = state is OrdersLoaded && state.isOcrScanning;
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(AppSizes.pagePadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── العنوان ──
+          Text(
+            AppStrings.ocrTabTitle,
+            style: AppTypography.titleLarge,
+          ),
+          SizedBox(height: AppSizes.md),
+
+          // ── Dropdown اختيار الوضع ──
+          Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSizes.md,
+              vertical: AppSizes.xs,
+            ),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+              border: Border.all(
+                color: isDark
+                    ? AppColors.borderDark
+                    : AppColors.border,
+              ),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                value: _ocrMode,
+                isExpanded: true,
+                icon: Icon(
+                  IconsaxPlusLinear.arrow_down_1,
+                  color: captionColor,
+                ),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                ),
+                dropdownColor:
+                    isDark ? AppColors.surfaceDark : AppColors.surface,
+                items: List.generate(
+                  _ocrModeLabels.length,
+                  (i) => DropdownMenuItem(
+                    value: i,
+                    child: Text(_ocrModeLabels[i]),
+                  ),
+                ),
+                onChanged: (v) {
+                  if (v != null) setState(() => _ocrMode = v);
+                },
+              ),
+            ),
+          ),
+          SizedBox(height: AppSizes.xxl),
+
+          // ── المحتوى بناءً على الاختيار ──
+          switch (_ocrMode) {
+            0 => _buildOcrScanContent(state, isScanning, isDark),
+            1 => _buildOcrDirectContent(state, isScanning, isDark),
+            2 => _buildOcrBatchContent(state, isScanning, isDark),
+            _ => const SizedBox.shrink(),
+          },
+        ],
+      ),
+    );
+  }
+
+  // ── 1. صوّر فاتورة (مراجعة أولاً) ──
+  Widget _buildOcrScanContent(
+    OrdersState state,
+    bool isScanning,
+    bool isDark,
+  ) {
+    final ocrResult = state is OrdersLoaded ? state.ocrResult : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header
+        _buildOcrHeader(
+          icon: IconsaxPlusBold.scan_barcode,
+          title: AppStrings.ocrScanSingle,
+          subtitle: AppStrings.ocrScanSingleDesc,
+          isDark: isDark,
+        ),
+        SizedBox(height: AppSizes.xxl),
+
+        // Image preview
+        if (_ocrScanImage != null) ...[
+          _buildImagePreview(_ocrScanImage!),
+          SizedBox(height: AppSizes.md),
+        ],
+
+        // Pick image button
+        SekkaButton(
+          label: AppStrings.ocrPickImage,
+          icon: IconsaxPlusLinear.camera,
+          type: SekkaButtonType.secondary,
+          onPressed: isScanning
+              ? null
+              : () => _showImageSourceSheet(
+                    onPicked: (file) =>
+                        setState(() => _ocrScanImage = file),
+                  ),
+        ),
+
+        // Scan button
+        if (_ocrScanImage != null) ...[
+          SizedBox(height: AppSizes.md),
+          SekkaButton(
+            label: AppStrings.ocrScanSingle,
+            icon: IconsaxPlusLinear.scan,
+            isLoading: isScanning,
+            onPressed: isScanning
+                ? null
+                : () {
+                    context.read<OrdersBloc>().add(
+                          OcrScanInvoiceRequested(
+                            imageFile: _ocrScanImage!,
+                          ),
+                        );
+                  },
+          ),
+        ],
+
+        // Results
+        if (ocrResult != null) ...[
+          SizedBox(height: AppSizes.xxl),
+          Text(
+            AppStrings.ocrExtractedData,
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: AppSizes.md),
+          _buildOcrResultCard(ocrResult, isDark),
+          SizedBox(height: AppSizes.md),
+          SekkaButton(
+            label: AppStrings.ocrConfirmOrder,
+            icon: IconsaxPlusLinear.tick_circle,
+            onPressed: () {
+              _fillFormFromOcrResult(ocrResult);
+              _tabController?.animateTo(0);
+              context
+                  .read<OrdersBloc>()
+                  .add(const OcrClearResult());
+            },
+          ),
+        ],
+
+        SizedBox(height: AppSizes.xxl),
+      ],
+    );
+  }
+
+  // ── 2. إنشاء فوري ──
+  Widget _buildOcrDirectContent(
+    OrdersState state,
+    bool isScanning,
+    bool isDark,
+  ) {
+    final ocrCreatedOrder =
+        state is OrdersLoaded ? state.ocrCreatedOrder : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header
+        _buildOcrHeader(
+          icon: IconsaxPlusBold.flash_1,
+          title: AppStrings.ocrScanDirect,
+          subtitle: AppStrings.ocrScanDirectDesc,
+          isDark: isDark,
+          iconColor: AppColors.success,
+        ),
+        SizedBox(height: AppSizes.xxl),
+
+        // Image preview
+        if (_ocrDirectImage != null) ...[
+          _buildImagePreview(_ocrDirectImage!),
+          SizedBox(height: AppSizes.md),
+        ],
+
+        // Pick image button
+        SekkaButton(
+          label: AppStrings.ocrPickImage,
+          icon: IconsaxPlusLinear.camera,
+          type: SekkaButtonType.secondary,
+          onPressed: isScanning
+              ? null
+              : () => _showImageSourceSheet(
+                    onPicked: (file) =>
+                        setState(() => _ocrDirectImage = file),
+                  ),
+        ),
+
+        // Scan & create button
+        if (_ocrDirectImage != null) ...[
+          SizedBox(height: AppSizes.md),
+          SekkaButton(
+            label: AppStrings.ocrScanDirect,
+            icon: IconsaxPlusLinear.flash_1,
+            isLoading: isScanning,
+            onPressed: isScanning
+                ? null
+                : () {
+                    context.read<OrdersBloc>().add(
+                          OcrScanToOrderRequested(
+                            imageFile: _ocrDirectImage!,
+                          ),
+                        );
+                  },
+          ),
+        ],
+
+        // Success result
+        if (ocrCreatedOrder != null) ...[
+          SizedBox(height: AppSizes.xxl),
+          SekkaCard(
+            onTap: null,
+            child: Padding(
+              padding: EdgeInsets.all(AppSizes.lg),
+              child: Column(
+                children: [
+                  Icon(
+                    IconsaxPlusBold.tick_circle,
+                    color: AppColors.success,
+                    size: Responsive.r(56),
+                  ),
+                  SizedBox(height: AppSizes.md),
+                  Text(
+                    AppStrings.ocrDirectSuccess,
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: AppSizes.sm),
+                  Text(
+                    '#${ocrCreatedOrder.orderNumber}',
+                    style: AppTypography.titleLarge.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+
+        SizedBox(height: AppSizes.xxl),
+      ],
+    );
+  }
+
+  // ── 3. مسح مجمّع ──
+  Widget _buildOcrBatchContent(
+    OrdersState state,
+    bool isScanning,
+    bool isDark,
+  ) {
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final ocrBatchResult =
+        state is OrdersLoaded ? state.ocrBatchResult : null;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Header
+        _buildOcrHeader(
+          icon: IconsaxPlusBold.document_copy,
+          title: AppStrings.ocrScanBatch,
+          subtitle: AppStrings.ocrScanBatchDesc,
+          isDark: isDark,
+          iconColor: AppColors.info,
+        ),
+        SizedBox(height: AppSizes.xxl),
+
+        // Batch images preview
+        if (_ocrBatchImages.isNotEmpty) ...[
+          SizedBox(
+            height: Responsive.h(120),
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              shrinkWrap: true,
+              itemCount: _ocrBatchImages.length,
+              separatorBuilder: (_, __) =>
+                  SizedBox(width: AppSizes.sm),
+              itemBuilder: (_, index) => ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(AppSizes.radiusMd),
+                child: Image.file(
+                  _ocrBatchImages[index],
+                  width: Responsive.w(90),
+                  height: Responsive.h(120),
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(height: AppSizes.sm),
+          Text(
+            '${_ocrBatchImages.length} ${AppStrings.ocrImageCount}',
+            style: AppTypography.bodySmall.copyWith(
+              color: captionColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: AppSizes.md),
+        ],
+
+        // Select images button
+        SekkaButton(
+          label: AppStrings.ocrSelectImages,
+          icon: IconsaxPlusLinear.gallery,
+          type: SekkaButtonType.secondary,
+          onPressed: isScanning ? null : _pickBatchImages,
+        ),
+
+        // Scan batch button
+        if (_ocrBatchImages.isNotEmpty) ...[
+          SizedBox(height: AppSizes.md),
+          SekkaButton(
+            label:
+                '${AppStrings.ocrScanBatch} (${_ocrBatchImages.length})',
+            icon: IconsaxPlusLinear.scan,
+            isLoading: isScanning,
+            onPressed: isScanning
+                ? null
+                : () {
+                    context.read<OrdersBloc>().add(
+                          OcrScanBatchRequested(
+                            imageFiles: _ocrBatchImages,
+                          ),
+                        );
+                  },
+          ),
+        ],
+
+        // Batch results
+        if (ocrBatchResult != null) ...[
+          SizedBox(height: AppSizes.xxl),
+          Text(
+            '${AppStrings.ocrBatchSuccess} (${ocrBatchResult.successCount}/${ocrBatchResult.totalScanned})',
+            style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: AppSizes.md),
+          ...ocrBatchResult.results.asMap().entries.map(
+                (entry) => Padding(
+                  padding: EdgeInsets.only(bottom: AppSizes.sm),
+                  child: _buildOcrResultCard(
+                    entry.value,
+                    isDark,
+                    index: entry.key + 1,
+                  ),
+                ),
+              ),
+        ],
+
+        SizedBox(height: AppSizes.xxl),
+      ],
+    );
+  }
+
+  // ── Shared OCR widgets ──
+
+  Widget _buildOcrHeader({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    Color? iconColor,
+  }) {
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final color = iconColor ?? AppColors.primary;
+
+    return Column(
+      children: [
+        Center(
+          child: Container(
+            width: Responsive.r(72),
+            height: Responsive.r(72),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              size: Responsive.r(36),
+              color: color,
+            ),
+          ),
+        ),
+        SizedBox(height: AppSizes.md),
+        Text(
+          title,
+          style: AppTypography.titleLarge,
+          textAlign: TextAlign.center,
+        ),
+        SizedBox(height: AppSizes.xs),
+        Text(
+          subtitle,
+          style: AppTypography.bodySmall.copyWith(color: captionColor),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImagePreview(File imageFile) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      child: Image.file(
+        imageFile,
+        height: Responsive.h(200),
+        width: double.infinity,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildOcrResultCard(
+    OcrResultModel result,
+    bool isDark, {
+    int? index,
+  }) {
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+
+    return SekkaCard(
+      onTap: null,
+      child: Padding(
+        padding: EdgeInsets.all(AppSizes.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (index != null) ...[
+              Text(
+                '# $index',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: AppSizes.xs),
+            ],
+            if (result.confidence != null) ...[
+              Row(
+                children: [
+                  Icon(
+                    IconsaxPlusLinear.chart_1,
+                    size: Responsive.r(16),
+                    color: captionColor,
+                  ),
+                  SizedBox(width: AppSizes.xs),
+                  Text(
+                    '${AppStrings.ocrConfidence}: ${(result.confidence! * 100).toStringAsFixed(0)}%',
+                    style: AppTypography.caption.copyWith(
+                      color: captionColor,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSizes.sm),
+            ],
+            if (result.customerName != null)
+              _buildOcrDataRow(
+                AppStrings.ocrCustomerName,
+                result.customerName!,
+                IconsaxPlusLinear.user,
+              ),
+            if (result.customerPhone != null)
+              _buildOcrDataRow(
+                AppStrings.phone,
+                result.customerPhone!,
+                IconsaxPlusLinear.call,
+              ),
+            if (result.address != null)
+              _buildOcrDataRow(
+                AppStrings.ocrAddress,
+                result.address!,
+                IconsaxPlusLinear.location,
+              ),
+            if (result.amount != null)
+              _buildOcrDataRow(
+                AppStrings.ocrAmount,
+                '${result.amount} ${AppStrings.currency}',
+                IconsaxPlusLinear.money_2,
+              ),
+            if (result.description != null)
+              _buildOcrDataRow(
+                AppStrings.shipmentDescription,
+                result.description!,
+                IconsaxPlusLinear.document_text,
+              ),
+            if (result.items.isNotEmpty) ...[
+              SizedBox(height: AppSizes.sm),
+              Text(
+                AppStrings.ocrItems,
+                style: AppTypography.caption.copyWith(
+                  color: captionColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              ...result.items.map(
+                (item) => Padding(
+                  padding: EdgeInsets.only(
+                    right: AppSizes.md,
+                    top: AppSizes.xs,
+                  ),
+                  child: Text(
+                    '• ${item.name ?? '-'} × ${item.quantity ?? 1} — ${item.price ?? '-'}',
+                    style: AppTypography.bodySmall,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOcrDataRow(String label, String value, IconData icon) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: AppSizes.sm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: Responsive.r(18), color: AppColors.primary),
+          SizedBox(width: AppSizes.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textCaption,
+                  ),
+                ),
+                Text(value, style: AppTypography.bodyMedium),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _fillFormFromOcrResult(OcrResultModel result) {
+    if (result.customerName != null) {
+      _customerNameController.text = result.customerName!;
+    }
+    if (result.customerPhone != null) {
+      _customerPhoneController.text = result.customerPhone!;
+    }
+    if (result.address != null) {
+      _deliveryAddressController.text = result.address!;
+    }
+    if (result.amount != null) {
+      _amountController.text = result.amount!.toStringAsFixed(0);
+    }
+    if (result.description != null) {
+      _descriptionController.text = result.description!;
+    }
+    setState(() {
+      _currentStep = 0;
+      _ocrScanImage = null;
+    });
   }
 }
 
