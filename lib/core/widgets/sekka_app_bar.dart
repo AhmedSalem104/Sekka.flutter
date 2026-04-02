@@ -14,15 +14,19 @@ class SekkaAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.showBack = true,
     this.actions,
     this.onBack,
+    this.bottom,
   });
 
   final String title;
   final bool showBack;
   final List<Widget>? actions;
   final VoidCallback? onBack;
+  final PreferredSizeWidget? bottom;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(
+        kToolbarHeight + (bottom?.preferredSize.height ?? 0),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +44,7 @@ class SekkaAppBar extends StatelessWidget implements PreferredSizeWidget {
           : null,
       automaticallyImplyLeading: false,
       actions: actions,
+      bottom: bottom,
     );
   }
 }

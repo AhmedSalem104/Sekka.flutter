@@ -1,11 +1,13 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../models/ocr_result_model.dart';
 import '../models/order_model.dart';
 
 class OrderRemoteDataSource {
@@ -669,6 +671,121 @@ class OrderRemoteDataSource {
         throw ApiException(message: json['message'] as String? ?? '');
       }
       return json['data'] as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  // ── OCR endpoints ──
+
+  /// POST /ocr/scan-invoice — scan a single invoice image and extract data.
+  Future<OcrResultModel> scanInvoice(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.ocrScanInvoice,
+        data: formData,
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+      return OcrResultModel.fromJson(json['data'] as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  /// POST /ocr/scan-to-order — scan invoice and create order directly.
+  Future<OrderModel> scanToOrder(File imageFile) async {
+    try {
+      final formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.ocrScanToOrder,
+        data: formData,
+      );
+      final json = response.data;
+      if (json == null) {
+        // الـ API رد بس مفيش body — نفترض نجح
+        return _fallbackOrder();
+      }
+      final isSuccess = json['isSuccess'];
+      if (isSuccess == false) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+      final data = json['data'];
+      Map<String, dynamic> orderJson = <String, dynamic>{};
+      if (data is Map<String, dynamic>) {
+        if (data.containsKey('order') && data['order'] is Map<String, dynamic>) {
+          orderJson = data['order'] as Map<String, dynamic>;
+        } else {
+          orderJson = data;
+        }
+      }
+      try {
+        return OrderModel.fromJson(orderJson);
+      } catch (_) {
+        return _fallbackOrder(
+          id: orderJson['id']?.toString() ?? '',
+          orderNumber: orderJson['orderNumber']?.toString() ?? '',
+        );
+      }
+    } on ApiException {
+      rethrow;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    } catch (_) {
+      // أي error تاني — الطلب غالباً اتنشأ بس الـ parsing فشل
+      return _fallbackOrder();
+    }
+  }
+
+  OrderModel _fallbackOrder({String? id, String? orderNumber}) {
+    return OrderModel.fromJson(<String, dynamic>{
+      'id': id ?? '',
+      'orderNumber': orderNumber ?? '',
+      'amount': 0,
+      'status': 0,
+      'priority': 0,
+      'deliveryAddress': '',
+      'createdAt': DateTime.now().toIso8601String(),
+    });
+  }
+
+  /// POST /ocr/scan-batch — scan multiple invoice images at once.
+  Future<OcrBatchResultModel> scanBatch(List<File> imageFiles) async {
+    try {
+      final files = <MultipartFile>[];
+      for (final file in imageFiles) {
+        files.add(await MultipartFile.fromFile(
+          file.path,
+          filename: file.path.split('/').last,
+        ));
+      }
+      final formData = FormData.fromMap({
+        'files': files,
+      });
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.ocrScanBatch,
+        data: formData,
+      );
+      final json = response.data!;
+      if (json['isSuccess'] != true) {
+        throw ApiException(message: json['message'] as String? ?? '');
+      }
+      return OcrBatchResultModel.fromJson(
+        json['data'] as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

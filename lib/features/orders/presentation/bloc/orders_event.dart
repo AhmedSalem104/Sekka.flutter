@@ -415,3 +415,36 @@ final class OrderTempIdResolved extends OrdersEvent {
   @override
   List<Object?> get props => [tempId, realId];
 }
+
+// ── OCR Events ──
+
+final class OcrScanInvoiceRequested extends OrdersEvent {
+  const OcrScanInvoiceRequested({required this.imageFile});
+
+  final File imageFile;
+
+  @override
+  List<Object?> get props => [imageFile];
+}
+
+final class OcrScanToOrderRequested extends OrdersEvent {
+  const OcrScanToOrderRequested({required this.imageFile});
+
+  final File imageFile;
+
+  @override
+  List<Object?> get props => [imageFile];
+}
+
+final class OcrScanBatchRequested extends OrdersEvent {
+  const OcrScanBatchRequested({required this.imageFiles});
+
+  final List<File> imageFiles;
+
+  @override
+  List<Object?> get props => [imageFiles];
+}
+
+final class OcrClearResult extends OrdersEvent {
+  const OcrClearResult();
+}

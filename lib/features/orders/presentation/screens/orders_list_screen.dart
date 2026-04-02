@@ -9,6 +9,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
@@ -135,13 +136,17 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+      appBar: SekkaAppBar(
+        title: AppStrings.orders,
+        showBack: false,
+      ),
       body: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           textDirection: TextDirection.rtl,
           children: [
-            _buildHeader(isDark),
-
+            SizedBox(height: AppSizes.md),
             Padding(
               padding: EdgeInsets.symmetric(
                 horizontal: AppSizes.pagePadding,
@@ -222,26 +227,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     );
   }
 
-  Widget _buildHeader(bool isDark) {
-    return Padding(
-      padding: EdgeInsets.only(
-        right: AppSizes.pagePadding,
-        left: AppSizes.pagePadding,
-        top: AppSizes.lg,
-        bottom: AppSizes.md,
-      ),
-      child: Center(
-        child: Text(
-          AppStrings.orders,
-          style: AppTypography.headlineLarge.copyWith(
-            color: isDark
-                ? AppColors.textHeadlineDark
-                : AppColors.textHeadline,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildFilterChips(bool isDark) {
     return Directionality(

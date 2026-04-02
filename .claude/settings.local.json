@@ -110,7 +110,10 @@
       "Bash(git fetch:*)",
       "Bash(taskkill /F /IM dart.exe)",
       "Bash(taskkill /F /IM flutter.exe)",
-      "Bash(flutter clean:*)"
+      "Bash(flutter clean:*)",
+      "Bash(GIT_EDITOR=\":\" git rebase --continue)",
+      "Bash(EDITOR=true git rebase --continue)",
+      "Bash(GIT_EDITOR=true git rebase --continue)"
     ]
   }
 }

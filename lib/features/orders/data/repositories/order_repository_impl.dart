@@ -2,6 +2,7 @@ import 'dart:io';
 
 import '../../domain/repositories/order_repository.dart';
 import '../datasources/order_remote_datasource.dart';
+import '../models/ocr_result_model.dart';
 import '../models/order_model.dart';
 import '../../../../shared/network/api_response.dart';
 
@@ -203,4 +204,18 @@ class OrderRepositoryImpl implements OrderRepository {
     Map<String, dynamic> data,
   ) =>
       _remote.bookSlot(id, data);
+
+  // ── OCR ──
+
+  @override
+  Future<OcrResultModel> scanInvoice(File imageFile) =>
+      _remote.scanInvoice(imageFile);
+
+  @override
+  Future<OrderModel> scanToOrder(File imageFile) =>
+      _remote.scanToOrder(imageFile);
+
+  @override
+  Future<OcrBatchResultModel> scanBatch(List<File> imageFiles) =>
+      _remote.scanBatch(imageFiles);
 }

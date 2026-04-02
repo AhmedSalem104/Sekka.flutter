@@ -125,6 +125,28 @@ abstract final class ApiConstants {
   static String customerInterests(String id) => '$_customers/$id/interests';
   static String customerEngagement(String id) => '$_customers/$id/engagement';
 
+  // CustomerInsights endpoints
+  static const String _customerInsights = '$baseUrl/customer-insights';
+  static String customerInsightsProfile(String id) =>
+      '$_customerInsights/$id/profile';
+  static String customerInsightsInterests(String id) =>
+      '$_customerInsights/$id/interests';
+  static String customerInsightsRecommendations(String id) =>
+      '$_customerInsights/$id/recommendations';
+  static String customerInsightsRecommendationRead(String id) =>
+      '$_customerInsights/recommendations/$id/read';
+  static String customerInsightsRecommendationDismiss(String id) =>
+      '$_customerInsights/recommendations/$id/dismiss';
+  static String customerInsightsRecommendationAct(String id) =>
+      '$_customerInsights/recommendations/$id/act';
+  static String customerInsightsBehavior(String id) =>
+      '$_customerInsights/$id/behavior';
+  static const String customerInsightsTopInterests =
+      '$_customerInsights/top-interests';
+  static const String customerInsightsSegments = '$_customerInsights/segments';
+  static String customerInsightsSegmentCustomers(String segmentId) =>
+      '$_customerInsights/segments/$segmentId/customers';
+
   // Chat endpoints
   static const String _chat = '$baseUrl/chat';
   static const String chatConversations = '$_chat/conversations';
@@ -196,12 +218,24 @@ abstract final class ApiConstants {
   static const String breakEnd = '$_breaks/end';
   static const String breakHistory = '$_breaks/history';
 
+  // OCR endpoints
+  static const String _ocr = '$baseUrl/ocr';
+  static const String ocrScanInvoice = '$_ocr/scan-invoice';
+  static const String ocrScanToOrder = '$_ocr/scan-to-order';
+  static const String ocrScanBatch = '$_ocr/scan-batch';
+
   // Sync endpoints
   static const String _sync = '$baseUrl/sync';
   static const String syncPush = '$_sync/push';
   static const String syncPull = '$_sync/pull';
   static const String syncResolveConflict = '$_sync/resolve-conflict';
   static const String syncStatus = '$_sync/status';
+
+  // Parking endpoints
+  static const String _parking = '$baseUrl/parking';
+  static const String parking = _parking;
+  static String parkingDetail(String id) => '$_parking/$id';
+  static const String parkingNearby = '$_parking/nearby';
 
   // Timeline endpoints
   static const String _timeline = '$baseUrl/timeline';

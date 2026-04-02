@@ -5,6 +5,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:image_picker/image_picker.dart';
@@ -380,13 +381,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           child: ListView(
             padding: EdgeInsets.all(AppSizes.pagePadding),
             children: [
-              _StatusHeaderCard(order: order),
+              _OrderHeaderCard(order: order),
               if (order.isRecurring) ...[
                 SizedBox(height: AppSizes.md),
                 _RecurringInfoCard(order: order),
               ],
               SizedBox(height: AppSizes.md),
-              _CustomerAddressCard(order: order),
+              _AddressCard(order: order),
               SizedBox(height: AppSizes.md),
               _FinancialCard(order: order),
               SizedBox(height: AppSizes.md),
@@ -415,47 +416,198 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  1. STATUS HEADER CARD
+//  1. ORDER HEADER CARD — حالة + عميل + تواصل + تابع ع الخريطة
 // ═══════════════════════════════════════════════════════════════════════════
-class _StatusHeaderCard extends StatelessWidget {
-  const _StatusHeaderCard({required this.order});
+class _OrderHeaderCard extends StatelessWidget {
+  const _OrderHeaderCard({required this.order});
   final OrderModel order;
 
   @override
   Widget build(BuildContext context) {
-    // لو عنده deliveredAt يبقى اتسلّم فعلاً بغض النظر عن الـ status number
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActuallyDelivered = order.deliveredAt != null;
     final effectiveStatus =
         isActuallyDelivered ? OrderStatus.delivered : order.status;
     final color = _statusColor(effectiveStatus);
+    final isTracking = order.status == OrderStatus.inTransit ||
+        order.status == OrderStatus.arrivedAtDestination;
 
     return SekkaCard(
       child: Column(
         children: [
+          // ── اسم + رقم (يمين) | حالة الطلب (شمال) ──
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              badge.StatusBadge(status: _mapToBadgeStatus(effectiveStatus)),
-              SizedBox(width: AppSizes.sm),
+              // الاسم والرقم
               Expanded(
-                child: Text(
-                  effectiveStatus.arabic,
-                  style: AppTypography.titleLarge.copyWith(color: color),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (order.customerName != null &&
+                        order.customerName!.isNotEmpty)
+                      Text(
+                        order.customerName!,
+                        style: AppTypography.titleLarge.copyWith(
+                          color: isDark
+                              ? AppColors.textHeadlineDark
+                              : AppColors.textHeadline,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    if (order.customerPhone != null &&
+                        order.customerPhone!.isNotEmpty) ...[
+                      SizedBox(height: AppSizes.xs),
+                      GestureDetector(
+                        onTap: () => _callPhone(order.customerPhone!),
+                        onLongPress: () =>
+                            _copyPhone(context, order.customerPhone!),
+                        child: Text(
+                          order.customerPhone!,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
+              // حالة الطلب
+              badge.StatusBadge(status: _mapToBadgeStatus(effectiveStatus)),
             ],
           ),
-          SizedBox(height: AppSizes.md),
+          SizedBox(height: AppSizes.sm),
+
+          // ── تاريخ الإنشاء / التسليم ──
           _infoRow(
+            context,
             IconsaxPlusLinear.calendar_1,
             AppStrings.createdAt,
             _dateFmt.format(order.createdAt),
           ),
           if (order.deliveredAt != null) ...[
-            SizedBox(height: AppSizes.sm),
+            SizedBox(height: AppSizes.xs),
             _infoRow(
+              context,
               IconsaxPlusLinear.tick_circle,
               AppStrings.deliveredAt,
               _dateFmt.format(order.deliveredAt!),
+            ),
+          ],
+          SizedBox(height: AppSizes.md),
+
+          // ── رسائل سريعة + مراسلة + اتصال ──
+          Row(
+            children: [
+              // رسائل سريعة
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => _showQuickMessages(
+                    context,
+                    order.customerPhone,
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.w(12),
+                      vertical: Responsive.h(12),
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusSm),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          IconsaxPlusBold.message_text,
+                          size: AppSizes.iconMd,
+                          color: AppColors.primary,
+                        ),
+                        SizedBox(width: AppSizes.xs),
+                        Flexible(
+                          child: Text(
+                            AppStrings.quickMessages,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: AppSizes.sm),
+              // مراسلة
+              if (order.customerPhone != null &&
+                  order.customerPhone!.isNotEmpty)
+                GestureDetector(
+                  onTap: () => _openMessagingApps(order.customerPhone!),
+                  child: Container(
+                    padding: EdgeInsets.all(Responsive.r(12)),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusSm),
+                      border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      IconsaxPlusBold.message,
+                      size: AppSizes.iconMd,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              SizedBox(width: AppSizes.sm),
+              // اتصال
+              if (order.customerPhone != null &&
+                  order.customerPhone!.isNotEmpty)
+                GestureDetector(
+                  onTap: () => _callPhone(order.customerPhone!),
+                  child: Container(
+                    padding: EdgeInsets.all(Responsive.r(12)),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusSm),
+                      border: Border.all(
+                        color: AppColors.success.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Icon(
+                      IconsaxPlusBold.call,
+                      size: AppSizes.iconMd,
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+
+          // ── تابع ع الخريطة (يظهر فقط أثناء الرحلة) ──
+          if (isTracking) ...[
+            SizedBox(height: AppSizes.md),
+            SekkaButton(
+              label: AppStrings.trackOnMap,
+              icon: IconsaxPlusLinear.map,
+              onPressed: () => _openMapTracking(
+                context,
+                order.deliveryAddress,
+                order.deliveryLatitude,
+                order.deliveryLongitude,
+              ),
             ),
           ],
         ],
@@ -463,39 +615,140 @@ class _StatusHeaderCard extends StatelessWidget {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
-    return Builder(
-      builder: (context) {
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+  Widget _infoRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return Row(
-          children: [
-            Icon(
-              icon,
-              size: AppSizes.iconSm,
-              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: AppSizes.iconSm,
+          color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+        ),
+        SizedBox(width: AppSizes.sm),
+        Text(
+          '$label: ',
+          style: AppTypography.caption.copyWith(
+            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
             ),
-            SizedBox(width: AppSizes.sm),
-            Text(
-              '$label: ',
-              style: AppTypography.caption.copyWith(
-                color: isDark
-                    ? AppColors.textCaptionDark
-                    : AppColors.textCaption,
-              ),
-            ),
-            Expanded(
-              child: Text(
-                value,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
+        ),
+      ],
     );
+  }
+
+  void _showQuickMessages(BuildContext context, String? phone) {
+    final dio = context.read<DioClient>().dio;
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => QuickMessagesSheet(
+        repository: MessageTemplateRepository(dio),
+        customerPhone: phone,
+        onTemplateSelected: (messageText) {
+          if (phone != null && phone.isNotEmpty) {
+            _sendWhatsApp(phone, messageText);
+          } else {
+            Clipboard.setData(ClipboardData(text: messageText));
+            ScaffoldMessenger.of(context)
+              ..hideCurrentSnackBar()
+              ..showSnackBar(
+                SnackBar(
+                  content: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(AppStrings.messageCopied),
+                  ),
+                  backgroundColor: AppColors.success,
+                ),
+              );
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _openMessagingApps(String phone) async {
+    var normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (normalized.startsWith('0')) {
+      normalized = '+2$normalized';
+    } else if (!normalized.startsWith('+')) {
+      normalized = '+$normalized';
+    }
+    final uri = Uri(scheme: 'sms', path: normalized);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  Future<void> _sendWhatsApp(String phone, String message) async {
+    var normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (normalized.startsWith('0')) {
+      normalized = '+2$normalized';
+    } else if (!normalized.startsWith('+')) {
+      normalized = '+$normalized';
+    }
+    final uri = Uri.parse(
+      'https://wa.me/$normalized?text=${Uri.encodeComponent(message)}',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _callPhone(String phone) async {
+    final uri = Uri.parse('tel:$phone');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
+  void _copyPhone(BuildContext context, String phone) {
+    Clipboard.setData(ClipboardData(text: phone));
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(AppStrings.phoneCopied),
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+  }
+
+  Future<void> _openMapTracking(
+    BuildContext context,
+    String address,
+    double? lat,
+    double? lng,
+  ) async {
+    // Deep link to Google Maps with destination
+    final String query;
+    if (lat != null && lng != null && lat != 0 && lng != 0) {
+      query = '$lat,$lng';
+    } else {
+      query = Uri.encodeComponent(address);
+    }
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$query',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 }
 
@@ -687,180 +940,120 @@ class _RecurringInfoCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  2a. CUSTOMER & MESSAGING CARD
+//  2. ADDRESS CARD — العناوين (with reverse geocoding)
 // ═══════════════════════════════════════════════════════════════════════════
-class _CustomerAddressCard extends StatelessWidget {
-  const _CustomerAddressCard({required this.order});
+class _AddressCard extends StatefulWidget {
+  const _AddressCard({required this.order});
   final OrderModel order;
 
   @override
+  State<_AddressCard> createState() => _AddressCardState();
+}
+
+class _AddressCardState extends State<_AddressCard> {
+  String? _resolvedDeliveryAddress;
+  String? _resolvedPickupAddress;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolveAddresses();
+  }
+
+  Future<void> _resolveAddresses() async {
+    // Delivery address
+    _resolvedDeliveryAddress = await _resolveAddress(
+      widget.order.deliveryAddress,
+      widget.order.deliveryLatitude,
+      widget.order.deliveryLongitude,
+    );
+    // Pickup address
+    if (widget.order.pickupAddress != null &&
+        widget.order.pickupAddress!.isNotEmpty) {
+      _resolvedPickupAddress = await _resolveAddress(
+        widget.order.pickupAddress!,
+        widget.order.pickupLatitude,
+        widget.order.pickupLongitude,
+      );
+    }
+    if (mounted) setState(() {});
+  }
+
+  /// If address looks like coordinates, reverse geocode it.
+  Future<String> _resolveAddress(
+    String address,
+    double? lat,
+    double? lng,
+  ) async {
+    // Check if address is just coordinates (e.g. "30.0444, 31.2357")
+    final isCoords = RegExp(r'^[-\d.,\s]+$').hasMatch(address.trim());
+    if (!isCoords && address.length > 10) return address;
+
+    // Try reverse geocoding from lat/lng
+    final double? useLat;
+    final double? useLng;
+    if (lat != null && lng != null && lat != 0 && lng != 0) {
+      useLat = lat;
+      useLng = lng;
+    } else {
+      // Try parsing from address string
+      final parts = address.split(RegExp(r'[,\s]+'));
+      if (parts.length >= 2) {
+        useLat = double.tryParse(parts[0].trim());
+        useLng = double.tryParse(parts[1].trim());
+      } else {
+        return address;
+      }
+    }
+
+    if (useLat == null || useLng == null) return address;
+
+    try {
+      final placemarks = await placemarkFromCoordinates(useLat, useLng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final parts = <String>[
+          if (place.street?.isNotEmpty == true) place.street!,
+          if (place.subLocality?.isNotEmpty == true) place.subLocality!,
+          if (place.locality?.isNotEmpty == true) place.locality!,
+          if (place.administrativeArea?.isNotEmpty == true)
+            place.administrativeArea!,
+        ];
+        if (parts.isNotEmpty) return parts.join('، ');
+      }
+    } catch (_) {
+      // Geocoding failed — return original
+    }
+    return address;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // ── سيكشن العميل والمراسلة ──
-        SekkaCard(
-          child: Column(
-            children: [
-              // Customer name
-              if (order.customerName != null &&
-                  order.customerName!.isNotEmpty)
-                _row(
-                  context,
-                  IconsaxPlusLinear.user,
-                  order.customerName!,
-                ),
-              // Phone
-              if (order.customerPhone != null &&
-                  order.customerPhone!.isNotEmpty) ...[
-                SizedBox(height: AppSizes.md),
-                GestureDetector(
-                  onTap: () => _callPhone(order.customerPhone!),
-                  onLongPress: () =>
-                      _copyPhone(context, order.customerPhone!),
-                  child: _row(
-                    context,
-                    IconsaxPlusLinear.call,
-                    order.customerPhone!,
-                    valueColor: AppColors.primary,
-                  ),
-                ),
-              ],
-              // Quick Messages + WhatsApp row
-              SizedBox(height: AppSizes.md),
-              Row(
-                children: [
-                  // رسائل سريعة
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => _showQuickMessages(
-                        context,
-                        order.customerPhone,
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: Responsive.w(12),
-                          vertical: Responsive.h(12),
-                        ),
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.primary.withValues(alpha: 0.08),
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
-                          border: Border.all(
-                            color: AppColors.primary
-                                .withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              IconsaxPlusBold.message_text,
-                              size: AppSizes.iconMd,
-                              color: AppColors.primary,
-                            ),
-                            SizedBox(width: AppSizes.xs),
-                            Flexible(
-                              child: Text(
-                                AppStrings.quickMessages,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: AppSizes.sm),
-                  // مراسلة
-                  if (order.customerPhone != null &&
-                      order.customerPhone!.isNotEmpty)
-                    GestureDetector(
-                      onTap: () =>
-                          _openMessagingApps(order.customerPhone!),
-                      child: Container(
-                        padding: EdgeInsets.all(Responsive.r(12)),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary
-                              .withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
-                          border: Border.all(
-                            color: AppColors.primary
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Icon(
-                          IconsaxPlusBold.message,
-                          size: AppSizes.iconMd,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  SizedBox(width: AppSizes.sm),
-                  // اتصال
-                  if (order.customerPhone != null &&
-                      order.customerPhone!.isNotEmpty)
-                    GestureDetector(
-                      onTap: () => _callPhone(order.customerPhone!),
-                      child: Container(
-                        padding: EdgeInsets.all(Responsive.r(12)),
-                        decoration: BoxDecoration(
-                          color:
-                              AppColors.success.withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
-                          border: Border.all(
-                            color: AppColors.success
-                                .withValues(alpha: 0.3),
-                          ),
-                        ),
-                        child: Icon(
-                          IconsaxPlusBold.call,
-                          size: AppSizes.iconMd,
-                          color: AppColors.success,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
+    final deliveryText =
+        _resolvedDeliveryAddress ?? widget.order.deliveryAddress;
+    final pickupText =
+        _resolvedPickupAddress ?? widget.order.pickupAddress;
 
-        SizedBox(height: AppSizes.md),
-
-        // ── سيكشن العناوين ──
-        SekkaCard(
-          child: Column(
-            children: [
-              // Delivery address
-              _row(
-                context,
-                IconsaxPlusLinear.location,
-                order.deliveryAddress,
-                label: 'هيتوصّل فين',
-              ),
-              // Pickup address
-              if (order.pickupAddress != null &&
-                  order.pickupAddress!.isNotEmpty) ...[
-                SizedBox(height: AppSizes.md),
-                _row(
-                  context,
-                  IconsaxPlusLinear.location_tick,
-                  order.pickupAddress!,
-                  label: 'هيتستلم منين',
-                ),
-              ],
-            ],
+    return SekkaCard(
+      child: Column(
+        children: [
+          _row(
+            context,
+            IconsaxPlusLinear.location,
+            deliveryText,
+            label: 'هيتوصّل فين',
           ),
-        ),
-      ],
+          if (pickupText != null && pickupText.isNotEmpty) ...[
+            SizedBox(height: AppSizes.md),
+            _row(
+              context,
+              IconsaxPlusLinear.location_tick,
+              pickupText,
+              label: 'هيتستلم منين',
+            ),
+          ],
+        ],
+      ),
     );
   }
 
@@ -868,7 +1061,6 @@ class _CustomerAddressCard extends StatelessWidget {
     BuildContext context,
     IconData icon,
     String text, {
-    Color? valueColor,
     String? label,
   }) {
     return Row(
@@ -889,99 +1081,13 @@ class _CustomerAddressCard extends StatelessWidget {
                 ),
               Text(
                 text,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: valueColor,
-                ),
+                style: AppTypography.bodyMedium,
               ),
             ],
           ),
         ),
       ],
     );
-  }
-
-  void _showQuickMessages(BuildContext context, String? phone) {
-    final dio = context.read<DioClient>().dio;
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => QuickMessagesSheet(
-        repository: MessageTemplateRepository(dio),
-        customerPhone: phone,
-        onTemplateSelected: (messageText) {
-          if (phone != null && phone.isNotEmpty) {
-            _sendWhatsApp(phone, messageText);
-          } else {
-            Clipboard.setData(ClipboardData(text: messageText));
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text(AppStrings.messageCopied),
-                  ),
-                  backgroundColor: AppColors.success,
-                ),
-              );
-          }
-        },
-      ),
-    );
-  }
-
-  Future<void> _openMessagingApps(String phone) async {
-    var normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    if (normalized.startsWith('0')) {
-      normalized = '+2$normalized';
-    } else if (!normalized.startsWith('+')) {
-      normalized = '+$normalized';
-    }
-    final uri = Uri(
-      scheme: 'sms',
-      path: normalized,
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-
-  Future<void> _sendWhatsApp(String phone, String message) async {
-    var normalized = phone.replaceAll(RegExp(r'[^0-9+]'), '');
-    if (normalized.startsWith('0')) {
-      normalized = '+2$normalized';
-    } else if (!normalized.startsWith('+')) {
-      normalized = '+$normalized';
-    }
-    final uri = Uri.parse(
-      'https://wa.me/$normalized?text=${Uri.encodeComponent(message)}',
-    );
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _callPhone(String phone) async {
-    final uri = Uri.parse('tel:$phone');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-
-  void _copyPhone(BuildContext context, String phone) {
-    Clipboard.setData(ClipboardData(text: phone));
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Directionality(
-            textDirection: TextDirection.rtl,
-            child: Text(AppStrings.phoneCopied),
-          ),
-          backgroundColor: AppColors.success,
-        ),
-      );
   }
 }
 

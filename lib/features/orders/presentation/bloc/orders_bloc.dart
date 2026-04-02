@@ -59,6 +59,10 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
     on<RecurringOrderDeleteRequested>(_onRecurringOrderDelete);
     on<OrdersClearMessage>(_onClearMessage);
     on<OrderTempIdResolved>(_onTempIdResolved);
+    on<OcrScanInvoiceRequested>(_onOcrScanInvoice);
+    on<OcrScanToOrderRequested>(_onOcrScanToOrder);
+    on<OcrScanBatchRequested>(_onOcrScanBatch);
+    on<OcrClearResult>(_onOcrClearResult);
 
     // Listen for sync results that map tempId → realId
     _syncSub = SyncQueueService.instance.syncedItems.listen((items) {
@@ -1890,5 +1894,112 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
       };
     }
     return null;
+  }
+
+  // ── OCR Handlers ──
+
+  Future<void> _onOcrScanInvoice(
+    OcrScanInvoiceRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isOcrScanning: true));
+
+    try {
+      final result = await _repository.scanInvoice(event.imageFile);
+      emit(current.copyWith(
+        isOcrScanning: false,
+        ocrResult: () => result,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.toString(),
+        isActionError: true,
+      ));
+    }
+  }
+
+  Future<void> _onOcrScanToOrder(
+    OcrScanToOrderRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isOcrScanning: true));
+
+    try {
+      final order = await _repository.scanToOrder(event.imageFile);
+      emit(current.copyWith(
+        isOcrScanning: false,
+        ocrCreatedOrder: () => order,
+        orders: [order, ...current.orders],
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.toString(),
+        isActionError: true,
+      ));
+    }
+  }
+
+  Future<void> _onOcrScanBatch(
+    OcrScanBatchRequested event,
+    Emitter<OrdersState> emit,
+  ) async {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(isOcrScanning: true));
+
+    try {
+      final batchResult = await _repository.scanBatch(event.imageFiles);
+      emit(current.copyWith(
+        isOcrScanning: false,
+        ocrBatchResult: () => batchResult,
+      ));
+    } on ApiException catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.message,
+        isActionError: true,
+      ));
+    } catch (e) {
+      emit(current.copyWith(
+        isOcrScanning: false,
+        actionMessage: () => e.toString(),
+        isActionError: true,
+      ));
+    }
+  }
+
+  void _onOcrClearResult(
+    OcrClearResult event,
+    Emitter<OrdersState> emit,
+  ) {
+    final current = state;
+    if (current is! OrdersLoaded) return;
+
+    emit(current.copyWith(
+      ocrResult: () => null,
+      ocrBatchResult: () => null,
+      ocrCreatedOrder: () => null,
+    ));
   }
 }

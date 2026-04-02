@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../data/models/ocr_result_model.dart';
 import '../../data/models/order_model.dart';
 
 sealed class OrdersState extends Equatable {
@@ -37,6 +38,10 @@ final class OrdersLoaded extends OrdersState {
     this.duplicateCheck,
     this.recurringOrders,
     this.isRecurringLoading = false,
+    this.ocrResult,
+    this.ocrBatchResult,
+    this.ocrCreatedOrder,
+    this.isOcrScanning = false,
   });
 
   final List<OrderModel> orders;
@@ -57,6 +62,10 @@ final class OrdersLoaded extends OrdersState {
   final Map<String, dynamic>? duplicateCheck;
   final List<Map<String, dynamic>>? recurringOrders;
   final bool isRecurringLoading;
+  final OcrResultModel? ocrResult;
+  final OcrBatchResultModel? ocrBatchResult;
+  final OrderModel? ocrCreatedOrder;
+  final bool isOcrScanning;
 
   OrdersLoaded copyWith({
     List<OrderModel>? orders,
@@ -77,6 +86,10 @@ final class OrdersLoaded extends OrdersState {
     Map<String, dynamic>? Function()? duplicateCheck,
     List<Map<String, dynamic>>? Function()? recurringOrders,
     bool? isRecurringLoading,
+    OcrResultModel? Function()? ocrResult,
+    OcrBatchResultModel? Function()? ocrBatchResult,
+    OrderModel? Function()? ocrCreatedOrder,
+    bool? isOcrScanning,
   }) {
     return OrdersLoaded(
       orders: orders ?? this.orders,
@@ -104,6 +117,12 @@ final class OrdersLoaded extends OrdersState {
       recurringOrders:
           recurringOrders != null ? recurringOrders() : this.recurringOrders,
       isRecurringLoading: isRecurringLoading ?? this.isRecurringLoading,
+      ocrResult: ocrResult != null ? ocrResult() : this.ocrResult,
+      ocrBatchResult:
+          ocrBatchResult != null ? ocrBatchResult() : this.ocrBatchResult,
+      ocrCreatedOrder:
+          ocrCreatedOrder != null ? ocrCreatedOrder() : this.ocrCreatedOrder,
+      isOcrScanning: isOcrScanning ?? this.isOcrScanning,
     );
   }
 
@@ -127,6 +146,10 @@ final class OrdersLoaded extends OrdersState {
         duplicateCheck,
         recurringOrders,
         isRecurringLoading,
+        ocrResult,
+        ocrBatchResult,
+        ocrCreatedOrder,
+        isOcrScanning,
       ];
 }
 

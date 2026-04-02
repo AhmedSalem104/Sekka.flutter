@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import '../../data/models/ocr_result_model.dart';
 import '../../data/models/order_model.dart';
 import '../../../../shared/network/api_response.dart';
 
@@ -115,4 +116,9 @@ abstract class OrderRepository {
     String id,
     Map<String, dynamic> data,
   );
+
+  // ── OCR ──
+  Future<OcrResultModel> scanInvoice(File imageFile);
+  Future<OrderModel> scanToOrder(File imageFile);
+  Future<OcrBatchResultModel> scanBatch(List<File> imageFiles);
 }

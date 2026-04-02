@@ -15,8 +15,8 @@ class OrderPhotoModel {
 
   factory OrderPhotoModel.fromJson(Map<String, dynamic> json) {
     return OrderPhotoModel(
-      id: json['id'] as String,
-      photoUrl: json['photoUrl'] as String,
+      id: json['id'] as String? ?? '',
+      photoUrl: json['photoUrl'] as String? ?? '',
       photoType: json['photoType'] as int? ?? 0,
       takenAt: json['takenAt'] != null
           ? DateTime.tryParse(json['takenAt'] as String)
@@ -155,14 +155,14 @@ class OrderModel {
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     return OrderModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       orderNumber: json['orderNumber'] as String? ?? '',
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       partnerName: json['partnerName'] as String?,
       partnerColor: json['partnerColor'] as String?,
       description: json['description'] as String?,
-      amount: (json['amount'] as num).toDouble(),
+      amount: (json['amount'] as num?)?.toDouble() ?? 0,
       commissionAmount: (json['commissionAmount'] as num?)?.toDouble(),
       paymentMethod: PaymentMethod.fromValue(json['paymentMethod'] as int? ?? 0),
       status: OrderStatus.fromValue(json['status'] as int? ?? 0),
@@ -179,15 +179,16 @@ class OrderModel {
       notes: json['notes'] as String?,
       itemCount: json['itemCount'] as int?,
       timeWindowStart: json['timeWindowStart'] != null
-          ? DateTime.parse(json['timeWindowStart'] as String)
+          ? DateTime.tryParse(json['timeWindowStart'] as String)
           : null,
       timeWindowEnd: json['timeWindowEnd'] != null
-          ? DateTime.parse(json['timeWindowEnd'] as String)
+          ? DateTime.tryParse(json['timeWindowEnd'] as String)
           : null,
       scheduledDate: json['scheduledDate'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+          DateTime.now(),
       deliveredAt: json['deliveredAt'] != null
-          ? DateTime.parse(json['deliveredAt'] as String)
+          ? DateTime.tryParse(json['deliveredAt'] as String)
           : null,
       photos: (json['photos'] as List<dynamic>?)
               ?.map((e) =>

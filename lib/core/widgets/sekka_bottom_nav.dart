@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_animations.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_sizes.dart';
 import '../theme/app_typography.dart';
 import '../utils/responsive.dart';
 
@@ -31,8 +30,6 @@ class SekkaBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       color: Colors.transparent,
       padding: EdgeInsets.only(
@@ -43,22 +40,18 @@ class SekkaBottomNav extends StatelessWidget {
       child: Container(
         height: Responsive.h(60),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(Responsive.r(16)),
           border: Border.all(
-            color: isDark
-                ? AppColors.borderDark
-                : AppColors.border.withValues(alpha: 0.5),
+            color: AppColors.border.withValues(alpha: 0.4),
           ),
-          boxShadow: isDark
-              ? []
-              : const [
-                  BoxShadow(
-                    color: AppColors.shadowMedium,
-                    blurRadius: 24,
-                    offset: Offset(0, 4),
-                  ),
-                ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textHeadline.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -80,9 +73,7 @@ class SekkaBottomNav extends StatelessWidget {
                       isActive ? item.activeIcon : item.icon,
                       color: isActive
                           ? AppColors.primary
-                          : (isDark
-                              ? AppColors.textCaptionDark
-                              : AppColors.textCaption),
+                          : AppColors.textCaption,
                       size: Responsive.r(22),
                     ),
                     SizedBox(height: Responsive.h(4)),
@@ -91,9 +82,7 @@ class SekkaBottomNav extends StatelessWidget {
                       style: AppTypography.captionSmall.copyWith(
                         color: isActive
                             ? AppColors.primary
-                            : (isDark
-                                ? AppColors.textCaptionDark
-                                : AppColors.textCaption),
+                            : AppColors.textCaption,
                         fontWeight:
                             isActive ? FontWeight.w700 : FontWeight.w400,
                       ),
