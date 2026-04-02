@@ -94,6 +94,8 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
             ),
           ),
           body: BlocConsumer<SettlementBloc, SettlementState>(
+            listenWhen: (prev, curr) =>
+                curr is SettlementError || curr is SettlementCreated,
             listener: (context, state) {
               if (state is SettlementError) {
                 SekkaMessageDialog.show(context, message: state.message);
@@ -104,6 +106,9 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
                     .add(const SettlementRefreshRequested());
               }
             },
+            buildWhen: (prev, curr) =>
+                curr is! SettlementCreated && prev.runtimeType != curr.runtimeType ||
+                (prev is SettlementLoaded && curr is SettlementLoaded && prev != curr),
             builder: (context, state) {
               if (state is SettlementLoading) return const SekkaLoading();
               if (state is SettlementLoaded) {

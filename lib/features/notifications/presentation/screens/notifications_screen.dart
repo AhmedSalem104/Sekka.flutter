@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
@@ -10,71 +12,111 @@ import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
-import '../../../../shared/network/api_result.dart';
-import '../../../../shared/network/api_response.dart';
 import '../../data/models/notification_model.dart';
-import '../../data/repositories/notification_repository.dart';
+import '../bloc/notifications_bloc.dart';
+import '../bloc/notifications_event.dart';
+import '../bloc/notifications_state.dart';
 
-class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({super.key, required this.repository});
-  final NotificationRepository repository;
-
-  @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
-}
-
-class _NotificationsScreenState extends State<NotificationsScreen> {
-  PagedData<NotificationModel>? _data;
-  bool _isLoading = true;
-  String? _error;
+class NotificationsScreen extends StatelessWidget {
+  const NotificationsScreen({super.key});
 
   @override
-  void initState() {
-    super.initState();
-    _loadNotifications();
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.background,
+      appBar: SekkaAppBar(
+        title: AppStrings.notificationsTitle,
+        actions: [
+          BlocBuilder<NotificationsBloc, NotificationsState>(
+            buildWhen: (prev, curr) {
+              final prevHasUnread = prev is NotificationsLoaded &&
+                  prev.notifications.any((n) => !n.isRead);
+              final currHasUnread = curr is NotificationsLoaded &&
+                  curr.notifications.any((n) => !n.isRead);
+              return prevHasUnread != currHasUnread;
+            },
+            builder: (context, state) {
+              if (state is NotificationsLoaded &&
+                  state.notifications.any((n) => !n.isRead)) {
+                return TextButton(
+                  onPressed: () => context
+                      .read<NotificationsBloc>()
+                      .add(const NotificationsMarkAllAsRead()),
+                  child: Text(
+                    AppStrings.readAll,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+        ],
+      ),
+      body: BlocBuilder<NotificationsBloc, NotificationsState>(
+        buildWhen: (prev, curr) =>
+            prev.runtimeType != curr.runtimeType ||
+            (prev is NotificationsLoaded &&
+                curr is NotificationsLoaded &&
+                prev != curr),
+        builder: (context, state) => switch (state) {
+          NotificationsInitial() ||
+          NotificationsLoading() =>
+            const SekkaShimmerList(itemCount: 6),
+          NotificationsError(:final message) => SekkaEmptyState(
+              icon: IconsaxPlusLinear.warning_2,
+              title: message,
+              actionLabel: AppStrings.retry,
+              onAction: () => context
+                  .read<NotificationsBloc>()
+                  .add(const NotificationsLoadRequested()),
+            ),
+          NotificationsLoaded(:final notifications)
+              when notifications.isEmpty =>
+            SekkaEmptyState(
+              icon: IconsaxPlusLinear.notification,
+              title: AppStrings.noNotifications,
+              description: AppStrings.noNotificationsDesc,
+            ),
+          NotificationsLoaded(:final notifications) => RefreshIndicator(
+              onRefresh: () async => context
+                  .read<NotificationsBloc>()
+                  .add(const NotificationsRefreshRequested()),
+              color: AppColors.primary,
+              child: ListView.separated(
+                padding: EdgeInsets.all(Responsive.w(20)),
+                itemCount: notifications.length,
+                separatorBuilder: (_, __) =>
+                    SizedBox(height: Responsive.h(10)),
+                itemBuilder: (context, index) =>
+                    _buildNotificationItem(
+                  context,
+                  notifications[index],
+                  isDark,
+                ),
+              ),
+            ),
+        },
+      ),
+    );
   }
 
-  Future<void> _loadNotifications() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-
-    final result = await widget.repository.getNotifications();
-
-    if (!mounted) return;
-
-    switch (result) {
-      case ApiSuccess(:final data):
-        setState(() {
-          _data = data;
-          _isLoading = false;
-        });
-      case ApiFailure(:final error):
-        setState(() {
-          _error = error.arabicMessage;
-          _isLoading = false;
-        });
-    }
-  }
-
-  Future<void> _markAsRead(String id) async {
-    await widget.repository.markAsRead(id);
-    _loadNotifications();
-  }
-
-  Future<void> _markAllAsRead() async {
-    await widget.repository.markAllAsRead();
-    _loadNotifications();
-  }
-
-  void _onNotificationTap(NotificationModel notification) {
-    // Mark as read first
+  void _onNotificationTap(
+    BuildContext context,
+    NotificationModel notification,
+  ) {
     if (!notification.isRead) {
-      _markAsRead(notification.id);
+      context
+          .read<NotificationsBloc>()
+          .add(NotificationMarkAsRead(notification.id));
     }
 
-    // Navigate based on actionType
     final action = notification.actionType;
     final data = notification.actionData;
 
@@ -86,7 +128,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           context.push(RouteNames.orderDetails, extra: data);
         }
       case 'wallet':
-        // MainShell tab 3 is wallet — pop to main first
         Navigator.pop(context);
       case 'settlement':
         context.push(RouteNames.settlements);
@@ -99,75 +140,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: SekkaAppBar(
-        title: AppStrings.notificationsTitle,
-        actions: [
-          if (_data != null && _data!.items.any((n) => !n.isRead))
-            TextButton(
-              onPressed: _markAllAsRead,
-              child: Text(
-                AppStrings.readAll,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-        ],
-      ),
-      body: _buildBody(isDark),
-    );
-  }
-
-  Widget _buildBody(bool isDark) {
-    if (_isLoading) {
-      return const SekkaShimmerList(itemCount: 6);
-    }
-
-    if (_error != null) {
-      return SekkaEmptyState(
-        icon: IconsaxPlusLinear.warning_2,
-        title: _error!,
-        actionLabel: AppStrings.retry,
-        onAction: _loadNotifications,
-      );
-    }
-
-    if (_data == null || _data!.items.isEmpty) {
-      return SekkaEmptyState(
-        icon: IconsaxPlusLinear.notification,
-        title: AppStrings.noNotifications,
-        description: AppStrings.noNotificationsDesc,
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadNotifications,
-      color: AppColors.primary,
-      child: ListView.separated(
-        padding: EdgeInsets.all(Responsive.w(20)),
-        itemCount: _data!.items.length,
-        separatorBuilder: (_, __) => SizedBox(height: Responsive.h(10)),
-        itemBuilder: (context, index) {
-          final notification = _data!.items[index];
-          return _buildNotificationItem(notification, isDark);
-        },
-      ),
-    );
-  }
-
-  Widget _buildNotificationItem(NotificationModel notification, bool isDark) {
-    final (icon, color) = _getNotificationStyle(notification.notificationType);
+  Widget _buildNotificationItem(
+    BuildContext context,
+    NotificationModel notification,
+    bool isDark,
+  ) {
+    final (icon, color) =
+        _getNotificationStyle(notification.notificationType);
 
     return GestureDetector(
-      onTap: () => _onNotificationTap(notification),
+      onTap: () => _onNotificationTap(context, notification),
       child: SekkaCard(
         color: notification.isRead
             ? (isDark ? AppColors.surfaceDark : AppColors.surface)
@@ -178,7 +160,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon
             Container(
               width: Responsive.r(44),
               height: Responsive.r(44),
@@ -188,10 +169,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               ),
               child: Icon(icon, color: color, size: Responsive.r(22)),
             ),
-
             SizedBox(width: Responsive.w(14)),
-
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

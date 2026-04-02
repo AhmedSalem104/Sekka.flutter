@@ -65,10 +65,22 @@ class _WalletScreenState extends State<WalletScreen> {
         showBack: false,
       ),
       body: BlocConsumer<WalletBloc, WalletState>(
+        listenWhen: (prev, curr) => curr is WalletError,
         listener: (context, state) {
           if (state is WalletError) {
             SekkaMessageDialog.show(context, message: state.message);
           }
+        },
+        buildWhen: (prev, curr) {
+          if (prev is WalletLoaded && curr is WalletLoaded) {
+            return prev.balance != curr.balance ||
+                prev.transactions != curr.transactions ||
+                prev.activeFilter != curr.activeFilter ||
+                prev.isLoadingMore != curr.isLoadingMore ||
+                prev.cashStatus != curr.cashStatus ||
+                prev.summary != curr.summary;
+          }
+          return true;
         },
         builder: (context, state) {
           if (state is WalletLoading) return const SekkaLoading();

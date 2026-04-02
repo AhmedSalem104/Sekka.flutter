@@ -35,6 +35,17 @@ class ConversationModel {
           : DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'chatType': chatType,
+        'subject': subject,
+        'isClosed': isClosed,
+        'lastMessage': lastMessage,
+        'lastMessageAt': lastMessageAt?.toIso8601String(),
+        'unreadCount': unreadCount,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }
 
 class ChatMessageModel {
@@ -75,4 +86,15 @@ class ChatMessageModel {
           : DateTime.now(),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'senderId': senderId,
+        'senderName': senderName,
+        'senderType': senderType,
+        'content': content,
+        'attachmentUrl': attachmentUrl,
+        'status': status,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }

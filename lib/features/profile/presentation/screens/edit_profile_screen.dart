@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
@@ -356,14 +357,15 @@ class _LicenseUploadTile extends StatelessWidget {
             if (licenseUrl != null) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                child: Image.network(
-                  licenseUrl!.startsWith('http')
+                child: CachedNetworkImage(
+                  imageUrl: licenseUrl!.startsWith('http')
                       ? licenseUrl!
                       : '${ApiConstants.baseUrl.replaceAll('/api/v1', '')}$licenseUrl',
                   height: Responsive.h(150),
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                  placeholder: (_, __) => _buildPlaceholder(),
+                  errorWidget: (_, __, ___) => _buildPlaceholder(),
                 ),
               ),
               SizedBox(height: AppSizes.sm),

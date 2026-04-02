@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -310,10 +311,12 @@ class _CardHeader extends StatelessWidget {
                 ),
                 child: ClipOval(
                   child: imageUrl != null && imageUrl.isNotEmpty
-                      ? Image.network(
-                          _resolveImageUrl(imageUrl),
+                      ? CachedNetworkImage(
+                          imageUrl: _resolveImageUrl(imageUrl),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
+                          placeholder: (_, __) =>
+                              _buildAvatarPlaceholder(),
+                          errorWidget: (_, __, ___) =>
                               _buildAvatarPlaceholder(),
                         )
                       : _buildAvatarPlaceholder(),

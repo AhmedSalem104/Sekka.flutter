@@ -31,8 +31,12 @@ import '../../features/profile/presentation/screens/expenses_screen.dart';
 import '../../features/profile/presentation/screens/profile_stats_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/chat/data/repositories/chat_repository.dart';
+import '../../features/chat/presentation/bloc/conversations_bloc.dart';
+import '../../features/chat/presentation/bloc/conversations_event.dart';
 import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/notifications/data/repositories/notification_repository.dart';
+import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
+import '../../features/notifications/presentation/bloc/notifications_event.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/sos/data/repositories/sos_repository.dart';
 import '../../features/sos/presentation/screens/sos_history_screen.dart';
@@ -264,7 +268,12 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         path: RouteNames.chat,
         builder: (context, __) {
           final dio = context.read<DioClient>().dio;
-          return ConversationsScreen(repository: ChatRepository(dio));
+          final repository = ChatRepository(dio);
+          return BlocProvider(
+            create: (_) => ConversationsBloc(repository: repository)
+              ..add(const ConversationsLoadRequested()),
+            child: ConversationsScreen(repository: repository),
+          );
         },
       ),
 
@@ -273,8 +282,11 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         path: RouteNames.notifications,
         builder: (context, __) {
           final dio = context.read<DioClient>().dio;
-          return NotificationsScreen(
-            repository: NotificationRepository(dio),
+          return BlocProvider(
+            create: (_) => NotificationsBloc(
+              repository: NotificationRepository(dio),
+            )..add(const NotificationsLoadRequested()),
+            child: const NotificationsScreen(),
           );
         },
       ),

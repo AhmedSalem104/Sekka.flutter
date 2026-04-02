@@ -81,6 +81,10 @@ abstract final class AppColors {
   static const Color settlementInstapay = Color(0xFF805AD5); // purple — instapay
   static const Color settlementFawry = Color(0xFFECC94B);  // yellow — fawry
 
+  // Shadows
+  static const Color shadowLight = Color(0x0D000000);
+  static const Color shadowMedium = Color(0x12000000);
+
   // Logo colors (extracted from the logo)
   static const Color logoOrange = Color(0xFFFC5D01);
   static const Color logoNavy = Color(0xFF2D3748);

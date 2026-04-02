@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
@@ -46,12 +47,13 @@ class SekkaAvatar extends StatelessWidget {
             ),
             child: ClipOval(
               child: imageUrl != null && imageUrl!.isNotEmpty
-                  ? Image.network(
-                      _resolveImageUrl(imageUrl!),
+                  ? CachedNetworkImage(
+                      imageUrl: _resolveImageUrl(imageUrl!),
                       fit: BoxFit.cover,
                       width: resolvedSize,
                       height: resolvedSize,
-                      errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                      placeholder: (_, __) => _buildPlaceholder(),
+                      errorWidget: (_, __, ___) => _buildPlaceholder(),
                     )
                   : _buildPlaceholder(),
             ),
