@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -20,7 +22,7 @@ import '../../../orders/presentation/bloc/orders_state.dart';
 import '../../../orders/presentation/screens/order_detail_screen.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
-import '../../../routes/presentation/screens/route_screen.dart';
+import '../../../routes/presentation/screens/navigation_screen.dart';
 import '../../../breaks/presentation/bloc/break_bloc.dart';
 import '../../../breaks/presentation/widgets/active_break_card.dart';
 import '../../../breaks/presentation/widgets/break_suggestion_card.dart';
@@ -49,13 +51,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: Responsive.h(20)),
               _buildWelcomeSection(context, isDark),
               SizedBox(height: Responsive.h(24)),
-              _buildDailyStats(isDark),
-              SizedBox(height: Responsive.h(20)),
               _buildBreakSection(context, isDark),
-              SizedBox(height: Responsive.h(20)),
-              _buildRouteOptimizeButton(context, isDark),
-              SizedBox(height: Responsive.h(28)),
-              _buildUpcomingOrders(isDark),
               SizedBox(height: Responsive.h(24)),
               _buildRouteCard(context, isDark),
               SizedBox(height: Responsive.h(24)),
@@ -170,12 +166,18 @@ class HomeScreen extends StatelessWidget {
             ),
             SizedBox(height: Responsive.h(4)),
 
-            // Date
-            Text(
-              today,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textOnPrimary.withValues(alpha: 0.7),
-              ),
+            // Date + Location
+            Row(
+              children: [
+                Text(
+                  today,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                  ),
+                ),
+                SizedBox(width: Responsive.w(12)),
+                const _LocationChip(),
+              ],
             ),
             SizedBox(height: Responsive.h(20)),
 
@@ -185,15 +187,15 @@ class HomeScreen extends StatelessWidget {
               children: [
                 _WelcomeStatItem(
                   value: '$totalOrders',
-                  label: 'طلبات',
+                  label: AppStrings.statOrders,
                 ),
                 _WelcomeStatItem(
                   value: '$totalDelivered',
-                  label: 'تسليم',
+                  label: AppStrings.statDelivered,
                 ),
                 _WelcomeStatItem(
                   value: successRate,
-                  label: 'نجاح',
+                  label: AppStrings.statSuccess,
                 ),
               ],
             ),
@@ -412,7 +414,7 @@ class HomeScreen extends StatelessWidget {
             textDirection: TextDirection.rtl,
             children: [
               Text(
-                'حسّن مسارك',
+                AppStrings.optimizeYourRoute,
                 style: AppTypography.titleLarge.copyWith(
                   color: isDark
                       ? AppColors.textHeadlineDark
@@ -422,7 +424,7 @@ class HomeScreen extends StatelessWidget {
               ),
               SizedBox(height: Responsive.h(4)),
               Text(
-                'رتّب طلباتك ووفّر وقت ومسافة',
+                AppStrings.optimizeRouteHint,
                 style: AppTypography.bodySmall.copyWith(
                   color: isDark
                       ? AppColors.textBodyDark
@@ -436,7 +438,8 @@ class HomeScreen extends StatelessWidget {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (_) => const RouteScreen()),
+                      builder: (_) => const NavigationScreen(initialTab: 0),
+                    ),
                   ),
                   child: Container(
                     padding: EdgeInsets.symmetric(
@@ -460,7 +463,7 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                     child: Text(
-                      'دخّل مسارك',
+                      AppStrings.enterYourRouteBtn,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textOnPrimary,
                         fontWeight: FontWeight.w700,
@@ -472,7 +475,6 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        // Image inside card, peeking out from top
         Positioned(
           top: Responsive.h(-20),
           left: 0,
@@ -542,7 +544,8 @@ class HomeScreen extends StatelessWidget {
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute<void>(
-                        builder: (_) => const RouteScreen()),
+                      builder: (_) => const NavigationScreen(initialTab: 1),
+                    ),
                   ),
                   child: Container(
                     padding: EdgeInsets.symmetric(
@@ -578,7 +581,6 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        // Image inside card, peeking out from top
         Positioned(
           top: Responsive.h(-20),
           left: 0,
@@ -715,6 +717,113 @@ class _NotificationBadgeState extends State<_NotificationBadge> {
             ),
         ],
       ),
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  LOCATION CHIP — الموقع الحالي
+// ══════════════════════════════════════════════════════════════════════════
+
+class _LocationChip extends StatefulWidget {
+  const _LocationChip();
+
+  @override
+  State<_LocationChip> createState() => _LocationChipState();
+}
+
+class _LocationChipState extends State<_LocationChip> {
+  String _locationText = AppStrings.locatingPosition;
+  bool _hasLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) setState(() => _locationText = AppStrings.locationServiceDisabled);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _locationText = AppStrings.locationPermissionDenied);
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      // Reverse geocoding to get address
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty && mounted) {
+          final place = placemarks.first;
+          final parts = <String>[
+            if (place.subLocality?.isNotEmpty == true) place.subLocality!,
+            if (place.locality?.isNotEmpty == true) place.locality!,
+            if (place.administrativeArea?.isNotEmpty == true)
+              place.administrativeArea!,
+          ];
+          setState(() {
+            _locationText =
+                parts.isNotEmpty ? parts.join('، ') : place.country ?? '';
+            _hasLocation = true;
+          });
+          return;
+        }
+      } catch (_) {
+        // Geocoding failed — fallback to coordinates
+      }
+
+      if (mounted) {
+        setState(() {
+          _locationText =
+              '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
+          _hasLocation = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _locationText = AppStrings.locationFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          _hasLocation
+              ? IconsaxPlusBold.location
+              : IconsaxPlusLinear.location,
+          size: Responsive.r(12),
+          color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+        ),
+        SizedBox(width: Responsive.w(4)),
+        Text(
+          _locationText,
+          style: AppTypography.captionSmall.copyWith(
+            color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
     );
   }
 }

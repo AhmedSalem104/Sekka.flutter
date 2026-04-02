@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/phone_launcher.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
@@ -142,122 +143,151 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }) {
     final displayName = customer.name ?? customer.phone;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(height: Responsive.h(16)),
+    return Stack(
+      children: [
+        // Scrollable content
+        SingleChildScrollView(
+          padding: EdgeInsets.only(
+            left: Responsive.w(20),
+            right: Responsive.w(20),
+            bottom: Responsive.h(80),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: Responsive.h(16)),
 
-          // Profile header
-          _buildProfileHeader(customer, displayName, isDark),
+              // Profile header with stats
+              _buildProfileHeader(customer, displayName, isDark),
 
-          SizedBox(height: Responsive.h(20)),
+              SizedBox(height: Responsive.h(24)),
 
-          // Stats row
-          _buildStatsRow(customer, isDark),
+              // RFM Score section
+              if (insightsProfile != null) ...[
+                _buildSectionTitle(AppStrings.rfmScore, isDark),
+                SizedBox(height: Responsive.h(12)),
+                _buildRfmSection(insightsProfile, isDark),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          SizedBox(height: Responsive.h(24)),
+              // Engagement section
+              if (engagement != null) ...[
+                _buildSectionTitle(AppStrings.engagement, isDark),
+                SizedBox(height: Responsive.h(12)),
+                _buildEngagementSection(engagement, isDark),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // RFM Score section (from insights profile)
-          if (insightsProfile != null) ...[
-            _buildSectionTitle(AppStrings.rfmScore, isDark),
-            SizedBox(height: Responsive.h(12)),
-            _buildRfmSection(insightsProfile, isDark),
-            SizedBox(height: Responsive.h(24)),
-          ],
+              // Interests section
+              if (interests != null &&
+                  (interests.topCategories.isNotEmpty ||
+                      interests.preferredPartners.isNotEmpty)) ...[
+                _buildSectionTitle(AppStrings.interests, isDark),
+                SizedBox(height: Responsive.h(12)),
+                _buildInterestsSection(interests, isDark),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // Engagement section
-          if (engagement != null) ...[
-            _buildSectionTitle(AppStrings.engagement, isDark),
-            SizedBox(height: Responsive.h(12)),
-            _buildEngagementSection(engagement, isDark),
-            SizedBox(height: Responsive.h(24)),
-          ],
+              // Behavior section
+              if (behavior != null) ...[
+                _buildSectionTitle(AppStrings.behaviorAnalysis, isDark),
+                SizedBox(height: Responsive.h(12)),
+                _buildBehaviorSection(behavior, isDark),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // Interests section
-          if (interests != null &&
-              (interests.topCategories.isNotEmpty ||
-                  interests.preferredPartners.isNotEmpty)) ...[
-            _buildSectionTitle(AppStrings.interests, isDark),
-            SizedBox(height: Responsive.h(12)),
-            _buildInterestsSection(interests, isDark),
-            SizedBox(height: Responsive.h(24)),
-          ],
+              // Insights Interests section
+              if (insightsInterests != null &&
+                  insightsInterests.isNotEmpty) ...[
+                _buildSectionTitle(AppStrings.insightsInterests, isDark),
+                SizedBox(height: Responsive.h(12)),
+                _buildInsightsInterestsSection(insightsInterests, isDark),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // Behavior section
-          if (behavior != null) ...[
-            _buildSectionTitle(AppStrings.behaviorAnalysis, isDark),
-            SizedBox(height: Responsive.h(12)),
-            _buildBehaviorSection(behavior, isDark),
-            SizedBox(height: Responsive.h(24)),
-          ],
+              // Recommendations section
+              if (recommendations != null &&
+                  recommendations.isNotEmpty) ...[
+                _buildSectionTitle(AppStrings.recommendations, isDark),
+                SizedBox(height: Responsive.h(12)),
+                ...recommendations.map(
+                  (rec) => _buildRecommendationCard(rec, isDark),
+                ),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // Insights Interests section
-          if (insightsInterests != null &&
-              insightsInterests.isNotEmpty) ...[
-            _buildSectionTitle(AppStrings.insightsInterests, isDark),
-            SizedBox(height: Responsive.h(12)),
-            _buildInsightsInterestsSection(insightsInterests, isDark),
-            SizedBox(height: Responsive.h(24)),
-          ],
+              // Addresses section
+              if (customer.addresses.isNotEmpty) ...[
+                _buildSectionTitle(AppStrings.addresses, isDark),
+                SizedBox(height: Responsive.h(12)),
+                ...customer.addresses.map(
+                  (address) => _buildAddressCard(address, isDark),
+                ),
+                SizedBox(height: Responsive.h(24)),
+              ],
 
-          // Recommendations section
-          if (recommendations != null && recommendations.isNotEmpty) ...[
-            _buildSectionTitle(AppStrings.recommendations, isDark),
-            SizedBox(height: Responsive.h(12)),
-            ...recommendations.map(
-              (rec) => _buildRecommendationCard(rec, isDark),
+              // Recent orders section
+              if (orders != null && orders.items.isNotEmpty) ...[
+                _buildSectionTitle(
+                  '${AppStrings.recentOrders} (${orders.totalCount})',
+                  isDark,
+                ),
+                SizedBox(height: Responsive.h(12)),
+                ...orders.items.map(
+                  (order) => _buildOrderCard(order, isDark),
+                ),
+                SizedBox(height: Responsive.h(24)),
+              ] else if (customer.recentOrders.isNotEmpty) ...[
+                _buildSectionTitle(AppStrings.recentOrders, isDark),
+                SizedBox(height: Responsive.h(12)),
+                ...customer.recentOrders.map(
+                  (order) => _buildOrderCard(order, isDark),
+                ),
+                SizedBox(height: Responsive.h(24)),
+              ],
+
+              // Ratings section
+              if (customer.ratings.isNotEmpty) ...[
+                _buildSectionTitle(AppStrings.averageRating, isDark),
+                SizedBox(height: Responsive.h(12)),
+                ...customer.ratings.map(
+                  (rating) => _buildRatingCard(rating, isDark),
+                ),
+                SizedBox(height: Responsive.h(24)),
+              ],
+
+              SizedBox(height: Responsive.h(20)),
+            ],
+          ),
+        ),
+
+        // Sticky bottom action buttons
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.w(20),
+              vertical: Responsive.h(12),
             ),
-            SizedBox(height: Responsive.h(24)),
-          ],
-
-          // Addresses section
-          if (customer.addresses.isNotEmpty) ...[
-            _buildSectionTitle(AppStrings.addresses, isDark),
-            SizedBox(height: Responsive.h(12)),
-            ...customer.addresses.map(
-              (address) => _buildAddressCard(address, isDark),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.textHeadline.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, -4),
+                ),
+              ],
             ),
-            SizedBox(height: Responsive.h(24)),
-          ],
-
-          // Recent orders section
-          if (orders != null && orders.items.isNotEmpty) ...[
-            _buildSectionTitle(
-              '${AppStrings.recentOrders} (${orders.totalCount})',
-              isDark,
+            child: SafeArea(
+              top: false,
+              child: _buildActionButtons(customer, isDark),
             ),
-            SizedBox(height: Responsive.h(12)),
-            ...orders.items.map(
-              (order) => _buildOrderCard(order, isDark),
-            ),
-            SizedBox(height: Responsive.h(24)),
-          ] else if (customer.recentOrders.isNotEmpty) ...[
-            _buildSectionTitle(AppStrings.recentOrders, isDark),
-            SizedBox(height: Responsive.h(12)),
-            ...customer.recentOrders.map(
-              (order) => _buildOrderCard(order, isDark),
-            ),
-            SizedBox(height: Responsive.h(24)),
-          ],
-
-          // Ratings section
-          if (customer.ratings.isNotEmpty) ...[
-            _buildSectionTitle(AppStrings.averageRating, isDark),
-            SizedBox(height: Responsive.h(12)),
-            ...customer.ratings.map(
-              (rating) => _buildRatingCard(rating, isDark),
-            ),
-            SizedBox(height: Responsive.h(24)),
-          ],
-
-          // Action buttons
-          _buildActionButtons(customer, isDark),
-
-          SizedBox(height: Responsive.h(40)),
-        ],
-      ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -276,107 +306,224 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primary.withValues(alpha: 0.75),
+            AppColors.primary.withValues(alpha: 0.85),
           ],
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
         ),
-        borderRadius: BorderRadius.circular(Responsive.r(20)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(AppSizes.radiusXl),
       ),
-      padding: EdgeInsets.all(Responsive.w(24)),
+      padding: EdgeInsets.all(Responsive.w(16)),
       child: Column(
         children: [
-          // Avatar
-          Container(
-            width: Responsive.r(80),
-            height: Responsive.r(80),
-            decoration: BoxDecoration(
-              color: AppColors.textOnPrimary.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: AppTypography.headlineLarge.copyWith(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w700,
-                  fontSize: Responsive.sp(32),
+          // Top row: Avatar + Name/Phone + Call/WhatsApp
+          Row(
+            children: [
+              // Avatar
+              Container(
+                width: Responsive.r(52),
+                height: Responsive.r(52),
+                decoration: BoxDecoration(
+                  color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: AppTypography.headlineMedium.copyWith(
+                      color: AppColors.textOnPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ),
+              SizedBox(width: Responsive.w(14)),
 
-          SizedBox(height: Responsive.h(14)),
-
-          // Name
-          Text(
-            displayName,
-            style: AppTypography.headlineMedium.copyWith(
-              color: AppColors.textOnPrimary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-
-          SizedBox(height: Responsive.h(6)),
-
-          // Phone
-          Text(
-            customer.phone,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.textOnPrimary.withValues(alpha: 0.7),
-            ),
-          ),
-
-          SizedBox(height: Responsive.h(12)),
-
-          // Rating row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                IconsaxPlusBold.star_1,
-                size: Responsive.r(20),
-                color: AppColors.warning,
+              // Name + Phone
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      displayName,
+                      style: AppTypography.titleLarge.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    SizedBox(height: Responsive.h(4)),
+                    Text(
+                      customer.phone,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                      ),
+                    ),
+                    if (customer.isBlocked) ...[
+                      SizedBox(height: Responsive.h(6)),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.w(8),
+                          vertical: Responsive.h(2),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.error,
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusPill),
+                        ),
+                        child: Text(
+                          AppStrings.blocked,
+                          style: AppTypography.captionSmall.copyWith(
+                            color: AppColors.textOnPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-              SizedBox(width: Responsive.w(6)),
-              Text(
-                customer.averageRating.toStringAsFixed(1),
-                style: AppTypography.titleLarge.copyWith(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w700,
+
+              // Call + WhatsApp
+              GestureDetector(
+                onTap: () => PhoneLauncher.call(customer.phone),
+                child: Container(
+                  padding: EdgeInsets.all(Responsive.w(10)),
+                  decoration: BoxDecoration(
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    IconsaxPlusBold.call,
+                    size: Responsive.r(18),
+                    color: AppColors.textOnPrimary,
+                  ),
+                ),
+              ),
+              SizedBox(width: Responsive.w(8)),
+              GestureDetector(
+                onTap: () => PhoneLauncher.whatsApp(customer.phone),
+                child: Container(
+                  padding: EdgeInsets.all(Responsive.w(10)),
+                  decoration: BoxDecoration(
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    IconsaxPlusLinear.message,
+                    size: Responsive.r(18),
+                    color: AppColors.textOnPrimary,
+                  ),
                 ),
               ),
             ],
           ),
 
-          // Blocked badge
-          if (customer.isBlocked) ...[
-            SizedBox(height: Responsive.h(12)),
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: Responsive.w(16),
-                vertical: Responsive.h(6),
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.error,
-                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
-              ),
-              child: Text(
-                AppStrings.blocked,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w600,
+          SizedBox(height: Responsive.h(16)),
+
+          // Divider
+          Container(
+            height: 1,
+            color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+          ),
+          SizedBox(height: Responsive.h(14)),
+
+          // Stats row
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      '${customer.totalDeliveries}',
+                      style: AppTypography.titleLarge.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: Responsive.h(2)),
+                    Text(
+                      AppStrings.totalDeliveries,
+                      style: AppTypography.captionSmall.copyWith(
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+              Container(
+                width: 1,
+                height: Responsive.h(32),
+                color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      '${customer.successfulDeliveries}',
+                      style: AppTypography.titleLarge.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: Responsive.h(2)),
+                    Text(
+                      AppStrings.successfulDeliveries,
+                      style: AppTypography.captionSmall.copyWith(
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: Responsive.h(32),
+                color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+              ),
+              Expanded(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          IconsaxPlusBold.star_1,
+                          size: Responsive.r(14),
+                          color: AppColors.warning,
+                        ),
+                        SizedBox(width: Responsive.w(4)),
+                        Text(
+                          customer.averageRating.toStringAsFixed(1),
+                          style: AppTypography.titleLarge.copyWith(
+                            color: AppColors.textOnPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: Responsive.h(2)),
+                    Text(
+                      AppStrings.averageRating,
+                      style: AppTypography.captionSmall.copyWith(
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -388,20 +535,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Row(
       children: [
         _buildStatCard(
+          icon: IconsaxPlusBold.box_1,
           value: '${customer.totalDeliveries}',
           label: AppStrings.totalDeliveries,
+          color: AppColors.primary,
           isDark: isDark,
         ),
         SizedBox(width: Responsive.w(10)),
         _buildStatCard(
+          icon: IconsaxPlusBold.tick_circle,
           value: '${customer.successfulDeliveries}',
           label: AppStrings.successfulDeliveries,
+          color: AppColors.success,
           isDark: isDark,
         ),
         SizedBox(width: Responsive.w(10)),
         _buildStatCard(
+          icon: IconsaxPlusBold.star_1,
           value: customer.averageRating.toStringAsFixed(1),
           label: AppStrings.averageRating,
+          color: AppColors.warning,
           isDark: isDark,
         ),
       ],
@@ -409,8 +562,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   }
 
   Widget _buildStatCard({
+    required IconData icon,
     required String value,
     required String label,
+    required Color color,
     required bool isDark,
   }) {
     return Expanded(
@@ -422,15 +577,29 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         ),
         child: Column(
           children: [
+            Container(
+              padding: EdgeInsets.all(Responsive.w(8)),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: Responsive.r(18),
+                color: color,
+              ),
+            ),
+            SizedBox(height: Responsive.h(8)),
             Text(
               value,
-              style: AppTypography.headlineSmall.copyWith(
+              style: AppTypography.titleLarge.copyWith(
                 color: isDark
                     ? AppColors.textHeadlineDark
                     : AppColors.textHeadline,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: Responsive.h(4)),
+            SizedBox(height: Responsive.h(2)),
             Text(
               label,
               style: AppTypography.captionSmall.copyWith(
@@ -450,11 +619,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   // ── Section Title ──
 
   Widget _buildSectionTitle(String title, bool isDark) {
-    return Text(
-      title,
-      style: AppTypography.titleLarge.copyWith(
-        color: isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: Responsive.w(4),
+          height: Responsive.h(20),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(Responsive.r(2)),
+          ),
+        ),
+        SizedBox(width: Responsive.w(10)),
+        Text(
+          title,
+          style: AppTypography.titleLarge.copyWith(
+            color:
+                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
     );
   }
 
@@ -467,132 +651,112 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     final rfm = profile.rfmScore;
     final segmentLabel = _rfmSegmentLabel(rfm.segment);
     final segmentColor = _rfmSegmentColor(rfm.segment);
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
 
     return SekkaCard(
       color: isDark ? AppColors.surfaceDark : AppColors.surface,
       padding: EdgeInsets.all(Responsive.w(16)),
       child: Column(
         children: [
-          // Segment badge
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              vertical: Responsive.h(10),
-            ),
-            decoration: BoxDecoration(
-              color: segmentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(Responsive.r(12)),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  AppStrings.customerSegment,
-                  style: AppTypography.captionSmall.copyWith(
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
-                  ),
+          // Segment + Engagement row
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.w(12),
+                  vertical: Responsive.h(6),
                 ),
-                SizedBox(height: Responsive.h(4)),
-                Text(
+                decoration: BoxDecoration(
+                  color: segmentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
                   segmentLabel,
-                  style: AppTypography.titleLarge.copyWith(
+                  style: AppTypography.bodySmall.copyWith(
                     color: segmentColor,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          SizedBox(height: Responsive.h(16)),
-
-          // RFM bars
-          Row(
-            children: [
-              _buildRfmBar(
-                AppStrings.recency,
-                rfm.recencyScore,
-                AppColors.info,
-                isDark,
               ),
-              SizedBox(width: Responsive.w(10)),
-              _buildRfmBar(
-                AppStrings.frequency,
-                rfm.frequencyScore,
-                AppColors.success,
-                isDark,
-              ),
-              SizedBox(width: Responsive.w(10)),
-              _buildRfmBar(
-                AppStrings.monetary,
-                rfm.monetaryScore,
-                AppColors.warning,
-                isDark,
-              ),
-            ],
-          ),
-
-          SizedBox(height: Responsive.h(14)),
-
-          // Extra info row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '${AppStrings.lifetimeValue}: ${profile.lifetimeValue.toStringAsFixed(0)} ${AppStrings.currency}',
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.textBodyDark
-                      : AppColors.textBody,
-                ),
-              ),
-              Text(
-                '${AppStrings.orders}: ${profile.totalOrders}',
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.textBodyDark
-                      : AppColors.textBody,
-                ),
-              ),
-            ],
-          ),
-
-          // Engagement level
-          if (profile.engagementLevel.isNotEmpty) ...[
-            SizedBox(height: Responsive.h(8)),
-            Row(
-              children: [
-                Text(
-                  '${AppStrings.engagement}: ',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
-                  ),
-                ),
+              if (profile.engagementLevel.isNotEmpty) ...[
+                SizedBox(width: Responsive.w(8)),
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(10),
-                    vertical: Responsive.h(3),
+                    horizontal: Responsive.w(12),
+                    vertical: Responsive.h(6),
                   ),
                   decoration: BoxDecoration(
                     color: _engagementColor(profile.engagementLevel)
-                        .withValues(alpha: 0.12),
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusPill),
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
                   ),
                   child: Text(
                     _engagementLabel(profile.engagementLevel),
-                    style: AppTypography.captionSmall.copyWith(
+                    style: AppTypography.bodySmall.copyWith(
                       color: _engagementColor(profile.engagementLevel),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ],
-            ),
-          ],
+              const Spacer(),
+              Text(
+                '${profile.totalOrders} طلب',
+                style: AppTypography.bodySmall.copyWith(
+                  color: captionColor,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: Responsive.h(16)),
+
+          // RFM bars — compact
+          Row(
+            children: [
+              _buildRfmBar(
+                AppStrings.recency,
+                rfm.recencyScore,
+                AppColors.textHeadline.withValues(alpha: 0.6),
+                isDark,
+              ),
+              SizedBox(width: Responsive.w(10)),
+              _buildRfmBar(
+                AppStrings.frequency,
+                rfm.frequencyScore,
+                AppColors.textHeadline.withValues(alpha: 0.6),
+                isDark,
+              ),
+              SizedBox(width: Responsive.w(10)),
+              _buildRfmBar(
+                AppStrings.monetary,
+                rfm.monetaryScore,
+                AppColors.textHeadline.withValues(alpha: 0.6),
+                isDark,
+              ),
+            ],
+          ),
+
+          SizedBox(height: Responsive.h(12)),
+
+          // Lifetime value
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '${AppStrings.lifetimeValue}: ',
+                style: AppTypography.bodySmall.copyWith(color: captionColor),
+              ),
+              Text(
+                '${profile.lifetimeValue.toStringAsFixed(0)} ${AppStrings.currency}',
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -647,11 +811,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   String _rfmSegmentLabel(String segment) => switch (segment.toLowerCase()) {
         'new' => 'عميل جديد',
         'champions' || 'champion' => 'بطل',
-        'loyal' || 'loyal_customers' => 'عميل مخلص',
-        'potential' || 'potential_loyalist' => 'محتمل الولاء',
-        'at_risk' || 'atrisk' => 'معرّض للخسارة',
-        'lost' || 'hibernating' => 'عميل خامل',
-        'cant_lose' => 'لا يمكن خسارته',
+        'loyal' || 'loyal_customers' => 'عميل وفي',
+        'potential' || 'potential_loyalist' => 'ممكن يبقى وفي',
+        'at_risk' || 'atrisk' => 'ممكن نخسره',
+        'lost' || 'hibernating' => 'عميل راح',
+        'cant_lose' => 'لازم نحافظ عليه',
         _ => segment,
       };
 
@@ -686,68 +850,90 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     CustomerEngagementModel engagement,
     bool isDark,
   ) {
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final headlineColor =
+        isDark ? AppColors.textHeadlineDark : AppColors.textHeadline;
+
     return SekkaCard(
       color: isDark ? AppColors.surfaceDark : AppColors.surface,
       padding: EdgeInsets.all(Responsive.w(16)),
       child: Column(
         children: [
-          // Level + Score row
+          // Level + Score + Orders inline
           Row(
             children: [
-              Expanded(
-                child: _buildEngagementChip(
-                  AppStrings.engagement,
+              Text(AppStrings.engagement,
+                  style: AppTypography.bodySmall.copyWith(color: captionColor)),
+              SizedBox(width: Responsive.w(6)),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.w(10),
+                  vertical: Responsive.h(4),
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
                   engagement.level,
-                  AppColors.primary,
-                  isDark,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              SizedBox(width: Responsive.w(10)),
-              Expanded(
-                child: _buildEngagementChip(
-                  AppStrings.engagementScore,
-                  '${engagement.engagementScore}',
-                  AppColors.info,
-                  isDark,
+              const Spacer(),
+              Text(
+                '${engagement.engagementScore}',
+                style: AppTypography.titleLarge.copyWith(
+                  color: headlineColor,
+                  fontWeight: FontWeight.w700,
                 ),
+              ),
+              Text(
+                ' نقطة',
+                style: AppTypography.bodySmall.copyWith(color: captionColor),
               ),
             ],
           ),
+
           SizedBox(height: Responsive.h(14)),
-          // Stats row
+
+          // Stats row — flat
           Row(
             children: [
-              _buildMiniStat(
-                '${engagement.totalOrders}',
-                AppStrings.orders,
-                isDark,
+              Expanded(
+                child: _buildInlineDetail(
+                  AppStrings.orders,
+                  '${engagement.totalOrders}',
+                  headlineColor,
+                  captionColor,
+                ),
               ),
-              _buildMiniStat(
-                engagement.daysSinceLastOrder >= 0
-                    ? '${engagement.daysSinceLastOrder}'
-                    : '-',
-                AppStrings.daysSinceLastOrder,
-                isDark,
+              Expanded(
+                child: _buildInlineDetail(
+                  AppStrings.daysSinceLastOrder,
+                  engagement.daysSinceLastOrder >= 0
+                      ? '${engagement.daysSinceLastOrder} يوم'
+                      : '-',
+                  headlineColor,
+                  captionColor,
+                ),
               ),
             ],
           ),
           if (engagement.lastInteraction != null) ...[
-            SizedBox(height: Responsive.h(10)),
+            SizedBox(height: Responsive.h(8)),
             Row(
               children: [
-                Icon(
-                  IconsaxPlusLinear.clock,
-                  size: Responsive.r(14),
-                  color:
-                      isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                ),
-                SizedBox(width: Responsive.w(6)),
+                Icon(IconsaxPlusLinear.clock,
+                    size: Responsive.r(12), color: captionColor),
+                SizedBox(width: Responsive.w(4)),
                 Text(
                   '${AppStrings.lastInteraction}: ${_formatDate(engagement.lastInteraction!)}',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
+                  style: AppTypography.captionSmall.copyWith(
+                    color: captionColor,
                   ),
                 ),
               ],
@@ -758,65 +944,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildEngagementChip(
+  Widget _buildInlineDetail(
     String label,
     String value,
-    Color color,
-    bool isDark,
+    Color headlineColor,
+    Color captionColor,
   ) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        vertical: Responsive.h(10),
-        horizontal: Responsive.w(10),
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(Responsive.r(12)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: AppTypography.captionSmall.copyWith(
-              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: AppTypography.captionSmall.copyWith(color: captionColor)),
+        SizedBox(height: Responsive.h(2)),
+        Text(
+          value,
+          style: AppTypography.titleMedium.copyWith(
+            color: headlineColor,
+            fontWeight: FontWeight.w600,
           ),
-          SizedBox(height: Responsive.h(4)),
-          Text(
-            value,
-            style: AppTypography.titleMedium.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniStat(String value, String label, bool isDark) {
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            value,
-            style: AppTypography.titleLarge.copyWith(
-              color: isDark
-                  ? AppColors.textHeadlineDark
-                  : AppColors.textHeadline,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: Responsive.h(2)),
-          Text(
-            label,
-            style: AppTypography.captionSmall.copyWith(
-              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -830,26 +977,41 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (interests.topCategories.isNotEmpty) ...[
-            Text(
-              'الفئات المفضلة',
-              style: AppTypography.bodySmall.copyWith(
-                color:
-                    isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-              ),
+            Row(
+              children: [
+                Icon(
+                  IconsaxPlusBold.category_2,
+                  size: Responsive.r(16),
+                  color: AppColors.primary,
+                ),
+                SizedBox(width: Responsive.w(6)),
+                Text(
+                  'بيحب إيه',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: Responsive.h(8)),
+            SizedBox(height: Responsive.h(10)),
             Wrap(
               spacing: Responsive.w(8),
-              runSpacing: Responsive.h(6),
+              runSpacing: Responsive.h(8),
               children: interests.topCategories.map((cat) {
                 return Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(12),
-                    vertical: Responsive.h(6),
+                    horizontal: Responsive.w(14),
+                    vertical: Responsive.h(8),
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
+                    color: AppColors.primary.withValues(alpha: 0.06),
                     borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                    border: Border.all(
+                      color: AppColors.primary.withValues(alpha: 0.15),
+                    ),
                   ),
                   child: Text(
                     cat,
@@ -861,68 +1023,142 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 );
               }).toList(),
             ),
-            SizedBox(height: Responsive.h(14)),
+            SizedBox(height: Responsive.h(16)),
+            Divider(
+              color: isDark
+                  ? AppColors.borderDark
+                  : AppColors.border.withValues(alpha: 0.3),
+              height: 1,
+            ),
+            SizedBox(height: Responsive.h(16)),
           ],
           if (interests.preferredPartners.isNotEmpty) ...[
-            Text(
-              'شركاء مفضلين',
-              style: AppTypography.bodySmall.copyWith(
-                color:
-                    isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-              ),
+            Row(
+              children: [
+                Icon(
+                  IconsaxPlusBold.shop,
+                  size: Responsive.r(16),
+                  color: AppColors.info,
+                ),
+                SizedBox(width: Responsive.w(6)),
+                Text(
+                  'بيطلب من مين',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: Responsive.h(8)),
+            SizedBox(height: Responsive.h(10)),
             ...interests.preferredPartners.take(3).map((p) {
               return Padding(
-                padding: EdgeInsets.only(bottom: Responsive.h(6)),
-                child: Row(
-                  children: [
-                    Icon(
-                      IconsaxPlusLinear.shop,
-                      size: Responsive.r(16),
-                      color: AppColors.primary,
-                    ),
-                    SizedBox(width: Responsive.w(8)),
-                    Expanded(
-                      child: Text(
-                        p.partnerName,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: isDark
-                              ? AppColors.textHeadlineDark
-                              : AppColors.textHeadline,
+                padding: EdgeInsets.only(bottom: Responsive.h(8)),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.w(12),
+                    vertical: Responsive.h(10),
+                  ),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? AppColors.backgroundDark
+                        : AppColors.background,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(Responsive.w(6)),
+                        decoration: BoxDecoration(
+                          color: AppColors.info.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(Responsive.r(8)),
+                        ),
+                        child: Icon(
+                          IconsaxPlusLinear.shop,
+                          size: Responsive.r(14),
+                          color: AppColors.info,
                         ),
                       ),
-                    ),
-                    Text(
-                      '${p.orderCount} طلب',
-                      style: AppTypography.captionSmall.copyWith(
-                        color: isDark
-                            ? AppColors.textCaptionDark
-                            : AppColors.textCaption,
+                      SizedBox(width: Responsive.w(10)),
+                      Expanded(
+                        child: Text(
+                          p.partnerName,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: isDark
+                                ? AppColors.textHeadlineDark
+                                : AppColors.textHeadline,
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: Responsive.w(10),
+                          vertical: Responsive.h(4),
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withValues(alpha: 0.08),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusPill),
+                        ),
+                        child: Text(
+                          '${p.orderCount} طلب',
+                          style: AppTypography.captionSmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),
+            SizedBox(height: Responsive.h(8)),
           ],
-          Row(
-            children: [
-              Text(
-                'متوسط قيمة الطلب: ',
-                style: AppTypography.bodySmall.copyWith(
-                  color:
-                      isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                ),
+
+          // متوسط قيمة الطلب
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              vertical: Responsive.h(10),
+              horizontal: Responsive.w(12),
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(
+                color: AppColors.success.withValues(alpha: 0.12),
               ),
-              Text(
-                '${interests.averageOrderValue.toStringAsFixed(0)} ${AppStrings.currency}',
-                style: AppTypography.titleMedium.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  IconsaxPlusBold.money_2,
+                  size: Responsive.r(16),
+                  color: AppColors.success,
                 ),
-              ),
-            ],
+                SizedBox(width: Responsive.w(8)),
+                Text(
+                  'متوسط الطلب: ',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
+                  ),
+                ),
+                Text(
+                  '${interests.averageOrderValue.toStringAsFixed(0)} ${AppStrings.currency}',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -1049,9 +1285,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
             // Status indicators for already actioned
             if (rec.isActedOn)
-              _buildRecStatusBadge('تم التنفيذ', AppColors.success),
+              _buildRecStatusBadge('اتنفّذ', AppColors.success),
             if (rec.isDismissed)
-              _buildRecStatusBadge('تم التجاهل', AppColors.textCaption),
+              _buildRecStatusBadge('اتجاهل', AppColors.textCaption),
           ],
         ),
       ),
@@ -1119,6 +1355,10 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     final dayLabel = _translateDay(behavior.preferredDayOfWeek);
     final tierLabel = _translateTier(behavior.spendingTier);
     final tierColor = _tierColor(behavior.spendingTier);
+    final captionColor =
+        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
+    final headlineColor =
+        isDark ? AppColors.textHeadlineDark : AppColors.textHeadline;
 
     return SekkaCard(
       color: isDark ? AppColors.surfaceDark : AppColors.surface,
@@ -1126,63 +1366,27 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top row: time + day
+          // Top: spending tier + avg order value
           Row(
             children: [
-              _buildBehaviorChip(
-                IconsaxPlusLinear.clock,
-                AppStrings.preferredOrderTime,
-                timeLabel,
-                AppColors.primary,
-                isDark,
-              ),
-              SizedBox(width: Responsive.w(8)),
-              _buildBehaviorChip(
-                IconsaxPlusLinear.calendar_1,
-                AppStrings.preferredDay,
-                dayLabel,
-                AppColors.info,
-                isDark,
-              ),
-            ],
-          ),
-
-          SizedBox(height: Responsive.h(10)),
-
-          // Second row: frequency + spending
-          Row(
-            children: [
-              _buildBehaviorChip(
-                IconsaxPlusLinear.repeat,
-                AppStrings.orderFrequency,
-                '${behavior.orderFrequencyPerMonth}',
-                AppColors.success,
-                isDark,
-              ),
-              SizedBox(width: Responsive.w(8)),
-              _buildBehaviorChip(
-                IconsaxPlusLinear.dollar_circle,
-                AppStrings.spendingTier,
-                tierLabel,
-                tierColor,
-                isDark,
-              ),
-            ],
-          ),
-
-          SizedBox(height: Responsive.h(10)),
-
-          // Average order value
-          Row(
-            children: [
-              Text(
-                'متوسط قيمة الطلب: ',
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.textCaptionDark
-                      : AppColors.textCaption,
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: Responsive.w(12),
+                  vertical: Responsive.h(6),
+                ),
+                decoration: BoxDecoration(
+                  color: tierColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
+                  tierLabel,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: tierColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
+              const Spacer(),
               Text(
                 '${behavior.averageOrderValue.toStringAsFixed(0)} ${AppStrings.currency}',
                 style: AppTypography.titleMedium.copyWith(
@@ -1190,51 +1394,77 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
+              Text(
+                ' / طلب',
+                style: AppTypography.captionSmall.copyWith(
+                  color: captionColor,
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: Responsive.h(14)),
+
+          // Row 1: time + day
+          Row(
+            children: [
+              Expanded(
+                child: _buildInlineDetail(
+                  AppStrings.preferredOrderTime,
+                  timeLabel,
+                  headlineColor,
+                  captionColor,
+                ),
+              ),
+              Expanded(
+                child: _buildInlineDetail(
+                  AppStrings.preferredDay,
+                  dayLabel,
+                  headlineColor,
+                  captionColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: Responsive.h(10)),
+          // Row 2: frequency
+          Row(
+            children: [
+              Expanded(
+                child: _buildInlineDetail(
+                  AppStrings.orderFrequency,
+                  '${behavior.orderFrequencyPerMonth}/شهر',
+                  headlineColor,
+                  captionColor,
+                ),
+              ),
+              const Expanded(child: SizedBox()),
             ],
           ),
 
           // Preferred areas
           if (behavior.preferredAreas.isNotEmpty) ...[
             SizedBox(height: Responsive.h(12)),
-            Text(
-              AppStrings.preferredAreas,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark
-                    ? AppColors.textCaptionDark
-                    : AppColors.textCaption,
-              ),
-            ),
-            SizedBox(height: Responsive.h(6)),
             Wrap(
-              spacing: Responsive.w(8),
+              spacing: Responsive.w(6),
               runSpacing: Responsive.h(6),
               children: behavior.preferredAreas.map((area) {
                 return Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(12),
-                    vertical: Responsive.h(6),
+                    horizontal: Responsive.w(10),
+                    vertical: Responsive.h(4),
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.info.withValues(alpha: 0.08),
+                    color: AppColors.textHeadline.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(AppSizes.radiusPill),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        IconsaxPlusLinear.location,
-                        size: Responsive.r(12),
-                        color: AppColors.info,
-                      ),
-                      SizedBox(width: Responsive.w(4)),
-                      Text(
-                        area,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.info,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    area,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                    ),
                   ),
                 );
               }).toList(),
@@ -1243,27 +1473,16 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
           // Patterns
           if (behavior.patterns.isNotEmpty) ...[
-            SizedBox(height: Responsive.h(12)),
-            Text(
-              'أنماط السلوك',
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark
-                    ? AppColors.textCaptionDark
-                    : AppColors.textCaption,
-              ),
-            ),
-            SizedBox(height: Responsive.h(6)),
+            SizedBox(height: Responsive.h(10)),
             ...behavior.patterns.map((pattern) {
               return Padding(
                 padding: EdgeInsets.only(bottom: Responsive.h(4)),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      IconsaxPlusLinear.trend_up,
-                      size: Responsive.r(14),
-                      color: AppColors.success,
-                    ),
-                    SizedBox(width: Responsive.w(6)),
+                    Text('• ',
+                        style: AppTypography.bodySmall
+                            .copyWith(color: captionColor)),
                     Expanded(
                       child: Text(
                         pattern,
@@ -1284,58 +1503,11 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
-  Widget _buildBehaviorChip(
-    IconData icon,
-    String label,
-    String value,
-    Color color,
-    bool isDark,
-  ) {
-    return Expanded(
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          vertical: Responsive.h(10),
-          horizontal: Responsive.w(8),
-        ),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(Responsive.r(10)),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: Responsive.r(18), color: color),
-            SizedBox(height: Responsive.h(4)),
-            Text(
-              label,
-              style: AppTypography.captionSmall.copyWith(
-                color: isDark
-                    ? AppColors.textCaptionDark
-                    : AppColors.textCaption,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: Responsive.h(2)),
-            Text(
-              value,
-              style: AppTypography.titleMedium.copyWith(
-                color: color,
-                fontWeight: FontWeight.w700,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   String _translateTime(String? time) => switch (time?.toLowerCase()) {
-        'morning' => 'صباحاً',
-        'afternoon' => 'ظهراً',
-        'evening' => 'مساءً',
-        'night' => 'ليلاً',
+        'morning' => 'الصبح',
+        'afternoon' => 'الضهر',
+        'evening' => 'بالليل',
+        'night' => 'آخر الليل',
         _ => time ?? '-',
       };
 
@@ -1438,6 +1610,14 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
 
   Widget _buildAddressCard(AddressModel address, bool isDark) {
     final addressTypeLabel = _addressTypeLabel(address.addressType);
+    final typeIcon = switch (address.addressType) {
+      0 => IconsaxPlusBold.home_2,
+      1 => IconsaxPlusBold.briefcase,
+      2 => IconsaxPlusBold.shop,
+      3 => IconsaxPlusBold.coffee,
+      4 => IconsaxPlusBold.box_1,
+      _ => IconsaxPlusBold.location,
+    };
 
     return Padding(
       padding: EdgeInsets.only(bottom: Responsive.h(10)),
@@ -1448,101 +1628,131 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  IconsaxPlusLinear.location,
-                  size: Responsive.r(18),
-                  color: AppColors.primary,
-                ),
-                SizedBox(width: Responsive.w(8)),
-                Expanded(
-                  child: Text(
-                    address.addressText,
-                    style: AppTypography.titleMedium.copyWith(
-                      color: isDark
-                          ? AppColors.textHeadlineDark
-                          : AppColors.textHeadline,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(10),
-                    vertical: Responsive.h(4),
-                  ),
+                  padding: EdgeInsets.all(Responsive.w(10)),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusPill),
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(Responsive.r(12)),
                   ),
-                  child: Text(
-                    addressTypeLabel,
-                    style: AppTypography.captionSmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Icon(
+                    typeIcon,
+                    size: Responsive.r(20),
+                    color: AppColors.primary,
+                  ),
+                ),
+                SizedBox(width: Responsive.w(12)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              address.addressText,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.textHeadlineDark
+                                    : AppColors.textHeadline,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          SizedBox(width: Responsive.w(8)),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: Responsive.w(10),
+                              vertical: Responsive.h(4),
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.08),
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusPill),
+                            ),
+                            child: Text(
+                              addressTypeLabel,
+                              style: AppTypography.captionSmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (address.landmarks != null &&
+                          address.landmarks!.isNotEmpty) ...[
+                        SizedBox(height: Responsive.h(6)),
+                        Row(
+                          children: [
+                            Icon(
+                              IconsaxPlusLinear.map_1,
+                              size: Responsive.r(12),
+                              color: isDark
+                                  ? AppColors.textCaptionDark
+                                  : AppColors.textCaption,
+                            ),
+                            SizedBox(width: Responsive.w(4)),
+                            Expanded(
+                              child: Text(
+                                address.landmarks!,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: isDark
+                                      ? AppColors.textCaptionDark
+                                      : AppColors.textCaption,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                      if (address.deliveryNotes != null &&
+                          address.deliveryNotes!.isNotEmpty) ...[
+                        SizedBox(height: Responsive.h(6)),
+                        Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(Responsive.w(8)),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.backgroundDark
+                                : AppColors.background,
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusSm),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                IconsaxPlusLinear.note_1,
+                                size: Responsive.r(12),
+                                color: AppColors.warning,
+                              ),
+                              SizedBox(width: Responsive.w(4)),
+                              Expanded(
+                                child: Text(
+                                  address.deliveryNotes!,
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: isDark
+                                        ? AppColors.textBodyDark
+                                        : AppColors.textBody,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
             ),
-            if (address.landmarks != null &&
-                address.landmarks!.isNotEmpty) ...[
-              SizedBox(height: Responsive.h(8)),
-              Row(
-                children: [
-                  Icon(
-                    IconsaxPlusLinear.map_1,
-                    size: Responsive.r(14),
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
-                  ),
-                  SizedBox(width: Responsive.w(6)),
-                  Expanded(
-                    child: Text(
-                      address.landmarks!,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.textCaptionDark
-                            : AppColors.textCaption,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-            if (address.deliveryNotes != null &&
-                address.deliveryNotes!.isNotEmpty) ...[
-              SizedBox(height: Responsive.h(6)),
-              Row(
-                children: [
-                  Icon(
-                    IconsaxPlusLinear.note_1,
-                    size: Responsive.r(14),
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
-                  ),
-                  SizedBox(width: Responsive.w(6)),
-                  Expanded(
-                    child: Text(
-                      address.deliveryNotes!,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.textCaptionDark
-                            : AppColors.textCaption,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
           ],
         ),
       ),
@@ -1572,6 +1782,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         padding: EdgeInsets.all(Responsive.w(16)),
         child: Row(
           children: [
+            // Order icon
+            Container(
+              padding: EdgeInsets.all(Responsive.w(10)),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(Responsive.r(12)),
+              ),
+              child: Icon(
+                IconsaxPlusBold.clipboard_text,
+                size: Responsive.r(20),
+                color: AppColors.primary,
+              ),
+            ),
+            SizedBox(width: Responsive.w(12)),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1582,16 +1806,29 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                       color: isDark
                           ? AppColors.textHeadlineDark
                           : AppColors.textHeadline,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   SizedBox(height: Responsive.h(4)),
-                  Text(
-                    _formatDate(order.orderDate),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.textCaptionDark
-                          : AppColors.textCaption,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        IconsaxPlusLinear.calendar_1,
+                        size: Responsive.r(12),
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                      SizedBox(width: Responsive.w(4)),
+                      Text(
+                        _formatDate(order.orderDate),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.textCaptionDark
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -1650,54 +1887,120 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           children: [
             Row(
               children: [
+                // Rating number
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: Responsive.w(10),
+                    vertical: Responsive.h(4),
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        IconsaxPlusBold.star_1,
+                        size: Responsive.r(14),
+                        color: AppColors.warning,
+                      ),
+                      SizedBox(width: Responsive.w(4)),
+                      Text(
+                        '${rating.ratingValue}',
+                        style: AppTypography.titleMedium.copyWith(
+                          color: AppColors.warning,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: Responsive.w(10)),
                 // Stars
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: List.generate(5, (index) {
-                    return Icon(
-                      index < rating.ratingValue
-                          ? IconsaxPlusBold.star_1
-                          : IconsaxPlusLinear.star,
-                      size: Responsive.r(16),
-                      color: AppColors.warning,
+                    return Padding(
+                      padding: EdgeInsets.only(left: Responsive.w(2)),
+                      child: Icon(
+                        index < rating.ratingValue
+                            ? IconsaxPlusBold.star_1
+                            : IconsaxPlusLinear.star,
+                        size: Responsive.r(14),
+                        color: AppColors.warning,
+                      ),
                     );
                   }),
                 ),
                 const Spacer(),
-                Text(
-                  _formatDate(rating.createdAt),
-                  style: AppTypography.captionSmall.copyWith(
-                    color: isDark
-                        ? AppColors.textCaptionDark
-                        : AppColors.textCaption,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      IconsaxPlusLinear.calendar_1,
+                      size: Responsive.r(12),
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                    SizedBox(width: Responsive.w(4)),
+                    Text(
+                      _formatDate(rating.createdAt),
+                      style: AppTypography.captionSmall.copyWith(
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
             if (rating.driverName != null) ...[
-              SizedBox(height: Responsive.h(8)),
-              Text(
-                rating.driverName!,
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark
-                      ? AppColors.textBodyDark
-                      : AppColors.textBody,
-                  fontWeight: FontWeight.w600,
-                ),
+              SizedBox(height: Responsive.h(10)),
+              Row(
+                children: [
+                  Icon(
+                    IconsaxPlusLinear.user,
+                    size: Responsive.r(14),
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: Responsive.w(6)),
+                  Text(
+                    rating.driverName!,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ],
             if (rating.feedbackText != null &&
                 rating.feedbackText!.isNotEmpty) ...[
-              SizedBox(height: Responsive.h(6)),
-              Text(
-                rating.feedbackText!,
-                style: AppTypography.bodySmall.copyWith(
+              SizedBox(height: Responsive.h(8)),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(Responsive.w(12)),
+                decoration: BoxDecoration(
                   color: isDark
-                      ? AppColors.textBodyDark
-                      : AppColors.textBody,
+                      ? AppColors.backgroundDark
+                      : AppColors.background,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                 ),
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
+                child: Text(
+                  rating.feedbackText!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark
+                        ? AppColors.textBodyDark
+                        : AppColors.textBody,
+                  ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           ],
@@ -1709,46 +2012,46 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   // ── Action Buttons ──
 
   Widget _buildActionButtons(CustomerDetailModel customer, bool isDark) {
-    return Column(
+    return Row(
       children: [
-        SekkaButton(
-          label: AppStrings.rateCustomer,
-          icon: IconsaxPlusLinear.star,
-          onPressed: () {
-            showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => RateCustomerSheet(
-                onSubmit: (rating) {
-                  Navigator.of(context).pop();
-                  _bloc.add(CustomerRateRequested(
-                    customerId: widget.customerId,
-                    rating: rating,
-                  ));
-                },
-              ),
-            );
-          },
-        ),
-        SizedBox(height: Responsive.h(12)),
-        SekkaButton(
-          label: customer.isBlocked
-              ? AppStrings.unblockCustomer
-              : AppStrings.blockCustomer,
-          icon: customer.isBlocked
-              ? IconsaxPlusLinear.unlock
-              : IconsaxPlusLinear.lock,
-          type: SekkaButtonType.secondary,
-          onPressed: () {
-            if (customer.isBlocked) {
-              _bloc.add(
-                CustomerUnblockRequested(widget.customerId),
+        Expanded(
+          child: SekkaButton(
+            label: AppStrings.rateCustomer,
+            onPressed: () {
+              showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => RateCustomerSheet(
+                  onSubmit: (rating) {
+                    Navigator.of(context).pop();
+                    _bloc.add(CustomerRateRequested(
+                      customerId: widget.customerId,
+                      rating: rating,
+                    ));
+                  },
+                ),
               );
-            } else {
-              _showBlockDialog(isDark);
-            }
-          },
+            },
+          ),
+        ),
+        SizedBox(width: Responsive.w(10)),
+        Expanded(
+          child: SekkaButton(
+            label: customer.isBlocked
+                ? AppStrings.unblockCustomer
+                : AppStrings.blockCustomer,
+            type: SekkaButtonType.secondary,
+            onPressed: () {
+              if (customer.isBlocked) {
+                _bloc.add(
+                  CustomerUnblockRequested(widget.customerId),
+                );
+              } else {
+                _showBlockDialog(isDark);
+              }
+            },
+          ),
         ),
       ],
     );

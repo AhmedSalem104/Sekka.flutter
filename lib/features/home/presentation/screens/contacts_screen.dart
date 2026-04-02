@@ -8,6 +8,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../core/utils/phone_launcher.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
@@ -333,49 +334,41 @@ class _ContactsScreenState extends State<ContactsScreen>
               ),
             ),
 
-            // Rating + blocked
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            // Call + WhatsApp buttons
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      customer.averageRating.toStringAsFixed(1),
-                      style: AppTypography.bodySmall.copyWith(
-                        color:
-                            isDark ? AppColors.textBodyDark : AppColors.textBody,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(width: Responsive.w(4)),
-                    Icon(
-                      IconsaxPlusBold.star_1,
-                      size: Responsive.r(16),
-                      color: AppColors.warning,
-                    ),
-                  ],
-                ),
-                if (customer.isBlocked) ...[
-                  SizedBox(height: Responsive.h(6)),
-                  Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Responsive.w(8),
-                      vertical: Responsive.h(2),
-                    ),
+                GestureDetector(
+                  onTap: () => PhoneLauncher.call(customer.phone),
+                  child: Container(
+                    padding: EdgeInsets.all(Responsive.w(8)),
                     decoration: BoxDecoration(
-                      color: AppColors.error.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(Responsive.r(100)),
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
-                    child: Text(
-                      AppStrings.blocked,
-                      style: AppTypography.captionSmall.copyWith(
-                        color: AppColors.error,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Icon(
+                      IconsaxPlusBold.call,
+                      size: Responsive.r(18),
+                      color: AppColors.success,
                     ),
                   ),
-                ],
+                ),
+                SizedBox(width: Responsive.w(8)),
+                GestureDetector(
+                  onTap: () => PhoneLauncher.whatsApp(customer.phone),
+                  child: Container(
+                    padding: EdgeInsets.all(Responsive.w(8)),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      IconsaxPlusLinear.message,
+                      size: Responsive.r(18),
+                      color: AppColors.success,
+                    ),
+                  ),
+                ),
               ],
             ),
           ],

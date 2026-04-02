@@ -474,6 +474,7 @@ abstract final class AppStrings {
   static String get addOrder => _isAr ? 'أضف طلب' : 'Add Order';
   static String get orderDetails =>
       _isAr ? 'تفاصيل الطلب' : 'Order Details';
+  static const String trackOnMap = 'تابع ع الخريطة';
   static String get clientName => _isAr ? 'اسم العميل' : 'Client name';
   static String get phone => _isAr ? 'رقم الموبايل' : 'Phone number';
   static String get address => _isAr ? 'العنوان' : 'Address';
@@ -857,11 +858,11 @@ abstract final class AppStrings {
   static String get useCurrentLocation =>
       _isAr ? 'استخدم موقعي الحالي' : 'Use my current location';
   static String get detectingLocation =>
-      _isAr ? 'جاري تحديد الموقع...' : 'Detecting location...';
+      _isAr ? 'بنحدد مكانك...' : 'Detecting location...';
   static String get locationDetected =>
-      _isAr ? 'تم تحديد الموقع' : 'Location detected';
+      _isAr ? 'لقيناك!' : 'Location detected';
   static String get locationPermissionDenied =>
-      _isAr ? 'لازم تسمح بالوصول للموقع' : 'Location permission required';
+      _isAr ? 'لازم تسمح بالموقع' : 'Location permission required';
   static String get locationServiceDisabled =>
       _isAr ? 'فعّل خدمة الموقع الأول' : 'Enable location services first';
 
@@ -870,43 +871,43 @@ abstract final class AppStrings {
   static String get customerDetails =>
       _isAr ? 'تفاصيل العميل' : 'Customer Details';
   static String get searchCustomer =>
-      _isAr ? 'بحث عن عميل' : 'Search customer';
+      _isAr ? 'دوّر على عميل' : 'Search customer';
   static String get totalDeliveries =>
-      _isAr ? 'إجمالي التوصيلات' : 'Total deliveries';
+      _isAr ? 'كل التوصيلات' : 'Total deliveries';
   static String get successfulDeliveries =>
-      _isAr ? 'توصيلات ناجحة' : 'Successful deliveries';
+      _isAr ? 'توصيلات تمام' : 'Successful deliveries';
   static String get averageRating =>
-      _isAr ? 'متوسط التقييم' : 'Average rating';
+      _isAr ? 'التقييم' : 'Average rating';
   static String get blocked => _isAr ? 'محظور' : 'Blocked';
-  static String get unblocked => _isAr ? 'غير محظور' : 'Unblocked';
+  static String get unblocked => _isAr ? 'مش محظور' : 'Unblocked';
   static String get rateCustomer =>
-      _isAr ? 'تقييم العميل' : 'Rate customer';
+      _isAr ? 'قيّم العميل' : 'Rate customer';
   static String get blockCustomer =>
-      _isAr ? 'حظر العميل' : 'Block customer';
+      _isAr ? 'احظر العميل' : 'Block customer';
   static String get unblockCustomer =>
-      _isAr ? 'إلغاء حظر العميل' : 'Unblock customer';
+      _isAr ? 'شيل الحظر' : 'Unblock customer';
   static String get blockReason =>
-      _isAr ? 'سبب الحظر' : 'Block reason';
+      _isAr ? 'إيه سبب الحظر؟' : 'Block reason';
   static String get reportToCommunity =>
-      _isAr ? 'إبلاغ المجتمع' : 'Report to community';
+      _isAr ? 'بلّغ عنه' : 'Report to community';
   static String get customerBlocked =>
-      _isAr ? 'تم حظر العميل بنجاح' : 'Customer blocked successfully';
+      _isAr ? 'تمام! العميل اتحظر' : 'Customer blocked successfully';
   static String get customerUnblocked =>
-      _isAr ? 'تم إلغاء حظر العميل بنجاح' : 'Customer unblocked successfully';
-  static String get voiceMemo => _isAr ? 'مذكرة صوتية' : 'Voice memo';
-  static String get interests => _isAr ? 'الاهتمامات' : 'Interests';
+      _isAr ? 'تمام! الحظر اتشال' : 'Customer unblocked successfully';
+  static String get voiceMemo => _isAr ? 'رسالة صوتية' : 'Voice memo';
+  static String get interests => _isAr ? 'اهتماماته' : 'Interests';
   static String get engagement =>
-      _isAr ? 'مستوى التفاعل' : 'Engagement level';
+      _isAr ? 'التفاعل' : 'Engagement level';
   static String get insightsProfile =>
       _isAr ? 'ملف التحليلات' : 'Insights Profile';
-  static String get rfmScore => _isAr ? 'تحليل RFM' : 'RFM Score';
-  static String get recency => _isAr ? 'الحداثة' : 'Recency';
+  static String get rfmScore => _isAr ? 'تقييم العميل' : 'Customer Score';
+  static String get recency => _isAr ? 'آخر مرة' : 'Recency';
   static String get frequency => _isAr ? 'التكرار' : 'Frequency';
   static String get monetary => _isAr ? 'القيمة' : 'Monetary';
   static String get customerSegment =>
-      _isAr ? 'شريحة العميل' : 'Customer Segment';
+      _isAr ? 'نوع العميل' : 'Customer Segment';
   static String get recommendations =>
-      _isAr ? 'التوصيات' : 'Recommendations';
+      _isAr ? 'نصايح' : 'Recommendations';
   static String get markAsRead => _isAr ? 'قرأت' : 'Read';
   static String get dismiss => _isAr ? 'تجاهل' : 'Dismiss';
   static String get actOnIt => _isAr ? 'نفّذ' : 'Act';
@@ -915,25 +916,25 @@ abstract final class AppStrings {
   static String get engagementScore =>
       _isAr ? 'نقاط التفاعل' : 'Engagement Score';
   static String get lastInteraction =>
-      _isAr ? 'آخر تفاعل' : 'Last Interaction';
+      _isAr ? 'آخر تعامل' : 'Last Interaction';
   static String get daysSinceLastOrder =>
-      _isAr ? 'أيام من آخر طلب' : 'Days Since Last Order';
+      _isAr ? 'من آخر طلب' : 'Days Since Last Order';
   static String get lifetimeValue =>
-      _isAr ? 'القيمة الكلية' : 'Lifetime Value';
+      _isAr ? 'إجمالي اللي صرفه' : 'Lifetime Value';
   static String get noRecommendations =>
-      _isAr ? 'مفيش توصيات دلوقتي' : 'No recommendations';
+      _isAr ? 'مفيش نصايح دلوقتي' : 'No recommendations';
   static String get behaviorAnalysis =>
-      _isAr ? 'تحليل السلوك' : 'Behavior Analysis';
+      _isAr ? 'سلوك العميل' : 'Behavior Analysis';
   static String get preferredOrderTime =>
-      _isAr ? 'وقت الطلب المفضل' : 'Preferred Order Time';
+      _isAr ? 'بيطلب امتى' : 'Preferred Order Time';
   static String get preferredDay =>
-      _isAr ? 'اليوم المفضل' : 'Preferred Day';
+      _isAr ? 'يومه المفضل' : 'Preferred Day';
   static String get orderFrequency =>
-      _isAr ? 'معدل الطلب/شهر' : 'Orders/Month';
+      _isAr ? 'معدل الطلب' : 'Orders/Month';
   static String get spendingTier =>
-      _isAr ? 'مستوى الإنفاق' : 'Spending Tier';
+      _isAr ? 'مستوى الصرف' : 'Spending Tier';
   static String get preferredAreas =>
-      _isAr ? 'المناطق المفضلة' : 'Preferred Areas';
+      _isAr ? 'أماكنه المفضلة' : 'Preferred Areas';
   static String get insightsInterests =>
       _isAr ? 'اهتمامات العميل' : 'Customer Insights Interests';
 
@@ -959,9 +960,9 @@ abstract final class AppStrings {
   static String get partnerDetails =>
       _isAr ? 'تفاصيل الشريك' : 'Partner Details';
   static String get searchPartner =>
-      _isAr ? 'بحث عن شريك' : 'Search partner';
+      _isAr ? 'دوّر على شريك' : 'Search partner';
   static String get addPartner =>
-      _isAr ? 'إضافة شريك' : 'Add Partner';
+      _isAr ? 'ضيف شريك' : 'Add Partner';
   static String get partnerName =>
       _isAr ? 'اسم الشريك' : 'Partner name';
   static String get partnerPhone =>
@@ -986,14 +987,14 @@ abstract final class AppStrings {
   static String get partnerColor =>
       _isAr ? 'لون الشريك' : 'Partner color';
   static String get partnerAddedSuccess =>
-      _isAr ? 'تم إضافة الشريك بنجاح!' : 'Partner added successfully!';
+      _isAr ? 'تمام! الشريك اتضاف' : 'Partner added successfully!';
   static String get commission => _isAr ? 'العمولة' : 'Commission';
   static String get pickupPoints =>
       _isAr ? 'نقاط الاستلام' : 'Pickup points';
   static String get verification =>
       _isAr ? 'التوثيق' : 'Verification';
   static String get submitDocument =>
-      _isAr ? 'رفع مستند' : 'Submit document';
+      _isAr ? 'ارفع الورق' : 'Submit document';
 
   // Partner Types
   static String get restaurantType => _isAr ? 'مطعم' : 'Restaurant';
@@ -1007,11 +1008,11 @@ abstract final class AppStrings {
 
   // Verification Status
   static String get statusPending =>
-      _isAr ? 'قيد المراجعة' : 'Under review';
-  static String get statusVerified => _isAr ? 'موثّق' : 'Verified';
-  static String get statusRejected => _isAr ? 'مرفوض' : 'Rejected';
+      _isAr ? 'لسه بيتراجع' : 'Under review';
+  static String get statusVerified => _isAr ? 'متوثّق' : 'Verified';
+  static String get statusRejected => _isAr ? 'اترفض' : 'Rejected';
   static String get statusDocumentRequested =>
-      _isAr ? 'مطلوب مستند إضافي' : 'Additional document required';
+      _isAr ? 'محتاج ورق تاني' : 'Additional document required';
 
   // Address Types
   static String get addressHome => _isAr ? 'منزل' : 'Home';
@@ -1196,6 +1197,11 @@ abstract final class AppStrings {
   static const String totalOccurrences = 'مرات التكرار';
   static const String confirmDeleteRecurring = 'متأكد إنك عايز تحذف الطلب المتكرر ده؟';
 
+  // ── Navigation (Routes + Parking) ──
+  static const String navigationTitle = 'التنقل';
+  static const String tabRouteOptimize = 'حسّن مسارك';
+  static const String tabParkingSpots = 'أماكن الركن';
+
   // ── Routes ──
   static const String routeOptimization = 'تحسين المسار';
   static const String optimizeRoute = 'حسّن مسارك';
@@ -1222,7 +1228,7 @@ abstract final class AppStrings {
   static const String shortestRoute = 'أقصر مسار';
   static const String lowestCost = 'أقل تكلفة';
   static const String noActiveOrders = 'مفيش طلبات نشطة';
-  static const String addOrderToRoute = 'إضافة طلب للمسار';
+  static const String addOrderToRoute = 'ضيف طلب للمسار';
   static const String routeIsEmpty = 'المسار فاضي';
   static const String addOrdersToRoute = 'أضف طلبات للمسار';
   static const String dragToReorder = 'اسحب عشان تعيد الترتيب';
@@ -1272,18 +1278,50 @@ abstract final class AppStrings {
       _isAr ? 'بطاقتي الرقمية' : 'My Digital Badge';
 
   // ── Parking ──
-  static const String nearbyParking = 'أماكن ركن قريبة';
-  static const String myParkingSpots = 'أماكن الركن المحفوظة';
-  static const String addParkingSpot = 'حفظ مكان ركن';
-  static const String noParkingSpots = 'مفيش أماكن ركن';
-  static const String noParkingSpotsHint = 'احفظ أماكن الركن اللي بتستخدمها عشان ترجعلها بسهولة';
-  static const String parkingPaid = 'مدفوع';
-  static const String parkingFree = 'مجاني';
-  static const String parkingSaved = 'تم حفظ مكان الركن';
-  static const String parkingDeleted = 'تم حذف مكان الركن';
-  static const String parkingAddress = 'عنوان المكان';
-  static const String parkingRating = 'تقييم المكان';
-  static const String parkingIsPaid = 'مكان مدفوع؟';
-  static const String deleteParkingConfirm = 'متأكد إنك عايز تمسح المكان ده؟';
-  static const String usageCount = 'مرات الاستخدام';
+  static String get nearbyParking =>
+      _isAr ? 'ركنة قريبة' : 'Nearby Parking';
+  static String get myParkingSpots =>
+      _isAr ? 'أماكن الركنة بتاعتي' : 'My Parking Spots';
+  static String get addParkingSpot =>
+      _isAr ? 'حفظ مكان ركن' : 'Save Parking Spot';
+  static String get noParkingSpots =>
+      _isAr ? 'مفيش أماكن ركن' : 'No Parking Spots';
+  static String get noParkingSpotsHint =>
+      _isAr ? 'احفظ أماكن الركن اللي بتستخدمها عشان ترجعلها بسهولة' : 'Save parking spots you use for easy access';
+  static String get parkingPaid =>
+      _isAr ? 'مدفوع' : 'Paid';
+  static String get parkingFree =>
+      _isAr ? 'مجاني' : 'Free';
+  static String get parkingSaved =>
+      _isAr ? 'تمام! المكان اتحفظ' : 'Parking spot saved';
+  static String get parkingDeleted =>
+      _isAr ? 'تمام! المكان اتمسح' : 'Parking spot deleted';
+  static String get parkingAddress =>
+      _isAr ? 'عنوان المكان' : 'Location Address';
+  static String get parkingRating =>
+      _isAr ? 'تقييم المكان' : 'Location Rating';
+  static String get parkingIsPaid =>
+      _isAr ? 'بفلوس؟' : 'Paid parking?';
+  static String get deleteParkingConfirm =>
+      _isAr ? 'متأكد إنك عايز تمسح المكان ده؟' : 'Are you sure you want to delete this spot?';
+  static String get usageCount =>
+      _isAr ? 'استخدمته كام مرة' : 'Usage Count';
+
+  // ── Home Screen ──
+  static String get statOrders =>
+      _isAr ? 'طلبات' : 'Orders';
+  static String get statDelivered =>
+      _isAr ? 'تسليم' : 'Delivered';
+  static String get statSuccess =>
+      _isAr ? 'نجاح' : 'Success';
+  static String get optimizeYourRoute =>
+      _isAr ? 'حسّن مسارك' : 'Optimize Your Route';
+  static String get optimizeRouteHint =>
+      _isAr ? 'رتّب طلباتك ووفّر وقت ومسافة' : 'Sort your orders and save time & distance';
+  static String get enterYourRouteBtn =>
+      _isAr ? 'دخّل مسارك' : 'Enter Your Route';
+  static String get locatingPosition =>
+      _isAr ? 'بنحدد مكانك...' : 'Locating...';
+  static String get locationFailed =>
+      _isAr ? 'مقدرناش نحدد مكانك' : 'Could not determine location';
 }

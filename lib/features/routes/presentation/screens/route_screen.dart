@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -54,6 +55,61 @@ class RouteScreen extends StatelessWidget {
   }
 }
 
+/// Route tab content — used inside NavigationScreen TabBarView.
+class RouteTabContent extends StatelessWidget {
+  const RouteTabContent({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return BlocConsumer<RouteBloc, RouteState>(
+      listener: _routeListener,
+      builder: (context, state) => switch (state) {
+        RouteInitial() || RouteLoading() => const SekkaLoading(),
+        RouteLoaded(:final activeRoute, :final isActionInProgress) =>
+          activeRoute != null && activeRoute.isActive
+              ? _ActiveRouteView(
+                  route: activeRoute,
+                  isLoading: isActionInProgress,
+                  isDark: isDark,
+                )
+              : _EmptyState(isLoading: isActionInProgress, isDark: isDark),
+        RouteError(:final message) => _ErrorView(
+            message: message,
+            isDark: isDark,
+          ),
+      },
+    );
+  }
+}
+
+void _routeListener(BuildContext context, RouteState state) {
+  if (state is RouteLoaded && state.actionMessage != null) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              state.actionMessage!,
+              style: AppTypography.bodyMedium
+                  .copyWith(color: AppColors.textOnPrimary),
+            ),
+          ),
+          backgroundColor:
+              state.isActionError ? AppColors.error : AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+        ),
+      );
+    context.read<RouteBloc>().add(const RouteClearMessage());
+  }
+}
+
 // ══════════════════════════════════════════════════════════════════════════
 //  BODY
 // ══════════════════════════════════════════════════════════════════════════
@@ -72,7 +128,7 @@ class _RouteScreenBody extends StatelessWidget {
             isDark ? AppColors.backgroundDark : AppColors.background,
         appBar: const SekkaAppBar(title: AppStrings.routeOptimization),
         body: BlocConsumer<RouteBloc, RouteState>(
-          listener: _listener,
+          listener: _routeListener,
           builder: (context, state) => switch (state) {
             RouteInitial() || RouteLoading() => const SekkaLoading(),
             RouteLoaded(:final activeRoute, :final isActionInProgress) =>
@@ -93,31 +149,6 @@ class _RouteScreenBody extends StatelessWidget {
     );
   }
 
-  void _listener(BuildContext context, RouteState state) {
-    if (state is RouteLoaded && state.actionMessage != null) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Text(
-                state.actionMessage!,
-                style: AppTypography.bodyMedium
-                    .copyWith(color: AppColors.textOnPrimary),
-              ),
-            ),
-            backgroundColor:
-                state.isActionError ? AppColors.error : AppColors.success,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-          ),
-        );
-      context.read<RouteBloc>().add(const RouteClearMessage());
-    }
-  }
 }
 
 // ══════════════════════════════════════════════════════════════════════════
@@ -209,58 +240,6 @@ class _ActiveRouteView extends StatelessWidget {
           ),
           child: _RouteStatsCard(route: route, isDark: isDark),
         ),
-
-        // Nearby parking button
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
-          child: GestureDetector(
-            onTap: () => _showParkingSheet(context, isDark),
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: AppSizes.lg,
-                vertical: AppSizes.md,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.info.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-                border: Border.all(
-                  color: AppColors.info.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: EdgeInsets.all(Responsive.r(8)),
-                    decoration: BoxDecoration(
-                      color: AppColors.info.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      IconsaxPlusLinear.car,
-                      size: AppSizes.iconMd,
-                      color: AppColors.info,
-                    ),
-                  ),
-                  SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: Text(
-                      AppStrings.nearbyParking,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: AppColors.info,
-                      ),
-                    ),
-                  ),
-                  Icon(
-                    IconsaxPlusLinear.arrow_left_2,
-                    size: AppSizes.iconSm,
-                    color: AppColors.info,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: AppSizes.md),
 
         // Orders header + add button
         Padding(
@@ -423,15 +402,37 @@ class _BottomActions extends StatelessWidget {
           ),
         ],
       ),
-      child: SekkaButton(
-        label: AppStrings.completeRoute,
-        icon: IconsaxPlusLinear.tick_circle,
-        isLoading: isLoading,
-        onPressed: isLoading
-            ? null
-            : () => _confirmComplete(context),
+      child: Row(
+        children: [
+          // تابع ع الخريطة
+          Expanded(
+            child: SekkaButton(
+              label: AppStrings.trackOnMap,
+              type: SekkaButtonType.secondary,
+              onPressed: () => _openMapForRoute(context),
+            ),
+          ),
+          SizedBox(width: AppSizes.sm),
+          // إنهاء المسار
+          Expanded(
+            child: SekkaButton(
+              label: AppStrings.completeRoute,
+              isLoading: isLoading,
+              onPressed: isLoading
+                  ? null
+                  : () => _confirmComplete(context),
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _openMapForRoute(BuildContext context) async {
+    final uri = Uri.parse('https://www.google.com/maps');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _confirmComplete(BuildContext context) {
@@ -1651,7 +1652,7 @@ class _ParkingSheetBody extends StatelessWidget {
                   ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: () => _showCreateParkingSheet(context, isDark),
+                    onTap: () => showCreateParkingSheet(context, isDark),
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: AppSizes.md,
@@ -1725,7 +1726,7 @@ class _ParkingSheetBody extends StatelessWidget {
                   ParkingLoaded(:final spots) => spots.isEmpty
                       ? Padding(
                           padding: EdgeInsets.all(AppSizes.pagePadding),
-                          child: const SekkaEmptyState(
+                          child: SekkaEmptyState(
                             icon: IconsaxPlusLinear.car,
                             title: AppStrings.noParkingSpots,
                             description: AppStrings.noParkingSpotsHint,
@@ -1738,7 +1739,7 @@ class _ParkingSheetBody extends StatelessWidget {
                           itemCount: spots.length,
                           separatorBuilder: (_, __) =>
                               SizedBox(height: AppSizes.sm),
-                          itemBuilder: (context, index) => _ParkingSpotTile(
+                          itemBuilder: (context, index) => ParkingSpotTile(
                             spot: spots[index],
                             isDark: isDark,
                           ),
@@ -1766,8 +1767,8 @@ class _ParkingSheetBody extends StatelessWidget {
 //  PARKING SPOT TILE
 // ══════════════════════════════════════════════════════════════════════════
 
-class _ParkingSpotTile extends StatelessWidget {
-  const _ParkingSpotTile({required this.spot, required this.isDark});
+class ParkingSpotTile extends StatelessWidget {
+  const ParkingSpotTile({super.key, required this.spot, required this.isDark});
 
   final ParkingModel spot;
   final bool isDark;
@@ -1944,7 +1945,7 @@ class _ParkingSpotTile extends StatelessWidget {
 //  CREATE PARKING SHEET — حفظ مكان ركن جديد
 // ══════════════════════════════════════════════════════════════════════════
 
-void _showCreateParkingSheet(BuildContext context, bool isDark) {
+void showCreateParkingSheet(BuildContext context, bool isDark) {
   final bloc = context.read<ParkingBloc>();
 
   showModalBottomSheet<void>(
