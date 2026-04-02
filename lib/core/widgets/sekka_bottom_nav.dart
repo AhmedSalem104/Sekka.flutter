@@ -54,7 +54,7 @@ class SekkaBottomNav extends StatelessWidget {
               ? []
               : const [
                   BoxShadow(
-                    color: Color(0x12000000),
+                    color: AppColors.shadowMedium,
                     blurRadius: 24,
                     offset: Offset(0, 4),
                   ),

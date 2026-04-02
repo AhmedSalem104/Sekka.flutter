@@ -34,4 +34,28 @@ class NotificationModel {
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'notificationType': notificationType,
+        'title': title,
+        'message': message,
+        'isRead': isRead,
+        'actionType': actionType,
+        'actionData': actionData,
+        'priority': priority,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  NotificationModel copyWith({bool? isRead}) => NotificationModel(
+        id: id,
+        notificationType: notificationType,
+        title: title,
+        message: message,
+        isRead: isRead ?? this.isRead,
+        actionType: actionType,
+        actionData: actionData,
+        priority: priority,
+        createdAt: createdAt,
+      );
 }

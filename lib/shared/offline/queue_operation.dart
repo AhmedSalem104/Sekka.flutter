@@ -20,6 +20,13 @@ enum QueueOperationType {
   // Break actions
   breakStart,
   breakEnd,
+
+  // Chat actions
+  chatSend,
+
+  // Notification actions
+  notificationRead,
+  notificationReadAll,
 }
 
 class QueueOperation {

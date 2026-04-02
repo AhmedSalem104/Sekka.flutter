@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1228,12 +1229,23 @@ class _PhotosSection extends StatelessWidget {
                       ClipRRect(
                         borderRadius:
                             BorderRadius.circular(AppSizes.radiusMd),
-                        child: Image.network(
-                          photo.fullUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: photo.fullUrl,
                           width: Responsive.w(90),
                           height: Responsive.h(90),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
+                          placeholder: (_, __) => Container(
+                            width: Responsive.w(90),
+                            height: Responsive.h(90),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColors.backgroundDark
+                                  : AppColors.background,
+                              borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
                             width: Responsive.w(90),
                             height: Responsive.h(90),
                             decoration: BoxDecoration(
@@ -1279,10 +1291,10 @@ class _PhotosSection extends StatelessWidget {
             children: [
               Center(
                 child: InteractiveViewer(
-                  child: Image.network(
-                    photo.fullUrl,
+                  child: CachedNetworkImage(
+                    imageUrl: photo.fullUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Center(
+                    errorWidget: (_, __, ___) => Center(
                       child: Icon(
                         IconsaxPlusLinear.gallery_slash,
                         color: Colors.white54,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -8,70 +10,126 @@ import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
-import '../../../../shared/network/api_result.dart';
-import '../../../../shared/network/api_response.dart';
 import '../../data/models/conversation_model.dart';
 import '../../data/repositories/chat_repository.dart';
+import '../bloc/conversations_bloc.dart';
+import '../bloc/conversations_event.dart';
+import '../bloc/conversations_state.dart';
 import 'chat_messages_screen.dart';
 
-class ConversationsScreen extends StatefulWidget {
+class ConversationsScreen extends StatelessWidget {
   const ConversationsScreen({super.key, required this.repository});
   final ChatRepository repository;
 
   @override
-  State<ConversationsScreen> createState() => _ConversationsScreenState();
-}
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-class _ConversationsScreenState extends State<ConversationsScreen> {
-  PagedData<ConversationModel>? _data;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
+    return Scaffold(
+      backgroundColor:
+          isDark ? AppColors.backgroundDark : AppColors.background,
+      appBar: SekkaAppBar(title: AppStrings.chatTitle),
+      floatingActionButton: FloatingActionButton(
+        heroTag: 'chat_fab',
+        onPressed: () => _createConversation(context),
+        backgroundColor: AppColors.primary,
+        child: Icon(
+          IconsaxPlusBold.add,
+          color: AppColors.textOnPrimary,
+          size: Responsive.r(24),
+        ),
+      ),
+      body: BlocConsumer<ConversationsBloc, ConversationsState>(
+        listenWhen: (prev, curr) {
+          if (curr is ConversationsLoaded) {
+            return curr.createdConversation != null ||
+                curr.actionMessage != null;
+          }
+          return false;
+        },
+        listener: (context, state) {
+          if (state is ConversationsLoaded) {
+            if (state.createdConversation != null) {
+              final conv = state.createdConversation!;
+              context
+                  .read<ConversationsBloc>()
+                  .add(const ConversationsClearMessage());
+              _openChat(context, conv);
+            }
+            if (state.actionMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.actionMessage!)),
+              );
+              context
+                  .read<ConversationsBloc>()
+                  .add(const ConversationsClearMessage());
+            }
+          }
+        },
+        buildWhen: (prev, curr) {
+          if (prev is ConversationsLoaded && curr is ConversationsLoaded) {
+            return prev.conversations != curr.conversations;
+          }
+          return true;
+        },
+        builder: (context, state) => switch (state) {
+          ConversationsInitial() ||
+          ConversationsLoading() =>
+            const SekkaShimmerList(itemCount: 5),
+          ConversationsError(:final message) => SekkaEmptyState(
+              icon: IconsaxPlusLinear.warning_2,
+              title: message,
+              actionLabel: AppStrings.retry,
+              onAction: () => context
+                  .read<ConversationsBloc>()
+                  .add(const ConversationsLoadRequested()),
+            ),
+          ConversationsLoaded(:final conversations)
+              when conversations.isEmpty =>
+            SekkaEmptyState(
+              icon: IconsaxPlusLinear.message,
+              title: AppStrings.chatNoConversations,
+              description: AppStrings.chatNoConversationsDesc,
+            ),
+          ConversationsLoaded(:final conversations) => RefreshIndicator(
+              onRefresh: () async => context
+                  .read<ConversationsBloc>()
+                  .add(const ConversationsRefreshRequested()),
+              color: AppColors.primary,
+              child: ListView.separated(
+                padding: EdgeInsets.all(Responsive.w(20)),
+                itemCount: conversations.length,
+                separatorBuilder: (_, __) =>
+                    SizedBox(height: Responsive.h(10)),
+                itemBuilder: (context, index) =>
+                    _buildConversationItem(
+                  context,
+                  conversations[index],
+                  isDark,
+                ),
+              ),
+            ),
+        },
+      ),
+    );
   }
 
-  Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
-    try {
-      final result = await widget.repository.getConversations();
-      if (!mounted) return;
-      switch (result) {
-        case ApiSuccess(:final data):
-          setState(() { _data = data; _isLoading = false; });
-        case ApiFailure(:final error):
-          setState(() { _error = error.arabicMessage; _isLoading = false; });
-      }
-    } catch (_) {
-      if (!mounted) return;
-      setState(() { _error = 'مفيش نت — جرّب تاني لما النت يرجع'; _isLoading = false; });
-    }
-  }
-
-  Future<void> _createConversation() async {
-    final args = await _showNewConversationDialog();
-    if (args == null || !mounted) return;
+  Future<void> _createConversation(BuildContext context) async {
+    final args = await _showNewConversationDialog(context);
+    if (args == null) return;
 
     final (chatType, message) = args;
+    if (!context.mounted) return;
 
-    final result = await widget.repository.createConversation(
-      chatType: chatType,
-      initialMessage: message,
-    );
-    if (!mounted) return;
-    switch (result) {
-      case ApiSuccess(:final data):
-        _openChat(data);
-      case ApiFailure(:final error):
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.arabicMessage)),
-        );
-    }
+    context.read<ConversationsBloc>().add(ConversationCreateRequested(
+          chatType: chatType,
+          initialMessage: message,
+        ));
   }
 
-  Future<(int, String)?> _showNewConversationDialog() async {
+  Future<(int, String)?> _showNewConversationDialog(
+    BuildContext context,
+  ) async {
     int selectedType = 0;
     final messageController = TextEditingController();
 
@@ -88,7 +146,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+          backgroundColor:
+              isDark ? AppColors.surfaceDark : AppColors.surface,
           title: Text(
             AppStrings.chatNewConversation,
             style: AppTypography.headlineSmall.copyWith(
@@ -101,7 +160,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Type chips
               Wrap(
                 spacing: Responsive.w(8),
                 runSpacing: Responsive.h(8),
@@ -109,7 +167,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                   final (value, label) = t;
                   final isSelected = selectedType == value;
                   return GestureDetector(
-                    onTap: () => setDialogState(() => selectedType = value),
+                    onTap: () =>
+                        setDialogState(() => selectedType = value),
                     child: Container(
                       padding: EdgeInsets.symmetric(
                         horizontal: Responsive.w(14),
@@ -118,7 +177,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.primary.withValues(alpha: 0.08),
+                            : AppColors.primary
+                                .withValues(alpha: 0.08),
                         borderRadius:
                             BorderRadius.circular(Responsive.r(10)),
                       ),
@@ -136,7 +196,6 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                 }).toList(),
               ),
               SizedBox(height: Responsive.h(16)),
-              // Message
               TextField(
                 controller: messageController,
                 textDirection: TextDirection.rtl,
@@ -154,14 +213,16 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
                         : AppColors.textCaption,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(Responsive.r(12)),
+                    borderRadius:
+                        BorderRadius.circular(Responsive.r(12)),
                     borderSide: BorderSide(
                       color: isDark
                           ? AppColors.borderDark
                           : AppColors.border,
                     ),
                   ),
-                  contentPadding: EdgeInsets.all(Responsive.w(12)),
+                  contentPadding:
+                      EdgeInsets.all(Responsive.w(12)),
                 ),
               ),
             ],
@@ -196,75 +257,29 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     );
   }
 
-  void _openChat(ConversationModel conversation) {
+  void _openChat(BuildContext context, ConversationModel conversation) {
     Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
         builder: (_) => ChatMessagesScreen(
-          repository: widget.repository,
+          repository: repository,
           conversation: conversation,
         ),
       ),
-    ).then((_) => _load());
+    ).then((_) {
+      if (context.mounted) {
+        context
+            .read<ConversationsBloc>()
+            .add(const ConversationsRefreshRequested());
+      }
+    });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: SekkaAppBar(title: AppStrings.chatTitle),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'chat_fab',
-        onPressed: _createConversation,
-        backgroundColor: AppColors.primary,
-        child: Icon(
-          IconsaxPlusBold.add,
-          color: AppColors.textOnPrimary,
-          size: Responsive.r(24),
-        ),
-      ),
-      body: _buildBody(isDark),
-    );
-  }
-
-  Widget _buildBody(bool isDark) {
-    if (_isLoading) return const SekkaShimmerList(itemCount: 5);
-
-    if (_error != null) {
-      return SekkaEmptyState(
-        icon: IconsaxPlusLinear.warning_2,
-        title: _error!,
-        actionLabel: AppStrings.retry,
-        onAction: _load,
-      );
-    }
-
-    if (_data == null || _data!.items.isEmpty) {
-      return SekkaEmptyState(
-        icon: IconsaxPlusLinear.message,
-        title: AppStrings.chatNoConversations,
-        description: AppStrings.chatNoConversationsDesc,
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _load,
-      color: AppColors.primary,
-      child: ListView.separated(
-        padding: EdgeInsets.all(Responsive.w(20)),
-        itemCount: _data!.items.length,
-        separatorBuilder: (_, __) => SizedBox(height: Responsive.h(10)),
-        itemBuilder: (context, index) {
-          final conv = _data!.items[index];
-          return _buildConversationItem(conv, isDark);
-        },
-      ),
-    );
-  }
-
-  Widget _buildConversationItem(ConversationModel conv, bool isDark) {
+  Widget _buildConversationItem(
+    BuildContext context,
+    ConversationModel conv,
+    bool isDark,
+  ) {
     final chatTypeLabel = switch (conv.chatType) {
       0 => AppStrings.chatTypeSupport,
       1 => AppStrings.chatTypeComplaint,
@@ -275,7 +290,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     return SekkaCard(
       color: isDark ? AppColors.surfaceDark : AppColors.surface,
       padding: EdgeInsets.all(Responsive.w(16)),
-      onTap: () => _openChat(conv),
+      onTap: () => _openChat(context, conv),
       child: Row(
         children: [
           Container(
@@ -289,7 +304,8 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
               conv.isClosed
                   ? IconsaxPlusBold.message_remove
                   : IconsaxPlusBold.message,
-              color: conv.isClosed ? AppColors.textCaption : AppColors.primary,
+              color:
+                  conv.isClosed ? AppColors.textCaption : AppColors.primary,
               size: Responsive.r(22),
             ),
           ),

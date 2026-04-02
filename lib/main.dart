@@ -48,6 +48,8 @@ import 'features/sync/presentation/bloc/sync_event.dart';
 import 'features/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'features/wallet/data/repositories/wallet_repository_impl.dart';
 import 'features/wallet/presentation/bloc/wallet_bloc.dart';
+import 'features/chat/data/repositories/chat_repository.dart';
+import 'features/notifications/data/repositories/notification_repository.dart';
 import 'shared/network/dio_client.dart';
 import 'shared/storage/token_storage.dart';
 import 'shared/storage/user_storage.dart';
@@ -187,6 +189,10 @@ void main() async {
   final breakRepository =
       BreakRepositoryImpl(remoteDataSource: breakDataSource);
 
+  // Chat & Notifications
+  final chatRepository = ChatRepository(dioClient.dio);
+  final notificationRepository = NotificationRepository(dioClient.dio);
+
   // Offline write queue — flushes ALL pending actions when back online
   await OfflineQueueService.instance.initialize(
     executor: (op) async {
@@ -234,6 +240,19 @@ void main() async {
           await breakRepository.endBreak(
             energyAfter: op.payload['energyAfter'] as int,
           );
+        // Chat actions
+        case QueueOperationType.chatSend:
+          await chatRepository.sendMessage(
+            op.payload['conversationId'] as String,
+            content: op.payload['content'] as String,
+          );
+        // Notification actions
+        case QueueOperationType.notificationRead:
+          await notificationRepository.markAsRead(
+            op.payload['notificationId'] as String,
+          );
+        case QueueOperationType.notificationReadAll:
+          await notificationRepository.markAllAsRead();
       }
     },
   );

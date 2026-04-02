@@ -16,6 +16,8 @@ import '../../../auth/presentation/bloc/auth_state.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../notifications/data/repositories/notification_repository.dart';
+import '../../../notifications/presentation/bloc/notifications_bloc.dart';
+import '../../../notifications/presentation/bloc/notifications_event.dart';
 import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../routes/presentation/screens/route_screen.dart';
 import '../../../breaks/presentation/bloc/break_bloc.dart';
@@ -68,8 +70,11 @@ class HomeScreen extends StatelessWidget {
     return Navigator.push<void>(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => NotificationsScreen(
-          repository: NotificationRepository(dio),
+        builder: (_) => BlocProvider(
+          create: (_) => NotificationsBloc(
+            repository: NotificationRepository(dio),
+          )..add(const NotificationsLoadRequested()),
+          child: const NotificationsScreen(),
         ),
       ),
     );
@@ -394,11 +399,13 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildBreakSection(BuildContext context, bool isDark) {
     return BlocConsumer<BreakBloc, BreakState>(
+      listenWhen: (prev, curr) => curr is BreakStarted || curr is BreakEnded,
       listener: (context, state) {
         if (state is BreakStarted || state is BreakEnded) {
           context.read<BreakBloc>().add(const BreakCheckRequested());
         }
       },
+      buildWhen: (prev, curr) => curr is BreakCheckLoaded,
       builder: (context, state) {
         if (state is! BreakCheckLoaded) return const SizedBox.shrink();
         if (state.activeBreak != null) {
@@ -484,6 +491,12 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildDailyStats(bool isDark) {
     return BlocBuilder<DailyStatsBloc, DailyStatsState>(
+      buildWhen: (prev, curr) {
+        if (prev is DailyStatsLoaded && curr is DailyStatsLoaded) {
+          return prev.stats != curr.stats;
+        }
+        return true;
+      },
       builder: (context, state) {
         final String orders;
         final String earnings;

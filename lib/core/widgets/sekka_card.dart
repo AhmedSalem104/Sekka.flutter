@@ -30,7 +30,7 @@ class SekkaCard extends StatelessWidget {
         border: borderColor != null ? Border.all(color: borderColor!) : null,
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0D000000),
+            color: AppColors.shadowLight,
             blurRadius: 10,
             offset: Offset(0, 2),
           ),

@@ -47,6 +47,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: SekkaAppBar(title: AppStrings.settings),
       body: BlocConsumer<SettingsBloc, SettingsState>(
+        listenWhen: (prev, curr) =>
+            curr is SettingsLoaded && curr.errorMessage != null,
         listener: (context, state) {
           if (state is SettingsLoaded && state.errorMessage != null) {
             context.showSnackBar(state.errorMessage!, isError: true);
@@ -54,6 +56,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 .read<SettingsBloc>()
                 .add(const SettingsErrorCleared());
           }
+        },
+        buildWhen: (prev, curr) {
+          if (prev is SettingsLoaded && curr is SettingsLoaded) {
+            return prev.settings != curr.settings ||
+                prev.isSaving != curr.isSaving;
+          }
+          return true;
         },
         builder: (context, state) {
           if (state is SettingsLoading) return const SekkaLoading();

@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
@@ -151,10 +152,10 @@ class _PartnerDetailScreenState extends State<PartnerDetailScreen> {
                 ),
                 child: partner.logoUrl != null
                     ? ClipOval(
-                        child: Image.network(
-                          partner.logoUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: partner.logoUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Center(
+                          errorWidget: (_, __, ___) => Center(
                             child: Text(
                               partner.name.isNotEmpty
                                   ? partner.name.characters.first

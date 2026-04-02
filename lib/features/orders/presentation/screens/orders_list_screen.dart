@@ -159,6 +159,8 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
 
             Expanded(
               child: BlocConsumer<OrdersBloc, OrdersState>(
+                listenWhen: (prev, curr) =>
+                    curr is OrdersLoaded && curr.actionMessage != null,
                 listener: (context, state) {
                   if (state is OrdersLoaded && state.actionMessage != null) {
                     final msg = state.actionMessage!;
@@ -186,6 +188,16 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                         .read<OrdersBloc>()
                         .add(const OrdersClearMessage());
                   }
+                },
+                buildWhen: (prev, curr) {
+                  if (prev is OrdersLoaded && curr is OrdersLoaded) {
+                    return prev.orders != curr.orders ||
+                        prev.isLoadingMore != curr.isLoadingMore ||
+                        prev.isActionInProgress != curr.isActionInProgress ||
+                        prev.statusFilter != curr.statusFilter ||
+                        prev.hasMore != curr.hasMore;
+                  }
+                  return true;
                 },
                 builder: (context, state) => switch (state) {
                   OrdersInitial() || OrdersLoading() => const SekkaLoading(),

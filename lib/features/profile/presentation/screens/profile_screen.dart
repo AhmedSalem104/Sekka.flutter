@@ -60,10 +60,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       appBar: SekkaAppBar(title: AppStrings.profileTitle),
       body: BlocConsumer<ProfileBloc, ProfileState>(
+        listenWhen: (prev, curr) => curr is ProfileError,
         listener: (context, state) {
           if (state is ProfileError) {
             SekkaMessageDialog.show(context, message: state.message);
           }
+        },
+        buildWhen: (prev, curr) {
+          if (prev is ProfileLoaded && curr is ProfileLoaded) {
+            return prev.profile != curr.profile ||
+                prev.completion != curr.completion ||
+                prev.stats != curr.stats;
+          }
+          return true;
         },
         builder: (context, state) {
           if (state is ProfileLoading) return const SekkaLoading();
