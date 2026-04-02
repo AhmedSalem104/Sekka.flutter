@@ -119,24 +119,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           SizedBox(height: AppSizes.lg),
 
-          // Header — avatar, name, phone, level, edit button
+          // Header — avatar, name, phone, level, stats, edit button
           ProfileHeaderCard(
             profile: state.profile,
+            stats: state.stats,
             onEditTap: () => context.push(RouteNames.editProfile),
             onAvatarTap: () => _pickProfileImage(context),
           ),
           SizedBox(height: AppSizes.lg),
 
-          // Completion — progress bar + pending steps
+          // Completion — progress bar
           ProfileCompletionCard(
             completion: state.completion,
             onStepTap: (_) => context.push(RouteNames.editProfile),
           ),
           if (!state.completion.isProfileComplete) SizedBox(height: AppSizes.lg),
-
-          // Quick stats
-          ProfileStatsSummary(stats: state.stats),
-          SizedBox(height: AppSizes.lg),
 
           // Referral code
           ReferralCodeCard(code: state.profile.referralCode ?? ''),

@@ -227,7 +227,7 @@ abstract final class AppStrings {
   static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static String get walletTitle => _isAr ? 'جيبك' : 'Wallet';
+  static String get walletTitle => _isAr ? 'جيبي' : 'Wallet';
   static String get currentBalance =>
       _isAr ? 'الفلوس اللي معاك' : 'Your money';
   static String get cashOnHand => _isAr ? 'كاش في إيدك' : 'Cash on hand';

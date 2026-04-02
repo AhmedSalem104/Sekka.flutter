@@ -8,16 +8,19 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_avatar.dart';
 import '../../domain/entities/profile_entity.dart';
+import '../../domain/entities/profile_stats_entity.dart';
 
 class ProfileHeaderCard extends StatelessWidget {
   const ProfileHeaderCard({
     super.key,
     required this.profile,
+    this.stats,
     this.onEditTap,
     this.onAvatarTap,
   });
 
   final ProfileEntity profile;
+  final ProfileStatsEntity? stats;
   final VoidCallback? onEditTap;
   final VoidCallback? onAvatarTap;
 
@@ -109,6 +112,37 @@ class ProfileHeaderCard extends StatelessWidget {
               ),
             ],
           ),
+          // Stats row
+          if (stats != null) ...[
+            SizedBox(height: AppSizes.lg),
+            Divider(
+              color: isDark ? AppColors.borderDark : AppColors.border,
+              height: 1,
+            ),
+            SizedBox(height: AppSizes.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _StatText(
+                  value: '${stats!.totalOrders}',
+                  label: AppStrings.totalOrders,
+                  isDark: isDark,
+                ),
+                _StatText(
+                  value: '${stats!.totalDelivered}',
+                  label: AppStrings.delivered,
+                  isDark: isDark,
+                ),
+                _StatText(
+                  value: stats!.totalOrders > 0
+                      ? '${((stats!.totalDelivered / stats!.totalOrders) * 100).round()}%'
+                      : '0%',
+                  label: AppStrings.successRate,
+                  isDark: isDark,
+                ),
+              ],
+            ),
+          ],
           SizedBox(height: AppSizes.lg),
           SizedBox(
             width: double.infinity,
@@ -131,6 +165,44 @@ class ProfileHeaderCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatText extends StatelessWidget {
+  const _StatText({
+    required this.value,
+    required this.label,
+    required this.isDark,
+  });
+
+  final String value;
+  final String label;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: AppTypography.headlineSmall.copyWith(
+            color: isDark
+                ? AppColors.textHeadlineDark
+                : AppColors.textHeadline,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        SizedBox(height: AppSizes.xs),
+        Text(
+          label,
+          style: AppTypography.captionSmall.copyWith(
+            color: isDark
+                ? AppColors.textCaptionDark
+                : AppColors.textCaption,
+          ),
+        ),
+      ],
     );
   }
 }

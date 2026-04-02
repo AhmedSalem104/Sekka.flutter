@@ -144,6 +144,10 @@ class SyncQueueService {
     }
   }
 
+  Future<void> clear() async {
+    await _box.clear();
+  }
+
   void dispose() {
     _connectivitySub?.cancel();
     _syncedController.close();

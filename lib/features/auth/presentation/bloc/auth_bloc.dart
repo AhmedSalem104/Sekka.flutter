@@ -1,7 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../shared/network/api_exception.dart';
+import '../../../../shared/offline/offline_queue_service.dart';
+import '../../../../shared/offline/sync_queue_service.dart';
 import '../../../../shared/storage/token_storage.dart';
 import '../../../../shared/storage/user_storage.dart';
 import '../../data/models/driver_model.dart';
@@ -34,6 +37,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   /// Notifies GoRouter when auth state changes.
   final ValueNotifier<bool> authStatusNotifier;
+
+  /// Clears all local data: tokens, user, cached bloc states, offline queues.
+  Future<void> _clearAllLocalData() async {
+    await _tokenStorage.clearTokens();
+    await _userStorage.clearDriver();
+    await HydratedBloc.storage.clear();
+    try {
+      await OfflineQueueService.instance.clear();
+      await SyncQueueService.instance.clear();
+    } catch (_) {
+      // Queue services may not be initialized
+    }
+  }
 
   Future<void> _onCheckAuth(
     AuthCheckRequested event,
@@ -102,8 +118,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     } catch (_) {
       // Even if server logout fails, clear local state
     }
-    await _tokenStorage.clearTokens();
-    await _userStorage.clearDriver();
+    await _clearAllLocalData();
     authStatusNotifier.value = false;
     emit(const AuthUnauthenticated());
   }
@@ -112,10 +127,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     AuthSessionExpired event,
     Emitter<AuthState> emit,
   ) async {
-    await _tokenStorage.clearTokens();
-    await _userStorage.clearDriver();
+    await _clearAllLocalData();
     authStatusNotifier.value = false;
-    emit(const AuthUnauthenticated(message: 'انتهت الجلسة، سجّل دخولك تاني'));
+    emit(const AuthUnauthenticated(message: 'الجلسة خلصت، سجّل دخولك تاني'));
   }
 
   Future<void> _onDeleteAccount(
@@ -147,8 +161,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
     try {
       await _repository.confirmDeletion(event.otpCode);
-      await _tokenStorage.clearTokens();
-      await _userStorage.clearDriver();
+      await _clearAllLocalData();
       authStatusNotifier.value = false;
       emit(const AuthUnauthenticated());
     } on ApiException catch (e) {

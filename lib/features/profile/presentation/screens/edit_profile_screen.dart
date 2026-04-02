@@ -18,6 +18,7 @@ import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
+import '../../domain/entities/profile_completion_entity.dart';
 import '../bloc/profile_bloc.dart';
 import '../bloc/profile_event.dart';
 import '../bloc/profile_state.dart';
@@ -83,6 +84,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               state is ProfileLoaded && state.isUpdating;
           final profile =
               state is ProfileLoaded ? state.profile : null;
+          final completion =
+              state is ProfileLoaded ? state.completion : null;
 
           return ListView(
             padding: EdgeInsets.symmetric(horizontal: AppSizes.pagePadding),
@@ -116,7 +119,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: AppSizes.xxl),
+              SizedBox(height: AppSizes.lg),
+
+              // Completion steps (dropdown)
+              if (completion != null && !completion.isProfileComplete)
+                _CompletionDropdown(
+                  completion: completion,
+                  isDark: isDark,
+                ),
 
               // Name
               SekkaInputField(
@@ -387,6 +397,212 @@ class _LicenseUploadTile extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CompletionDropdown extends StatefulWidget {
+  const _CompletionDropdown({
+    required this.completion,
+    required this.isDark,
+  });
+
+  final ProfileCompletionEntity completion;
+  final bool isDark;
+
+  @override
+  State<_CompletionDropdown> createState() => _CompletionDropdownState();
+}
+
+class _CompletionDropdownState extends State<_CompletionDropdown> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final completion = widget.completion;
+    final pendingCount = completion.pendingSteps.length;
+    final completedCount = completion.completedSteps.length;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: AppSizes.lg),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          border: Border.all(
+            color: AppColors.primary.withValues(alpha: 0.2),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Header (tappable)
+            GestureDetector(
+              onTap: () => setState(() => _expanded = !_expanded),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: EdgeInsets.all(AppSizes.md),
+                child: Row(
+                  children: [
+                    Icon(
+                      IconsaxPlusLinear.info_circle,
+                      size: AppSizes.iconSm,
+                      color: AppColors.primary,
+                    ),
+                    SizedBox(width: AppSizes.sm),
+                    Expanded(
+                      child: Text(
+                        '$pendingCount ${AppStrings.requiredStep}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.25 : 0.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        IconsaxPlusLinear.arrow_down_1,
+                        size: AppSizes.iconSm,
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Expandable content
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSizes.md,
+                  0,
+                  AppSizes.md,
+                  AppSizes.md,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Divider(
+                      color: isDark ? AppColors.borderDark : AppColors.border,
+                      height: 1,
+                    ),
+                    SizedBox(height: AppSizes.md),
+
+                    // Pending steps
+                    if (completion.pendingSteps.isNotEmpty)
+                      Wrap(
+                        spacing: AppSizes.sm,
+                        runSpacing: AppSizes.sm,
+                        children: completion.pendingSteps
+                            .map((step) => _StepChip(
+                                  label: step.stepName,
+                                  status: step.isRequired
+                                      ? _StepStatus.required
+                                      : _StepStatus.optional,
+                                  isDark: isDark,
+                                ))
+                            .toList(),
+                      ),
+
+                    // Completed steps
+                    if (completedCount > 0) ...[
+                      SizedBox(height: AppSizes.sm),
+                      Wrap(
+                        spacing: AppSizes.sm,
+                        runSpacing: AppSizes.sm,
+                        children: completion.completedSteps
+                            .map((step) => _StepChip(
+                                  label: step,
+                                  status: _StepStatus.completed,
+                                  isDark: isDark,
+                                ))
+                            .toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              crossFadeState: _expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+enum _StepStatus { completed, required, optional }
+
+class _StepChip extends StatelessWidget {
+  const _StepChip({
+    required this.label,
+    required this.status,
+    required this.isDark,
+  });
+
+  final String label;
+  final _StepStatus status;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color bgColor, Color borderColor, Color textColor, IconData icon) =
+        switch (status) {
+      _StepStatus.completed => (
+          AppColors.success.withValues(alpha: 0.1),
+          AppColors.success.withValues(alpha: 0.3),
+          AppColors.success,
+          IconsaxPlusLinear.tick_circle,
+        ),
+      _StepStatus.required => (
+          AppColors.primary.withValues(alpha: 0.08),
+          AppColors.primary.withValues(alpha: 0.3),
+          AppColors.primary,
+          IconsaxPlusLinear.warning_2,
+        ),
+      _StepStatus.optional => (
+          isDark ? AppColors.surfaceDark : AppColors.background,
+          isDark ? AppColors.borderDark : AppColors.border,
+          isDark ? AppColors.textBodyDark : AppColors.textBody,
+          IconsaxPlusLinear.info_circle,
+        ),
+    };
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.xs,
+      ),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: Responsive.r(12), color: textColor),
+          SizedBox(width: AppSizes.xs),
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: textColor,
+              decoration: status == _StepStatus.completed
+                  ? TextDecoration.lineThrough
+                  : null,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
