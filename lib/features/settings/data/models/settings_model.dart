@@ -34,7 +34,7 @@ class SettingsModel extends SettingsEntity {
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
-      theme: json['theme'] as int? ?? 0,
+      theme: json['theme'] as int? ?? 1,
       language: json['language'] as String? ?? 'ar',
       numberFormat: json['numberFormat'] as int? ?? 0,
       focusModeAutoTrigger: json['focusModeAutoTrigger'] as bool? ?? true,

@@ -4,7 +4,6 @@ import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/dio_client.dart';
-import '../../../../shared/network/paginated_response.dart';
 import '../models/invoice_model.dart';
 import '../models/invoice_summary_model.dart';
 
@@ -15,7 +14,8 @@ class InvoiceRemoteDataSource {
 
   Dio get _dio => _client.dio;
 
-  Future<PaginatedResponse<InvoiceModel>> getInvoices({
+  /// GET /invoices — returns flat list (not paginated)
+  Future<List<InvoiceModel>> getInvoices({
     int pageNumber = 1,
     int pageSize = 20,
     int? status,
@@ -24,23 +24,30 @@ class InvoiceRemoteDataSource {
       final response = await _dio.get<Map<String, dynamic>>(
         ApiConstants.invoices,
         queryParameters: {
-          'pageNumber': pageNumber,
+          'page': pageNumber,
           'pageSize': pageSize,
           if (status != null) 'status': status,
         },
       );
-      final apiResponse =
-          ApiResponse<PaginatedResponse<InvoiceModel>>.fromJson(
-        response.data!,
-        fromJsonT: (data) => PaginatedResponse.fromJson(
-          data as Map<String, dynamic>,
-          fromJsonT: InvoiceModel.fromJson,
-        ),
-      );
-      if (!apiResponse.isSuccess || apiResponse.data == null) {
-        throw ApiException(message: apiResponse.message ?? '');
+      final json = response.data!;
+      final isSuccess = json['isSuccess'] as bool? ?? false;
+      if (!isSuccess) {
+        throw ApiException(message: json['message'] as String? ?? '');
       }
-      return apiResponse.data!;
+
+      final data = json['data'];
+      if (data is List) {
+        return data
+            .map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      // If paginated response
+      if (data is Map<String, dynamic> && data.containsKey('items')) {
+        return (data['items'] as List)
+            .map((e) => InvoiceModel.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      return [];
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
@@ -82,15 +89,14 @@ class InvoiceRemoteDataSource {
       final response = await _dio.get<Map<String, dynamic>>(
         ApiConstants.invoicesSummary,
       );
-      final apiResponse = ApiResponse<InvoiceSummaryModel>.fromJson(
-        response.data!,
-        fromJsonT: (data) =>
-            InvoiceSummaryModel.fromJson(data as Map<String, dynamic>),
-      );
-      if (!apiResponse.isSuccess || apiResponse.data == null) {
-        throw ApiException(message: apiResponse.message ?? '');
+      final json = response.data!;
+      final isSuccess = json['isSuccess'] as bool? ?? false;
+      if (!isSuccess) {
+        throw ApiException(message: json['message'] as String? ?? '');
       }
-      return apiResponse.data!;
+
+      final data = json['data'] as Map<String, dynamic>? ?? {};
+      return InvoiceSummaryModel.fromJson(data);
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

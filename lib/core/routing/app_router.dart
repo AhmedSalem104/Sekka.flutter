@@ -40,10 +40,19 @@ import '../../features/notifications/presentation/bloc/notifications_event.dart'
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
 import '../../features/sos/data/repositories/sos_repository.dart';
 import '../../features/sos/presentation/screens/sos_history_screen.dart';
+import '../../features/invoices/data/datasources/invoice_remote_datasource.dart';
+import '../../features/invoices/data/repositories/invoice_repository_impl.dart';
+import '../../features/invoices/presentation/bloc/invoices_bloc.dart';
+import '../../features/invoices/presentation/bloc/invoices_event.dart';
+import '../../features/invoices/presentation/screens/invoices_list_screen.dart';
 import '../../features/badge/data/repositories/badge_repository.dart';
 import '../../features/badge/presentation/bloc/badge_bloc.dart';
 import '../../features/badge/presentation/bloc/badge_event.dart';
 import '../../features/badge/presentation/screens/badge_screen.dart';
+import '../../features/gamification/data/repositories/gamification_repository.dart';
+import '../../features/gamification/presentation/bloc/gamification_bloc.dart';
+import '../../features/gamification/presentation/bloc/gamification_event.dart';
+import '../../features/gamification/presentation/screens/gamification_screen.dart';
 import '../../shared/network/dio_client.dart';
 import 'route_names.dart';
 
@@ -200,11 +209,17 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       ),
       GoRoute(
         path: RouteNames.invoices,
-        builder: (_, __) => const _PlaceholderScreen(name: 'الفواتير'),
-      ),
-      GoRoute(
-        path: RouteNames.invoiceDetail,
-        builder: (_, __) => const _PlaceholderScreen(name: 'تفاصيل الفاتورة'),
+        builder: (context, __) {
+          final dioClient = context.read<DioClient>();
+          final dataSource = InvoiceRemoteDataSource(dioClient);
+          final repository =
+              InvoiceRepositoryImpl(remoteDataSource: dataSource);
+          return BlocProvider(
+            create: (_) => InvoicesBloc(repository: repository)
+              ..add(const InvoicesLoadRequested()),
+            child: const InvoicesListScreen(),
+          );
+        },
       ),
 
       // Main routes
@@ -312,6 +327,20 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
           );
         },
       ),
+      // Gamification
+      GoRoute(
+        path: RouteNames.gamification,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return BlocProvider(
+            create: (_) =>
+                GamificationBloc(repository: GamificationRepository(dio))
+                  ..add(const GamificationLoadRequested()),
+            child: const GamificationScreen(),
+          );
+        },
+      ),
+
       // Partners
       GoRoute(
         path: RouteNames.partners,

@@ -37,6 +37,25 @@ class InvoiceEntity extends Equatable {
   final DateTime? paidAt;
   final List<InvoiceLineItem> lineItems;
 
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'invoiceNumber': invoiceNumber,
+        'periodStart': periodStart,
+        'periodEnd': periodEnd,
+        'totalOrders': totalOrders,
+        'totalEarnings': totalEarnings,
+        'totalCommissions': totalCommissions,
+        'totalExpenses': totalExpenses,
+        'netAmount': netAmount,
+        'status': status,
+        'statusName': statusName,
+        'statusNameAr': statusNameAr,
+        'issuedAt': issuedAt.toIso8601String(),
+        'dueDate': dueDate,
+        'paidAt': paidAt?.toIso8601String(),
+        'lineItems': lineItems.map((e) => e.toJson()).toList(),
+      };
+
   @override
   List<Object?> get props => [id, invoiceNumber, netAmount, status];
 }
@@ -55,6 +74,14 @@ class InvoiceLineItem extends Equatable {
   final double unitPrice;
   final double total;
   final String type;
+
+  Map<String, dynamic> toJson() => {
+        'description': description,
+        'quantity': quantity,
+        'unitPrice': unitPrice,
+        'total': total,
+        'type': type,
+      };
 
   @override
   List<Object?> get props => [description, total, type];

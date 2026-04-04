@@ -50,4 +50,7 @@ abstract final class RouteNames {
   // Badge
   static const String badge = '/badge';
   static const String badgeScanner = '/badge/scanner';
+
+  // Gamification
+  static const String gamification = '/gamification';
 }

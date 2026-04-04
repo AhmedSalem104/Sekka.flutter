@@ -25,6 +25,11 @@ import '../../../orders/presentation/screens/order_detail_screen.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../routes/presentation/screens/navigation_screen.dart';
+import '../../../statistics/data/datasources/statistics_remote_datasource.dart';
+import '../../../statistics/data/repositories/statistics_repository_impl.dart';
+import '../../../statistics/presentation/bloc/statistics_bloc.dart';
+import '../../../statistics/presentation/screens/statistics_screen.dart';
+import '../bloc/daily_stats_bloc.dart';
 import '../../../breaks/presentation/bloc/break_bloc.dart';
 import '../../../breaks/presentation/widgets/active_break_card.dart';
 import '../../../breaks/presentation/widgets/break_suggestion_card.dart';
@@ -52,6 +57,8 @@ class HomeScreen extends StatelessWidget {
               _buildAppBar(context, isDark),
               SizedBox(height: Responsive.h(20)),
               _buildWelcomeSection(context, isDark),
+              SizedBox(height: Responsive.h(20)),
+              _buildEarningsCard(context, isDark),
               SizedBox(height: Responsive.h(24)),
               _buildBreakSection(context, isDark),
               SizedBox(height: Responsive.h(24)),
@@ -279,6 +286,209 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(Responsive.r(14)),
       ),
       child: Icon(icon, color: AppColors.textOnPrimary, size: Responsive.r(22)),
+    );
+  }
+
+  // ── Earnings Card ──
+
+  Widget _buildEarningsCard(BuildContext context, bool isDark) {
+    return BlocBuilder<DailyStatsBloc, DailyStatsState>(
+      buildWhen: (prev, curr) {
+        if (prev is DailyStatsLoaded && curr is DailyStatsLoaded) {
+          return prev.stats != curr.stats;
+        }
+        return true;
+      },
+      builder: (context, state) {
+        final stats = state is DailyStatsLoaded ? state.stats : null;
+
+        return GestureDetector(
+          onTap: () {
+            final dioClient = context.read<DioClient>();
+            final dataSource = StatisticsRemoteDataSource(dioClient);
+            final repository = StatisticsRepositoryImpl(
+              remoteDataSource: dataSource,
+            );
+            Navigator.push<void>(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => BlocProvider(
+                  create: (_) {
+                    final bloc = StatisticsBloc(repository: repository);
+                    if (bloc.state is! StatisticsLoaded) {
+                      bloc.add(
+                          const StatisticsTabChanged(StatisticsTab.weekly));
+                    }
+                    return bloc;
+                  },
+                  child: const StatisticsScreen(),
+                ),
+              ),
+            );
+          },
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(Responsive.w(18)),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              borderRadius: BorderRadius.circular(Responsive.r(16)),
+              border: Border.all(
+                color: isDark ? AppColors.borderDark : AppColors.border,
+              ),
+              boxShadow: isDark
+                  ? []
+                  : [
+                      BoxShadow(
+                        color: AppColors.shadowLight,
+                        blurRadius: 10,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title row
+                  Row(
+                    children: [
+                      Container(
+                        width: Responsive.r(36),
+                        height: Responsive.r(36),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withValues(alpha: 0.1),
+                          borderRadius:
+                              BorderRadius.circular(Responsive.r(10)),
+                        ),
+                        child: Icon(
+                          IconsaxPlusLinear.wallet_money,
+                          color: AppColors.success,
+                          size: Responsive.r(18),
+                        ),
+                      ),
+                      SizedBox(width: Responsive.w(10)),
+                      Text(
+                        AppStrings.todayEarnings,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textHeadlineDark
+                              : AppColors.textHeadline,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Icon(
+                        IconsaxPlusLinear.arrow_left_2,
+                        color: isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption,
+                        size: Responsive.r(16),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: Responsive.h(16)),
+
+                  // Stats row
+                  Row(
+                    children: [
+                      // Net profit
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              stats != null
+                                  ? '${stats.netProfit.toInt()}'
+                                  : '--',
+                              style: AppTypography.headlineMedium.copyWith(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: Responsive.h(2)),
+                            Text(
+                              AppStrings.netProfit,
+                              style: AppTypography.captionSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _earningsDivider(isDark),
+                      // Earnings
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              stats != null
+                                  ? '${stats.earnings.toInt()}'
+                                  : '--',
+                              style: AppTypography.headlineMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.textHeadlineDark
+                                    : AppColors.textHeadline,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: Responsive.h(2)),
+                            Text(
+                              AppStrings.totalEarningsLabel,
+                              style: AppTypography.captionSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _earningsDivider(isDark),
+                      // Orders
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              stats != null
+                                  ? '${stats.totalOrders}'
+                                  : '--',
+                              style: AppTypography.headlineMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.textHeadlineDark
+                                    : AppColors.textHeadline,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: Responsive.h(2)),
+                            Text(
+                              AppStrings.statOrders,
+                              style: AppTypography.captionSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _earningsDivider(bool isDark) {
+    return Container(
+      width: 1,
+      height: Responsive.h(36),
+      color: isDark ? AppColors.borderDark : AppColors.border,
     );
   }
 

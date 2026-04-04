@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../home/presentation/bloc/daily_stats_bloc.dart';
 import '../../domain/entities/daily_settlement_summary_entity.dart';
 import '../utils/settlement_helpers.dart';
 
@@ -63,6 +65,43 @@ class DailySummaryCard extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // Today's earnings
+          BlocBuilder<DailyStatsBloc, DailyStatsState>(
+            builder: (context, statsState) {
+              final stats =
+                  statsState is DailyStatsLoaded ? statsState.stats : null;
+              return Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(AppSizes.md),
+                decoration: BoxDecoration(
+                  color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryStat(
+                        label: AppStrings.invoiceNetAmount,
+                        value: stats != null
+                            ? '${stats.netProfit.toInt()} ${AppStrings.currency}'
+                            : '--',
+                      ),
+                    ),
+                    Expanded(
+                      child: _SummaryStat(
+                        label: AppStrings.invoiceCommissions,
+                        value: stats != null
+                            ? '${stats.commissions.toInt()} ${AppStrings.currency}'
+                            : '--',
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ],
       ),

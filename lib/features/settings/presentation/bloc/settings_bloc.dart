@@ -56,7 +56,14 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
       emit(const SettingsLoading());
     }
     try {
-      final settings = await _repository.getSettings();
+      final remote = await _repository.getSettings();
+      // Preserve local theme/language — user controls these, not the server
+      final settings = current is SettingsLoaded
+          ? remote.copyWith(
+              theme: current.settings.theme,
+              language: current.settings.language,
+            )
+          : remote;
       _syncNotifiers(settings.theme, settings.language);
       emit(SettingsLoaded(settings: settings));
     } on ApiException catch (e) {
@@ -72,8 +79,16 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
     SettingsRefreshRequested event,
     Emitter<SettingsState> emit,
   ) async {
+    final current = state;
     try {
-      final settings = await _repository.getSettings();
+      final remote = await _repository.getSettings();
+      // Preserve local theme/language — user controls these, not the server
+      final settings = current is SettingsLoaded
+          ? remote.copyWith(
+              theme: current.settings.theme,
+              language: current.settings.language,
+            )
+          : remote;
       _syncNotifiers(settings.theme, settings.language);
       emit(SettingsLoaded(settings: settings));
     } on ApiException {

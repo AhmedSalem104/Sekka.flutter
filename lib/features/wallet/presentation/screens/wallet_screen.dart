@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
+import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_hint_tip.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
@@ -160,6 +163,56 @@ class _WalletScreenState extends State<WalletScreen> {
           SekkaHintTip(
             hintKey: 'wallet_summary',
             message: AppStrings.hintWalletSummary,
+          ),
+          SizedBox(height: AppSizes.lg),
+
+          // Invoices button
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: SekkaCard(
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              padding: EdgeInsets.symmetric(
+                horizontal: Responsive.w(16),
+                vertical: Responsive.h(14),
+              ),
+              onTap: () => context.push(RouteNames.invoices),
+              child: Row(
+                children: [
+                  Container(
+                    width: Responsive.r(40),
+                    height: Responsive.r(40),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(Responsive.r(10)),
+                    ),
+                    child: Icon(
+                      IconsaxPlusLinear.receipt_item,
+                      color: AppColors.primary,
+                      size: Responsive.r(20),
+                    ),
+                  ),
+                  SizedBox(width: Responsive.w(12)),
+                  Expanded(
+                    child: Text(
+                      AppStrings.invoicesTitle,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: isDark
+                            ? AppColors.textHeadlineDark
+                            : AppColors.textHeadline,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    IconsaxPlusLinear.arrow_left_2,
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
+                    size: Responsive.r(18),
+                  ),
+                ],
+              ),
+            ),
           ),
           SizedBox(height: AppSizes.xxl),
 

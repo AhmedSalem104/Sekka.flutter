@@ -160,6 +160,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
+            icon: IconsaxPlusLinear.cup,
+            label: AppStrings.gamificationTitle,
+            onTap: () => context.push(RouteNames.gamification),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
             icon: IconsaxPlusLinear.notification,
             label: AppStrings.notificationsTitle,
             onTap: () => context.push(RouteNames.notifications),
