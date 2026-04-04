@@ -9,6 +9,7 @@ import '../../../../shared/network/dio_client.dart';
 import '../../../../shared/network/paginated_response.dart';
 import '../models/emergency_contact_model.dart';
 import '../models/expense_model.dart';
+import '../models/health_score_model.dart';
 import '../models/leaderboard_model.dart';
 import '../models/profile_completion_model.dart';
 import '../models/profile_model.dart';
@@ -67,6 +68,24 @@ class ProfileRemoteDataSource {
         response.data!,
         fromJsonT: (data) =>
             ProfileStatsModel.fromJson(data as Map<String, dynamic>),
+      );
+      if (!apiResponse.isSuccess || apiResponse.data == null) {
+        throw ApiException(message: apiResponse.message ?? '');
+      }
+      return apiResponse.data!;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<HealthScoreModel> getHealthScore() async {
+    try {
+      final response =
+          await _dio.get<Map<String, dynamic>>(ApiConstants.healthScore);
+      final apiResponse = ApiResponse<HealthScoreModel>.fromJson(
+        response.data!,
+        fromJsonT: (data) =>
+            HealthScoreModel.fromJson(data as Map<String, dynamic>),
       );
       if (!apiResponse.isSuccess || apiResponse.data == null) {
         throw ApiException(message: apiResponse.message ?? '');

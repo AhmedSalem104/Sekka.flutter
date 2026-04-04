@@ -22,6 +22,8 @@ abstract final class RouteNames {
   static const String emergencyContacts = '/emergency-contacts';
   static const String profileExpenses = '/profile-expenses';
   static const String settings = '/settings';
+  static const String privacy = '/privacy';
+  static const String shiftSummary = '/shift-summary';
 
   // Financial
   static const String settlements = '/settlements';

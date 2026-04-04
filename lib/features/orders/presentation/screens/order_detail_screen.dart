@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -268,6 +269,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           const PopupMenuItem(value: 'transfer', child: Text('حوّل لسائق تاني')),
         if (isActive)
           const PopupMenuItem(value: 'swap_address', child: Text('غيّر العنوان')),
+        if (order.trackingCode != null && order.trackingCode!.isNotEmpty)
+          PopupMenuItem(value: 'share_tracking', child: Text(AppStrings.shareTrackingLink)),
         const PopupMenuItem(value: 'photo', child: Text('صوّر الطلب')),
         const PopupMenuItem(value: 'disclaimer', child: Text('إخلاء مسؤولية')),
         if (isDeliveredOrFailed)
@@ -295,6 +298,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         _showSheet(_TransferBottomSheet(orderId: widget.orderId));
       case 'swap_address':
         _showSheet(_SwapAddressBottomSheet(orderId: widget.orderId));
+      case 'share_tracking':
+        _shareTrackingLink(order.trackingCode!);
       case 'photo':
         _showPhotoTypePicker();
       case 'disclaimer':
@@ -311,6 +316,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       case 'book_slot':
         _showSheet(_BookSlotBottomSheet(orderId: widget.orderId));
     }
+  }
+
+  void _shareTrackingLink(String trackingCode) {
+    final url = 'https://sekka.runasp.net/track/$trackingCode';
+    SharePlus.instance.share(
+      ShareParams(text: url),
+    );
   }
 
   void _showSheet(Widget sheet) {

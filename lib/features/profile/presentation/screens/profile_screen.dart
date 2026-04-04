@@ -70,7 +70,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (prev is ProfileLoaded && curr is ProfileLoaded) {
             return prev.profile != curr.profile ||
                 prev.completion != curr.completion ||
-                prev.stats != curr.stats;
+                prev.stats != curr.stats ||
+                prev.healthScore != curr.healthScore;
           }
           return true;
         },
@@ -164,6 +165,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
+            icon: IconsaxPlusLinear.timer_start,
+            label: AppStrings.shiftPerformanceTitle,
+            onTap: () => context.push(RouteNames.shiftSummary),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
             icon: IconsaxPlusLinear.chart_2,
             label: AppStrings.detailedStats,
             onTap: () => context.push(RouteNames.profileStats),
@@ -189,6 +197,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: IconsaxPlusLinear.message,
             label: AppStrings.chatTitle,
             onTap: () => context.push(RouteNames.chat),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
+            icon: IconsaxPlusLinear.shield_tick,
+            label: AppStrings.privacySettings,
+            onTap: () => context.push(RouteNames.privacy),
           ),
           SizedBox(height: AppSizes.sm),
 

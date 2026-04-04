@@ -520,6 +520,36 @@ abstract final class AppStrings {
       _isAr ? 'يلا نستورد!' : 'Import';
   static String get separator => _isAr ? 'الفاصل' : 'Separator';
 
+  // Address Selection
+  static String get savedAddresses =>
+      _isAr ? 'العناوين المحفوظة' : 'Saved Addresses';
+  static String get nearbyAddresses =>
+      _isAr ? 'عناوين قريبة' : 'Nearby Addresses';
+  static String get noSavedAddresses =>
+      _isAr ? 'مفيش عناوين محفوظة للعميل ده' : 'No saved addresses for this customer';
+  static String get noNearbyAddresses =>
+      _isAr ? 'مفيش عناوين قريبة' : 'No nearby addresses';
+  static String get addNewAddress =>
+      _isAr ? 'إضافة عنوان جديد' : 'Add New Address';
+  static String get selectAddress =>
+      _isAr ? 'اختر عنوان' : 'Select Address';
+  static String get searchAddress =>
+      _isAr ? 'ابحث عن عنوان...' : 'Search address...';
+  static String get addressLandmarks =>
+      _isAr ? 'علامات مميزة' : 'Landmarks';
+  static String get addressDeliveryNotes =>
+      _isAr ? 'ملاحظات التوصيل' : 'Delivery Notes';
+  static String get addressSaved =>
+      _isAr ? 'تم حفظ العنوان' : 'Address saved';
+  static String get addressDeleted =>
+      _isAr ? 'تم مسح العنوان' : 'Address deleted';
+  static String get visits =>
+      _isAr ? 'زيارات' : 'visits';
+  static String get pickFromMap =>
+      _isAr ? 'اختر من الخريطة' : 'Pick from map';
+  static String get locationSelected =>
+      _isAr ? 'تم تحديد الموقع ✓' : 'Location selected ✓';
+
   // Order — Create Steps (legacy const kept for non-duplicates)
   static const String stepCustomerInfo = 'العميل';
   static const String stepAddresses = 'العناوين';
@@ -718,6 +748,10 @@ abstract final class AppStrings {
       _isAr ? 'شارك الكود ده مع سائقين تانيين — لما حد يسجل بيه، هتكسبوا نقاط الاتنين!' : 'Share this code with other drivers — when someone signs up with it, you both earn points!';
   static String get copyCode => _isAr ? 'نسخ الكود' : 'Copy code';
   static String get shareCode => _isAr ? 'شارك الكود' : 'Share code';
+  static String get shareTrackingLink =>
+      _isAr ? 'مشاركة رابط التتبع' : 'Share tracking link';
+  static String get trackingLinkCopied =>
+      _isAr ? 'تم نسخ رابط التتبع!' : 'Tracking link copied!';
   static String get codeCopied =>
       _isAr ? 'تم نسخ الكود!' : 'Code copied!';
   static String get haveInviteCode =>
@@ -775,6 +809,25 @@ abstract final class AppStrings {
   static String get expenseCategory => _isAr ? 'النوع' : 'Category';
   static String get expenseAmount => _isAr ? 'المبلغ' : 'Amount';
   static String get expenseNotes => _isAr ? 'ملاحظات' : 'Notes';
+
+  // Health Score
+  static String get healthScore => _isAr ? 'مؤشر الأداء' : 'Health Score';
+  static String get successRateScore =>
+      _isAr ? 'نسبة النجاح' : 'Success Rate';
+  static String get customerRatingScore =>
+      _isAr ? 'تقييم العملاء' : 'Customer Rating';
+  static String get commitmentScore =>
+      _isAr ? 'الالتزام' : 'Commitment';
+  static String get activityScore =>
+      _isAr ? 'النشاط' : 'Activity';
+  static String get cashHandlingScore =>
+      _isAr ? 'إدارة الكاش' : 'Cash Handling';
+  static String get healthStatusGood => _isAr ? 'ممتاز' : 'Good';
+  static String get healthStatusAverage => _isAr ? 'متوسط' : 'Average';
+  static String get healthStatusPoor => _isAr ? 'ضعيف' : 'Poor';
+  static String get trendUp => _isAr ? 'صاعد' : 'Improving';
+  static String get trendDown => _isAr ? 'هابط' : 'Declining';
+  static String get trendStable => _isAr ? 'مستقر' : 'Stable';
 
   // Settings
   static String get settings => _isAr ? 'الإعدادات' : 'Settings';
@@ -865,6 +918,64 @@ abstract final class AppStrings {
       _isAr ? 'لازم تسمح بالموقع' : 'Location permission required';
   static String get locationServiceDisabled =>
       _isAr ? 'فعّل خدمة الموقع الأول' : 'Enable location services first';
+
+  // Privacy & Data
+  static String get privacySettings =>
+      _isAr ? 'الخصوصية والبيانات' : 'Privacy & Data';
+  static String get consentsSectionTitle =>
+      _isAr ? 'الموافقات' : 'Consents';
+  static String get consentLocationTracking =>
+      _isAr ? 'تتبع الموقع' : 'Location Tracking';
+  static String get consentLocationTrackingDesc =>
+      _isAr
+          ? 'السماح بتتبع موقعك لتحسين التوصيل'
+          : 'Allow tracking your location to optimize delivery';
+  static String get consentMarketing =>
+      _isAr ? 'الرسائل التسويقية' : 'Marketing Messages';
+  static String get consentMarketingDesc =>
+      _isAr
+          ? 'استقبال عروض وتحديثات تسويقية'
+          : 'Receive promotional offers and updates';
+  static String get myDataSectionTitle =>
+      _isAr ? 'بياناتي' : 'My Data';
+  static String get exportMyData =>
+      _isAr ? 'تصدير بياناتي' : 'Export My Data';
+  static String get exportMyDataDesc =>
+      _isAr
+          ? 'هنجهّزلك ملف فيه كل بياناتك وهنبعتهولك'
+          : 'We will prepare a file with all your data and send it to you';
+  static String get requestExport =>
+      _isAr ? 'اطلب تصدير' : 'Request Export';
+  static String get exportRequestSent =>
+      _isAr
+          ? 'تم تقديم طلب تصدير البيانات بنجاح'
+          : 'Data export request submitted successfully';
+  static String get deleteMyData =>
+      _isAr ? 'حذف بياناتي' : 'Delete My Data';
+  static String get deleteMyDataDesc =>
+      _isAr
+          ? 'طلب حذف كل بياناتك من النظام. العملية دي مش ممكن التراجع عنها'
+          : 'Request deletion of all your data. This action cannot be undone';
+  static String get requestDeletion =>
+      _isAr ? 'اطلب حذف' : 'Request Deletion';
+  static String get deleteRequestSent =>
+      _isAr
+          ? 'تم تقديم طلب حذف البيانات بنجاح'
+          : 'Data deletion request submitted successfully';
+  static String get deleteDataConfirmTitle =>
+      _isAr ? 'حذف البيانات' : 'Delete Data';
+  static String get deleteDataConfirmDesc =>
+      _isAr
+          ? 'لو أكدت، هنبدأ نحذف كل بياناتك. العملية دي مينفعش نرجع فيها.'
+          : 'Once confirmed, we will begin deleting all your data. This cannot be reversed.';
+  static String get deleteDataReason =>
+      _isAr ? 'إيه السبب؟ (اختياري)' : 'Reason (optional)';
+  static String get confirmDeleteData =>
+      _isAr ? 'تأكيد الحذف' : 'Confirm Deletion';
+  static String get deleteStatusTitle =>
+      _isAr ? 'حالة طلب الحذف' : 'Deletion Request Status';
+  static String get deleteStatusPending =>
+      _isAr ? 'الطلب قيد المراجعة' : 'Request is under review';
 
   // Customers
   static String get customers => _isAr ? 'العملاء' : 'Customers';
@@ -1032,8 +1143,8 @@ abstract final class AppStrings {
   static String get landmarks => _isAr ? 'معالم قريبة' : 'Nearby landmarks';
   static String get deliveryNotes =>
       _isAr ? 'ملاحظات التوصيل' : 'Delivery notes';
-  static String get nearbyAddresses =>
-      _isAr ? 'عناوين قريبة' : 'Nearby addresses';
+  static String get noResults =>
+      _isAr ? 'مفيش نتائج' : 'No results';
 
   // Caller ID
   static String get callerId => _isAr ? 'معرّف المتصل' : 'Caller ID';
@@ -1162,6 +1273,10 @@ abstract final class AppStrings {
   // General
   static String get retry => _isAr ? 'حاول تاني' : 'Retry';
   static String get save => _isAr ? 'حفظ' : 'Save';
+  static String get edit => _isAr ? 'تعديل' : 'Edit';
+  static String get delete => _isAr ? 'مسح' : 'Delete';
+  static String get deleteConfirm =>
+      _isAr ? 'متأكد عايز تمسح؟' : 'Are you sure you want to delete?';
   static String get cancel => _isAr ? 'إلغاء' : 'Cancel';
   static String get confirm => _isAr ? 'تأكيد' : 'Confirm';
   static String get skip => _isAr ? 'تخطي' : 'Skip';
@@ -1324,4 +1439,64 @@ abstract final class AppStrings {
       _isAr ? 'بنحدد مكانك...' : 'Locating...';
   static String get locationFailed =>
       _isAr ? 'مقدرناش نحدد مكانك' : 'Could not determine location';
+
+  // Shifts
+  static String get shiftStart =>
+      _isAr ? 'ابدأ الوردية' : 'Start Shift';
+  static String get shiftEnd =>
+      _isAr ? 'أنهي الوردية' : 'End Shift';
+  static String get shiftActive =>
+      _isAr ? 'الوردية شغّالة' : 'Shift Active';
+  static String get shiftInactive =>
+      _isAr ? 'مفيش وردية' : 'No Active Shift';
+  static String get shiftStarted =>
+      _isAr ? 'الوردية بدأت!' : 'Shift started!';
+  static String get shiftEnded =>
+      _isAr ? 'الوردية خلصت!' : 'Shift ended!';
+  static String get shiftSummaryTitle =>
+      _isAr ? 'ملخص الورديات' : 'Shift Summary';
+  static String get shiftPerformanceTitle =>
+      _isAr ? 'ملخص الأداء والورديات' : 'Performance & Shifts';
+  static String get totalShifts =>
+      _isAr ? 'إجمالي الورديات' : 'Total Shifts';
+  static String get totalHoursWorked =>
+      _isAr ? 'ساعات العمل' : 'Hours Worked';
+  static String get totalOrdersCompleted =>
+      _isAr ? 'الطلبات المكتملة' : 'Orders Completed';
+  static String get totalEarnings =>
+      _isAr ? 'إجمالي الأرباح' : 'Total Earnings';
+  static String get totalDistanceKm =>
+      _isAr ? 'المسافة (كم)' : 'Distance (km)';
+  static String get avgShiftDuration =>
+      _isAr ? 'متوسط مدة الوردية' : 'Avg Shift Duration';
+  static String get shiftEndConfirm =>
+      _isAr ? 'متأكد إنك عايز تنهي الوردية؟' : 'Are you sure you want to end the shift?';
+
+  // Analytics
+  static String get analyticsTitle =>
+      _isAr ? 'تحليلات الأداء' : 'Performance Analytics';
+  static String get analyticsProfitabilityTrends =>
+      _isAr ? 'اتجاهات الربحية' : 'Profitability Trends';
+  static String get analyticsTimeAnalysis =>
+      _isAr ? 'أوقات الذروة' : 'Peak Hours';
+  static String get analyticsRegionAnalysis =>
+      _isAr ? 'تحليل المناطق' : 'Region Analysis';
+  static String get analyticsSourceBreakdown =>
+      _isAr ? 'مصادر الأوردرات' : 'Order Sources';
+  static String get analyticsCustomerProfitability =>
+      _isAr ? 'أعلى عملاء ربحية' : 'Top Customers';
+  static String get analyticsCancellationReport =>
+      _isAr ? 'تقرير الإلغاءات' : 'Cancellation Report';
+  static String get analyticsRevenue =>
+      _isAr ? 'الإيراد' : 'Revenue';
+  static String get analyticsExpenses =>
+      _isAr ? 'المصاريف' : 'Expenses';
+  static String get analyticsNetProfit =>
+      _isAr ? 'صافي الربح' : 'Net Profit';
+  static String get analyticsProfitMargin =>
+      _isAr ? 'هامش الربح' : 'Profit Margin';
+  static String get analyticsOrders =>
+      _isAr ? 'طلب' : 'orders';
+  static String get analyticsNoData =>
+      _isAr ? 'مفيش بيانات كافية لسه' : 'Not enough data yet';
 }

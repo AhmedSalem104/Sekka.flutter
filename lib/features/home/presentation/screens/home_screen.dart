@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
@@ -23,17 +25,51 @@ import '../../../orders/presentation/bloc/orders_bloc.dart';
 import '../../../orders/presentation/bloc/orders_state.dart';
 import '../../../orders/presentation/screens/order_detail_screen.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_event.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
 import '../../../routes/presentation/screens/navigation_screen.dart';
 import '../../../breaks/presentation/bloc/break_bloc.dart';
 import '../../../breaks/presentation/widgets/active_break_card.dart';
 import '../../../breaks/presentation/widgets/break_suggestion_card.dart';
+import '../../../shifts/presentation/bloc/shift_bloc.dart';
+import '../../../shifts/presentation/bloc/shift_event.dart';
+import '../../../shifts/presentation/bloc/shift_state.dart';
 import '../../../sync/presentation/widgets/sync_status_indicator.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.onAvatarTap});
 
   final VoidCallback? onAvatarTap;
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  Timer? _autoRefreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-refresh every 30 seconds
+    _autoRefreshTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _refreshAll(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _refreshAll() {
+    if (!mounted) return;
+    context.read<ShiftBloc>().add(const ShiftCheckRequested());
+    context.read<ProfileBloc>().add(const ProfileRefreshRequested());
+    context.read<BreakBloc>().add(const BreakCheckRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,23 +79,28 @@ class HomeScreen extends StatelessWidget {
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: Responsive.h(16)),
-              _buildAppBar(context, isDark),
-              SizedBox(height: Responsive.h(20)),
-              _buildWelcomeSection(context, isDark),
-              SizedBox(height: Responsive.h(24)),
-              _buildBreakSection(context, isDark),
-              SizedBox(height: Responsive.h(24)),
-              _buildRouteCard(context, isDark),
-              SizedBox(height: Responsive.h(24)),
-              _buildParkingCard(context, isDark),
-              SizedBox(height: Responsive.h(120)),
-            ],
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () async => _refreshAll(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(height: Responsive.h(16)),
+                _buildAppBar(context, isDark),
+                SizedBox(height: Responsive.h(20)),
+                _buildWelcomeSection(context, isDark),
+                SizedBox(height: Responsive.h(24)),
+                _buildBreakSection(context, isDark),
+                SizedBox(height: Responsive.h(24)),
+                _buildRouteCard(context, isDark),
+                SizedBox(height: Responsive.h(24)),
+                _buildParkingCard(context, isDark),
+                SizedBox(height: Responsive.h(120)),
+              ],
+            ),
           ),
         ),
       ),
@@ -92,7 +133,7 @@ class HomeScreen extends StatelessWidget {
     return Row(
       children: [
         GestureDetector(
-          onTap: onAvatarTap,
+          onTap: widget.onAvatarTap,
           child: SekkaAvatar(imageUrl: imageUrl, size: 46),
         ),
         const Spacer(),
@@ -205,6 +246,11 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
 
+            SizedBox(height: Responsive.h(16)),
+
+            // Shift toggle button
+            _buildShiftToggle(context),
+
             // Divider + in-transit order (if exists)
             if (inTransitOrder != null) ...[
               Padding(
@@ -279,6 +325,185 @@ class HomeScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(Responsive.r(14)),
       ),
       child: Icon(icon, color: AppColors.textOnPrimary, size: Responsive.r(22)),
+    );
+  }
+
+  // ── Shift Toggle ──
+
+  Widget _buildShiftToggle(BuildContext context) {
+    return BlocConsumer<ShiftBloc, ShiftState>(
+      listenWhen: (prev, curr) {
+        // Listen for shift toggle success
+        if (prev is ShiftLoaded && curr is ShiftLoaded) {
+          return prev.isActive != curr.isActive;
+        }
+        // Listen for errors
+        if (curr is ShiftError) return true;
+        return false;
+      },
+      listener: (context, state) {
+        if (state is ShiftError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        } else if (state is ShiftLoaded) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.isActive
+                    ? AppStrings.shiftStarted
+                    : AppStrings.shiftEnded,
+              ),
+              backgroundColor:
+                  state.isActive ? AppColors.success : AppColors.textCaption,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isActive =
+            state is ShiftLoaded && state.isActive;
+        final isToggling =
+            state is ShiftLoaded && state.isToggling;
+        final isLoading = state is ShiftLoading || isToggling;
+
+        return GestureDetector(
+          onTap: isLoading
+              ? null
+              : () {
+                  if (isActive) {
+                    _showEndShiftDialog(context);
+                  } else {
+                    context
+                        .read<ShiftBloc>()
+                        .add(const ShiftStartRequested());
+                  }
+                },
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(
+              vertical: Responsive.h(12),
+            ),
+            decoration: BoxDecoration(
+              color: isActive
+                  ? AppColors.textOnPrimary
+                  : AppColors.textOnPrimary.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(Responsive.r(12)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  SizedBox(
+                    width: Responsive.r(18),
+                    height: Responsive.r(18),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.textOnPrimary,
+                    ),
+                  )
+                else
+                  Icon(
+                    isActive
+                        ? IconsaxPlusBold.stop_circle
+                        : IconsaxPlusBold.play_circle,
+                    size: Responsive.r(20),
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.textOnPrimary,
+                  ),
+                SizedBox(width: Responsive.w(8)),
+                Text(
+                  isActive
+                      ? AppStrings.shiftEnd
+                      : AppStrings.shiftStart,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isActive
+                        ? AppColors.primary
+                        : AppColors.textOnPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (isActive) ...[
+                  SizedBox(width: Responsive.w(8)),
+                  Container(
+                    width: Responsive.r(8),
+                    height: Responsive.r(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showEndShiftDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(Responsive.r(16)),
+        ),
+        title: Text(
+          AppStrings.shiftEnd,
+          textDirection: TextDirection.rtl,
+          style: AppTypography.headlineSmall.copyWith(
+            color: isDark
+                ? AppColors.textHeadlineDark
+                : AppColors.textHeadline,
+          ),
+        ),
+        content: Text(
+          AppStrings.shiftEndConfirm,
+          textDirection: TextDirection.rtl,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              AppStrings.cancel,
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<ShiftBloc>().add(const ShiftEndRequested());
+            },
+            child: Text(
+              AppStrings.confirm,
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

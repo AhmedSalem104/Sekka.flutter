@@ -22,6 +22,9 @@ import '../../../../core/widgets/sekka_stepper.dart';
 import '../../../../shared/enums/order_enums.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../customers/data/models/address_model.dart';
+import '../../../customers/data/repositories/address_repository.dart';
+import '../../../customers/data/repositories/customer_repository.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../../../partners/data/models/pickup_point_model.dart';
 import '../../../partners/data/repositories/partner_repository.dart';
@@ -30,6 +33,7 @@ import '../../data/models/order_model.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
+import '../widgets/address_picker_sheet.dart';
 
 class CreateOrderScreen extends StatefulWidget {
   const CreateOrderScreen({super.key, this.order});
@@ -57,6 +61,12 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   final _customerNameController = TextEditingController();
   final _customerPhoneController = TextEditingController();
   String? _selectedPartnerId;
+
+  // ── Address & Customer lookup ──
+  late final AddressRepository _addressRepo;
+  late final CustomerRepository _customerRepo;
+  String? _customerId;
+  List<AddressModel> _customerAddresses = [];
 
   // ── Partners & Pickup Points ──
   late final PartnerRepository _partnerRepo;
@@ -107,9 +117,12 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = _isEditMode ? null : TabController(length: 4, vsync: this);
+    _tabController = _isEditMode ? null : TabController(length: 3, vsync: this);
     _idempotencyKey = const Uuid().v4();
-    _partnerRepo = PartnerRepository(context.read<DioClient>().dio);
+    final dio = context.read<DioClient>().dio;
+    _partnerRepo = PartnerRepository(dio);
+    _addressRepo = context.read<AddressRepository>();
+    _customerRepo = CustomerRepository(dio);
 
     if (_isEditMode) {
       _prefillFromOrder(widget.order!);
@@ -177,6 +190,58 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
       _pickupAddressController.text = point.address;
       _pickupLat = point.latitude;
       _pickupLng = point.longitude;
+    });
+  }
+
+  /// Look up customer by phone → load their saved addresses.
+  Future<void> _lookupCustomerByPhone(String phone) async {
+    if (phone.length < 10) {
+      setState(() {
+        _customerId = null;
+        _customerAddresses = [];
+      });
+      return;
+    }
+
+    final result = await _customerRepo.findByPhone(phone);
+    if (!mounted) return;
+
+    switch (result) {
+      case ApiSuccess(:final data):
+        _customerId = data.id;
+        // Load saved addresses for this customer
+        final addrResult = await _addressRepo.searchAddresses(
+          customerId: data.id,
+          pageSize: 20,
+        );
+        if (!mounted) return;
+        setState(() {
+          if (addrResult case ApiSuccess(:final data)) {
+            _customerAddresses = data;
+          }
+        });
+      case ApiFailure():
+        setState(() {
+          _customerId = null;
+          _customerAddresses = [];
+        });
+    }
+  }
+
+  /// Open the address picker bottom sheet for delivery address.
+  Future<void> _openAddressPicker() async {
+    final selected = await AddressPickerSheet.show(
+      context,
+      addressRepository: _addressRepo,
+      customerId: _customerId,
+    );
+
+    if (selected == null || !mounted) return;
+
+    setState(() {
+      _deliveryAddressController.text = selected.addressText;
+      _deliveryLat = selected.latitude;
+      _deliveryLng = selected.longitude;
     });
   }
 
@@ -274,6 +339,15 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
 
   void _nextStep() {
     if (!_validateStep(_currentStep)) return;
+
+    // Moving from step 1 (customer) → step 2 (addresses): look up customer
+    if (_currentStep == 0) {
+      final phone = _customerPhoneController.text.trim().toEnglishNumbers;
+      if (phone.isNotEmpty) {
+        _lookupCustomerByPhone(phone);
+      }
+    }
+
     if (_currentStep < _totalSteps - 1) {
       setState(() => _currentStep++);
     }
@@ -1032,7 +1106,31 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
       SizedBox(height: AppSizes.xxl),
 
       // ── Delivery ──
-      _buildSectionLabel(AppStrings.deliveryAddress),
+      Row(
+        children: [
+          Expanded(child: _buildSectionLabel(AppStrings.deliveryAddress)),
+          // Address picker button
+          TextButton.icon(
+            onPressed: _openAddressPicker,
+            icon: Icon(
+              IconsaxPlusLinear.archive_book,
+              size: Responsive.r(16),
+            ),
+            label: Text(
+              AppStrings.savedAddresses,
+              style: AppTypography.captionSmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
+            ),
+          ),
+        ],
+      ),
       SizedBox(height: AppSizes.sm),
       _buildAddressField(
         controller: _deliveryAddressController,
@@ -1041,6 +1139,78 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         hasCoords: _deliveryLat != null && _deliveryLng != null,
         isDark: isDark,
       ),
+
+      // ── Customer Saved Addresses (quick select) ──
+      if (_customerAddresses.isNotEmpty) ...[
+        SizedBox(height: AppSizes.md),
+        SizedBox(
+          height: Responsive.h(48),
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            reverse: true,
+            itemCount: _customerAddresses.length,
+            separatorBuilder: (_, __) => SizedBox(width: AppSizes.sm),
+            itemBuilder: (_, index) {
+              final addr = _customerAddresses[index];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _deliveryAddressController.text = addr.addressText;
+                    _deliveryLat = addr.latitude;
+                    _deliveryLng = addr.longitude;
+                  });
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSizes.md,
+                    vertical: AppSizes.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _deliveryAddressController.text == addr.addressText
+                        ? AppColors.primary.withValues(alpha: 0.1)
+                        : isDark
+                            ? AppColors.backgroundDark
+                            : AppColors.background,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                    border: Border.all(
+                      color:
+                          _deliveryAddressController.text == addr.addressText
+                              ? AppColors.primary
+                              : isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.border,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        IconsaxPlusLinear.location,
+                        size: Responsive.r(14),
+                        color: AppColors.primary,
+                      ),
+                      SizedBox(width: AppSizes.xs),
+                      ConstrainedBox(
+                        constraints: BoxConstraints(maxWidth: Responsive.w(180)),
+                        child: Text(
+                          addr.addressText,
+                          style: AppTypography.captionSmall.copyWith(
+                            color: isDark
+                                ? AppColors.textHeadlineDark
+                                : AppColors.textHeadline,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
       SizedBox(height: AppSizes.lg),
     ];
   }

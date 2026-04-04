@@ -5,9 +5,11 @@ import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/offline/offline_queue_service.dart';
 import '../../../../shared/offline/queue_operation.dart';
 import '../../../../shared/services/connectivity_service.dart';
+import '../../data/models/health_score_model.dart';
 import '../../data/models/profile_completion_model.dart';
 import '../../data/models/profile_model.dart';
 import '../../data/models/profile_stats_model.dart';
+import '../../domain/entities/health_score_entity.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/repositories/profile_repository.dart';
 import 'profile_event.dart';
@@ -42,10 +44,18 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
         _repository.getStats(),
       ).wait;
 
+      HealthScoreEntity? healthScore;
+      try {
+        healthScore = await _repository.getHealthScore();
+      } catch (_) {
+        // Health score is non-critical — proceed without it
+      }
+
       emit(ProfileLoaded(
         profile: profile,
         completion: completion,
         stats: stats,
+        healthScore: healthScore,
       ));
     } on ApiException catch (e) {
       if (current is! ProfileLoaded) emit(ProfileError(e.message));
@@ -65,10 +75,18 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
         _repository.getStats(),
       ).wait;
 
+      HealthScoreEntity? healthScore;
+      try {
+        healthScore = await _repository.getHealthScore();
+      } catch (_) {
+        // Health score is non-critical — proceed without it
+      }
+
       emit(ProfileLoaded(
         profile: profile,
         completion: completion,
         stats: stats,
+        healthScore: healthScore,
       ));
     } on ApiException {
       // Keep existing cached data on network failure
@@ -254,6 +272,7 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
   ProfileState? fromJson(Map<String, dynamic> json) {
     try {
       if (json['type'] == 'loaded') {
+        final healthScoreJson = json['healthScore'] as Map?;
         return ProfileLoaded(
           profile: ProfileModel.fromJson(
             Map<String, dynamic>.from(json['profile'] as Map),
@@ -264,6 +283,11 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
           stats: ProfileStatsModel.fromJson(
             Map<String, dynamic>.from(json['stats'] as Map),
           ),
+          healthScore: healthScoreJson != null
+              ? HealthScoreModel.fromJson(
+                  Map<String, dynamic>.from(healthScoreJson),
+                )
+              : null,
         );
       }
     } catch (_) {}
@@ -276,6 +300,7 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
       final profile = state.profile;
       final completion = state.completion;
       final stats = state.stats;
+      final healthScore = state.healthScore;
       if (profile is ProfileModel &&
           completion is ProfileCompletionModel &&
           stats is ProfileStatsModel) {
@@ -284,6 +309,8 @@ class ProfileBloc extends HydratedBloc<ProfileEvent, ProfileState> {
           'profile': profile.toJson(),
           'completion': completion.toJson(),
           'stats': stats.toJson(),
+          if (healthScore is HealthScoreModel)
+            'healthScore': healthScore.toJson(),
         };
       }
     }

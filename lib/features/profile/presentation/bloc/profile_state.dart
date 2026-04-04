@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../domain/entities/health_score_entity.dart';
 import '../../domain/entities/profile_completion_entity.dart';
 import '../../domain/entities/profile_entity.dart';
 import '../../domain/entities/profile_stats_entity.dart';
@@ -24,30 +25,34 @@ final class ProfileLoaded extends ProfileState {
     required this.profile,
     required this.completion,
     required this.stats,
+    this.healthScore,
     this.isUpdating = false,
   });
 
   final ProfileEntity profile;
   final ProfileCompletionEntity completion;
   final ProfileStatsEntity stats;
+  final HealthScoreEntity? healthScore;
   final bool isUpdating;
 
   ProfileLoaded copyWith({
     ProfileEntity? profile,
     ProfileCompletionEntity? completion,
     ProfileStatsEntity? stats,
+    HealthScoreEntity? healthScore,
     bool? isUpdating,
   }) {
     return ProfileLoaded(
       profile: profile ?? this.profile,
       completion: completion ?? this.completion,
       stats: stats ?? this.stats,
+      healthScore: healthScore ?? this.healthScore,
       isUpdating: isUpdating ?? this.isUpdating,
     );
   }
 
   @override
-  List<Object?> get props => [profile, completion, stats, isUpdating];
+  List<Object?> get props => [profile, completion, stats, healthScore, isUpdating];
 }
 
 final class ProfileError extends ProfileState {

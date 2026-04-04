@@ -3,6 +3,7 @@ import 'dart:io';
 import '../../../../shared/network/paginated_response.dart';
 import '../../domain/entities/emergency_contact_entity.dart';
 import '../../domain/entities/expense_entity.dart';
+import '../../domain/entities/health_score_entity.dart';
 import '../../domain/entities/leaderboard_entity.dart';
 import '../../domain/entities/profile_completion_entity.dart';
 import '../../domain/entities/profile_entity.dart';
@@ -24,6 +25,9 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<ProfileStatsEntity> getStats() => _remote.getStats();
+
+  @override
+  Future<HealthScoreEntity> getHealthScore() => _remote.getHealthScore();
 
   @override
   Future<LeaderboardEntity> getLeaderboard() => _remote.getLeaderboard();

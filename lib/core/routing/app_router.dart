@@ -29,7 +29,12 @@ import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/emergency_contacts_screen.dart';
 import '../../features/profile/presentation/screens/expenses_screen.dart';
 import '../../features/profile/presentation/screens/profile_stats_screen.dart';
+import '../../features/privacy/data/datasources/privacy_remote_datasource.dart';
+import '../../features/privacy/data/repositories/privacy_repository_impl.dart';
+import '../../features/privacy/presentation/bloc/privacy_bloc.dart';
+import '../../features/privacy/presentation/screens/privacy_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/shifts/presentation/screens/shift_summary_screen.dart';
 import '../../features/chat/data/repositories/chat_repository.dart';
 import '../../features/chat/presentation/bloc/conversations_bloc.dart';
 import '../../features/chat/presentation/bloc/conversations_event.dart';
@@ -248,6 +253,24 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       GoRoute(
         path: RouteNames.settings,
         builder: (_, __) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.shiftSummary,
+        builder: (_, __) => const ShiftSummaryScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.privacy,
+        builder: (context, __) {
+          final dioClient = context.read<DioClient>();
+          final dataSource = PrivacyRemoteDataSource(dioClient);
+          final repository = PrivacyRepositoryImpl(
+            remoteDataSource: dataSource,
+          );
+          return BlocProvider(
+            create: (_) => PrivacyBloc(repository: repository),
+            child: const PrivacyScreen(),
+          );
+        },
       ),
 
       // Customers

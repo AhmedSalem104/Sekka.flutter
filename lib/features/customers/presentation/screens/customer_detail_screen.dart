@@ -15,8 +15,12 @@ import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../shared/network/api_response.dart';
+import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../../core/widgets/sekka_input_field.dart';
+import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../data/models/address_model.dart';
+import '../../data/repositories/address_repository.dart';
 import '../../data/models/customer_behavior_model.dart';
 import '../../data/models/customer_detail_model.dart';
 import '../../data/models/customer_engagement_model.dart';
@@ -44,16 +48,36 @@ class CustomerDetailScreen extends StatefulWidget {
 
 class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late final CustomerDetailBloc _bloc;
+  late final AddressRepository _addressRepo;
+  List<AddressModel> _savedAddresses = [];
+  bool _isLoadingAddresses = false;
 
   @override
   void initState() {
     super.initState();
     final dioClient = context.read<DioClient>();
+    _addressRepo = context.read<AddressRepository>();
     _bloc = CustomerDetailBloc(
       repository: CustomerRepository(dioClient.dio),
       insightsRepository: CustomerInsightsRepository(dioClient.dio),
     );
     _bloc.add(CustomerDetailLoadRequested(widget.customerId));
+    _loadSavedAddresses();
+  }
+
+  Future<void> _loadSavedAddresses() async {
+    setState(() => _isLoadingAddresses = true);
+    final result = await _addressRepo.searchAddresses(
+      customerId: widget.customerId,
+      pageSize: 50,
+    );
+    if (!mounted) return;
+    setState(() {
+      _isLoadingAddresses = false;
+      if (result case ApiSuccess(:final data)) {
+        _savedAddresses = data;
+      }
+    });
   }
 
   @override
@@ -217,14 +241,35 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ],
 
               // Addresses section
-              if (customer.addresses.isNotEmpty) ...[
-                _buildSectionTitle(AppStrings.addresses, isDark),
-                SizedBox(height: Responsive.h(12)),
-                ...customer.addresses.map(
+              _buildAddressSectionHeader(isDark),
+              SizedBox(height: Responsive.h(12)),
+              if (_isLoadingAddresses)
+                Padding(
+                  padding: EdgeInsets.only(bottom: Responsive.h(12)),
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                )
+              else if (_allAddresses(customer).isEmpty)
+                Padding(
+                  padding: EdgeInsets.only(bottom: Responsive.h(12)),
+                  child: Text(
+                    AppStrings.noSavedAddresses,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                )
+              else
+                ..._allAddresses(customer).map(
                   (address) => _buildAddressCard(address, isDark),
                 ),
-                SizedBox(height: Responsive.h(24)),
-              ],
+              SizedBox(height: Responsive.h(24)),
 
               // Recent orders section
               if (orders != null && orders.items.isNotEmpty) ...[
@@ -1606,6 +1651,196 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     );
   }
 
+  // ── Address Section ──
+
+  /// Merge customer.addresses + _savedAddresses, deduplicate by ID.
+  List<AddressModel> _allAddresses(CustomerDetailModel customer) {
+    final map = <String, AddressModel>{};
+    for (final addr in customer.addresses) {
+      map[addr.id] = addr;
+    }
+    for (final addr in _savedAddresses) {
+      map[addr.id] = addr;
+    }
+    return map.values.toList();
+  }
+
+  Widget _buildAddressSectionHeader(bool isDark) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            AppStrings.savedAddresses,
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        TextButton.icon(
+          onPressed: () => _showAddAddressSheet(),
+          icon: Icon(IconsaxPlusLinear.add, size: Responsive.r(16)),
+          label: Text(
+            AppStrings.addNewAddress,
+            style: AppTypography.captionSmall.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _showAddAddressSheet() async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.cardRadius),
+        ),
+      ),
+      builder: (ctx) => _AddressFormSheet(
+        customerId: widget.customerId,
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    final apiResult = await _addressRepo.saveAddress(
+      customerId: widget.customerId,
+      addressText: result['addressText'] as String,
+      latitude: result['latitude'] as double?,
+      longitude: result['longitude'] as double?,
+      addressType: result['addressType'] as int,
+      landmarks: result['landmarks'] as String?,
+      deliveryNotes: result['deliveryNotes'] as String?,
+    );
+
+    if (!mounted) return;
+    switch (apiResult) {
+      case ApiSuccess():
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.addressSaved)),
+        );
+        _bloc.add(CustomerDetailLoadRequested(widget.customerId));
+        _loadSavedAddresses();
+      case ApiFailure(:final error):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.arabicMessage)),
+        );
+    }
+  }
+
+  Future<void> _showEditAddressSheet(AddressModel address) async {
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.cardRadius),
+        ),
+      ),
+      builder: (ctx) => _AddressFormSheet(
+        customerId: widget.customerId,
+        address: address,
+      ),
+    );
+
+    if (result == null || !mounted) return;
+
+    final apiResult = await _addressRepo.updateAddress(
+      address.id,
+      addressText: result['addressText'] as String?,
+      latitude: result['latitude'] as double?,
+      longitude: result['longitude'] as double?,
+      landmarks: result['landmarks'] as String?,
+      deliveryNotes: result['deliveryNotes'] as String?,
+    );
+
+    if (!mounted) return;
+    switch (apiResult) {
+      case ApiSuccess():
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.addressSaved)),
+        );
+        _bloc.add(CustomerDetailLoadRequested(widget.customerId));
+        _loadSavedAddresses();
+      case ApiFailure(:final error):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.arabicMessage)),
+        );
+    }
+  }
+
+  Future<void> _deleteAddress(AddressModel address) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) {
+        final isDark = Theme.of(ctx).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          ),
+          title: Text(
+            AppStrings.deleteConfirm,
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+            ),
+          ),
+          content: Text(
+            address.addressText,
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(AppStrings.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(
+                AppStrings.delete,
+                style: TextStyle(color: AppColors.error),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true || !mounted) return;
+
+    final apiResult = await _addressRepo.deleteAddress(address.id);
+    if (!mounted) return;
+
+    switch (apiResult) {
+      case ApiSuccess():
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.addressDeleted)),
+        );
+        _bloc.add(CustomerDetailLoadRequested(widget.customerId));
+        _loadSavedAddresses();
+      case ApiFailure(:final error):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(error.arabicMessage)),
+        );
+    }
+  }
+
   // ── Address Card ──
 
   Widget _buildAddressCard(AddressModel address, bool isDark) {
@@ -1748,6 +1983,75 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                           ),
                         ),
                       ],
+                      // Edit / Delete actions
+                      SizedBox(height: Responsive.h(8)),
+                      Row(
+                        children: [
+                          InkWell(
+                            onTap: () => _showEditAddressSheet(address),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusPill,
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Responsive.w(8),
+                                vertical: Responsive.h(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    IconsaxPlusLinear.edit_2,
+                                    size: Responsive.r(14),
+                                    color: AppColors.primary,
+                                  ),
+                                  SizedBox(width: Responsive.w(4)),
+                                  Text(
+                                    AppStrings.edit,
+                                    style:
+                                        AppTypography.captionSmall.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: Responsive.w(12)),
+                          InkWell(
+                            onTap: () => _deleteAddress(address),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusPill,
+                            ),
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Responsive.w(8),
+                                vertical: Responsive.h(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    IconsaxPlusLinear.trash,
+                                    size: Responsive.r(14),
+                                    color: AppColors.error,
+                                  ),
+                                  SizedBox(width: Responsive.w(4)),
+                                  Text(
+                                    AppStrings.delete,
+                                    style:
+                                        AppTypography.captionSmall.copyWith(
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -2161,6 +2465,296 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           },
         );
       },
+    );
+  }
+}
+
+// ── Add / Edit Address Bottom Sheet ──
+
+class _AddressFormSheet extends StatefulWidget {
+  const _AddressFormSheet({
+    required this.customerId,
+    this.address,
+  });
+
+  final String customerId;
+  final AddressModel? address;
+
+  @override
+  State<_AddressFormSheet> createState() => _AddressFormSheetState();
+}
+
+class _AddressFormSheetState extends State<_AddressFormSheet> {
+  late final TextEditingController _addressTextCtrl;
+  late final TextEditingController _landmarksCtrl;
+  late final TextEditingController _notesCtrl;
+  int _selectedType = 0;
+  double? _latitude;
+  double? _longitude;
+
+  bool get _isEdit => widget.address != null;
+  bool get _hasCoords => _latitude != null && _longitude != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _addressTextCtrl =
+        TextEditingController(text: widget.address?.addressText ?? '');
+    _landmarksCtrl =
+        TextEditingController(text: widget.address?.landmarks ?? '');
+    _notesCtrl =
+        TextEditingController(text: widget.address?.deliveryNotes ?? '');
+    _selectedType = widget.address?.addressType ?? 0;
+    _latitude = widget.address?.latitude;
+    _longitude = widget.address?.longitude;
+  }
+
+  @override
+  void dispose() {
+    _addressTextCtrl.dispose();
+    _landmarksCtrl.dispose();
+    _notesCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSizes.pagePadding,
+        AppSizes.xxl,
+        AppSizes.pagePadding,
+        MediaQuery.of(context).viewInsets.bottom + AppSizes.xxxl,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Drag handle
+            Container(
+              width: Responsive.w(40),
+              height: Responsive.h(4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.borderDark : AppColors.border,
+                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+              ),
+            ),
+            SizedBox(height: AppSizes.xxl),
+
+            // Title
+            Text(
+              _isEdit ? AppStrings.editAddress : AppStrings.addAddress,
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
+            SizedBox(height: AppSizes.xl),
+
+            // Address — tappable field opens map
+            GestureDetector(
+              onTap: _pickFromMap,
+              child: Container(
+                constraints: BoxConstraints(minHeight: AppSizes.inputHeight),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.lg,
+                  vertical: AppSizes.md,
+                ),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.backgroundDark
+                      : AppColors.background,
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.inputRadius),
+                  border: Border.all(
+                    color: _hasCoords ? AppColors.success : (isDark ? AppColors.borderDark : AppColors.border),
+                    width: _hasCoords ? 2 : 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      IconsaxPlusLinear.location,
+                      size: AppSizes.iconLg,
+                      color: _hasCoords
+                          ? AppColors.success
+                          : (isDark ? AppColors.textCaptionDark : AppColors.textCaption),
+                    ),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _addressTextCtrl.text.isNotEmpty
+                            ? _addressTextCtrl.text
+                            : AppStrings.pickFromMap,
+                        style: _addressTextCtrl.text.isNotEmpty
+                            ? AppTypography.bodyMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.textHeadlineDark
+                                    : AppColors.textHeadline,
+                              )
+                            : AppTypography.bodyMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    SizedBox(width: AppSizes.sm),
+                    if (_hasCoords)
+                      Icon(
+                        Icons.check_circle,
+                        size: AppSizes.iconMd,
+                        color: AppColors.success,
+                      )
+                    else
+                      Icon(
+                        IconsaxPlusLinear.map,
+                        size: AppSizes.iconMd,
+                        color: AppColors.primary,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.lg),
+
+            // Address type chips
+            SizedBox(
+              height: Responsive.h(40),
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                reverse: true,
+                children: [
+                  _typeChip(0, AppStrings.addressHome, IconsaxPlusLinear.home_2, isDark),
+                  SizedBox(width: AppSizes.sm),
+                  _typeChip(1, AppStrings.addressWork, IconsaxPlusLinear.building, isDark),
+                  SizedBox(width: AppSizes.sm),
+                  _typeChip(2, AppStrings.addressShop, IconsaxPlusLinear.shop, isDark),
+                  SizedBox(width: AppSizes.sm),
+                  _typeChip(3, AppStrings.addressRestaurant, IconsaxPlusLinear.coffee, isDark),
+                  SizedBox(width: AppSizes.sm),
+                  _typeChip(4, AppStrings.addressWarehouse, IconsaxPlusLinear.box_1, isDark),
+                  SizedBox(width: AppSizes.sm),
+                  _typeChip(5, AppStrings.addressOther, IconsaxPlusLinear.location, isDark),
+                ],
+              ),
+            ),
+            SizedBox(height: AppSizes.lg),
+
+            // Landmarks
+            SekkaInputField(
+              controller: _landmarksCtrl,
+              label: AppStrings.addressLandmarks,
+              prefixIcon: IconsaxPlusLinear.map_1,
+            ),
+            SizedBox(height: AppSizes.lg),
+
+            // Delivery notes
+            SekkaInputField(
+              controller: _notesCtrl,
+              label: AppStrings.addressDeliveryNotes,
+              prefixIcon: IconsaxPlusLinear.note_1,
+              maxLines: 2,
+            ),
+            SizedBox(height: AppSizes.xl),
+
+            // Save button
+            SizedBox(
+              width: double.infinity,
+              child: SekkaButton(
+                label: AppStrings.save,
+                onPressed: () {
+                  final text = _addressTextCtrl.text.trim();
+                  if (text.isEmpty) return;
+                  Navigator.pop(context, {
+                    'addressText': text,
+                    'addressType': _selectedType,
+                    'landmarks': _landmarksCtrl.text.trim().isEmpty
+                        ? null
+                        : _landmarksCtrl.text.trim(),
+                    'deliveryNotes': _notesCtrl.text.trim().isEmpty
+                        ? null
+                        : _notesCtrl.text.trim(),
+                    'latitude': _latitude,
+                    'longitude': _longitude,
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickFromMap() async {
+    final result = await SekkaMapPicker.show(
+      context,
+      initialLatitude: _latitude,
+      initialLongitude: _longitude,
+      title: AppStrings.selectAddress,
+    );
+
+    if (result == null || !mounted) return;
+
+    setState(() {
+      _latitude = result.latitude;
+      _longitude = result.longitude;
+      if (result.address != null && result.address!.isNotEmpty) {
+        _addressTextCtrl.text = result.address!;
+      }
+    });
+  }
+
+  Widget _typeChip(int type, String label, IconData icon, bool isDark) {
+    final isSelected = _selectedType == type;
+
+    return GestureDetector(
+      onTap: () => setState(() => _selectedType = type),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: AppSizes.sm,
+        ),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : isDark
+                  ? AppColors.backgroundDark
+                  : AppColors.background,
+          borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : isDark
+                    ? AppColors.borderDark
+                    : AppColors.border,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: Responsive.r(14),
+              color: isSelected ? AppColors.primary : (isDark ? AppColors.textCaptionDark : AppColors.textCaption),
+            ),
+            SizedBox(width: AppSizes.xs),
+            Text(
+              label,
+              style: AppTypography.captionSmall.copyWith(
+                color: isSelected ? AppColors.primary : (isDark ? AppColors.textBodyDark : AppColors.textBody),
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

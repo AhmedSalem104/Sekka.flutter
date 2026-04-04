@@ -41,6 +41,13 @@ import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/breaks/data/datasources/break_remote_datasource.dart';
 import 'features/breaks/data/repositories/break_repository_impl.dart';
 import 'features/breaks/presentation/bloc/break_bloc.dart';
+import 'features/analytics/data/datasources/analytics_remote_datasource.dart';
+import 'features/analytics/data/repositories/analytics_repository_impl.dart';
+import 'features/analytics/presentation/bloc/analytics_bloc.dart';
+import 'features/shifts/data/datasources/shift_remote_datasource.dart';
+import 'features/shifts/data/repositories/shift_repository_impl.dart';
+import 'features/shifts/presentation/bloc/shift_bloc.dart';
+import 'features/shifts/presentation/bloc/shift_event.dart';
 import 'features/sync/data/datasources/sync_remote_datasource.dart';
 import 'features/sync/data/repositories/sync_repository_impl.dart';
 import 'features/sync/presentation/bloc/sync_bloc.dart';
@@ -49,6 +56,7 @@ import 'features/wallet/data/datasources/wallet_remote_datasource.dart';
 import 'features/wallet/data/repositories/wallet_repository_impl.dart';
 import 'features/wallet/presentation/bloc/wallet_bloc.dart';
 import 'features/chat/data/repositories/chat_repository.dart';
+import 'features/customers/data/repositories/address_repository.dart';
 import 'features/notifications/data/repositories/notification_repository.dart';
 import 'shared/network/dio_client.dart';
 import 'shared/storage/token_storage.dart';
@@ -189,9 +197,22 @@ void main() async {
   final breakRepository =
       BreakRepositoryImpl(remoteDataSource: breakDataSource);
 
+  // Shifts
+  final shiftDataSource = ShiftRemoteDataSource(dioClient);
+  final shiftRepository =
+      ShiftRepositoryImpl(remoteDataSource: shiftDataSource);
+
+  // Analytics
+  final analyticsDataSource = AnalyticsRemoteDataSource(dioClient);
+  final analyticsRepository =
+      AnalyticsRepositoryImpl(remoteDataSource: analyticsDataSource);
+
   // Chat & Notifications
   final chatRepository = ChatRepository(dioClient.dio);
   final notificationRepository = NotificationRepository(dioClient.dio);
+
+  // Addresses
+  final addressRepository = AddressRepository(dioClient.dio);
 
   // Offline write queue — flushes ALL pending actions when back online
   await OfflineQueueService.instance.initialize(
@@ -264,6 +285,7 @@ void main() async {
     MultiRepositoryProvider(
       providers: [
         RepositoryProvider<ProfileRepository>.value(value: profileRepository),
+        RepositoryProvider.value(value: addressRepository),
         RepositoryProvider.value(value: dioClient),
         RepositoryProvider.value(value: tokenStorage),
       ],
@@ -319,6 +341,13 @@ void main() async {
           BlocProvider(
             create: (_) => BreakBloc(repository: breakRepository)
               ..add(const BreakCheckRequested()),
+          ),
+          BlocProvider(
+            create: (_) => ShiftBloc(repository: shiftRepository)
+              ..add(const ShiftCheckRequested()),
+          ),
+          BlocProvider(
+            create: (_) => AnalyticsBloc(repository: analyticsRepository),
           ),
         ],
         child: SekkaApp(

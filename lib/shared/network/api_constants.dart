@@ -94,6 +94,14 @@ abstract final class ApiConstants {
   static const String settingsNotificationChannelsBulk =
       '$_settings/notification-channels/bulk';
 
+  // Privacy endpoints
+  static const String _privacy = '$baseUrl/privacy';
+  static const String privacyConsents = '$_privacy/consents';
+  static String privacyConsent(String type) => '$_privacy/consents/$type';
+  static const String privacyExportData = '$_privacy/export-data';
+  static const String privacyDeleteData = '$_privacy/delete-data';
+  static const String privacyDeleteDataStatus = '$_privacy/delete-data/status';
+
   // Analytics endpoints
   static const String _analytics = '$baseUrl/analytics';
   static const String analyticsSourceBreakdown = '$_analytics/source-breakdown';
@@ -210,6 +218,13 @@ abstract final class ApiConstants {
   static String recurringOrderPause(String id) => '$_orders/recurring/$id/pause';
   static String recurringOrderResume(String id) => '$_orders/recurring/$id/resume';
 
+  // Shift endpoints
+  static const String _shifts = '$baseUrl/shifts';
+  static const String shiftStart = '$_shifts/start';
+  static const String shiftEnd = '$_shifts/end';
+  static const String shiftCurrent = '$_shifts/current';
+  static const String shiftSummary = '$_shifts/summary';
+
   // Break endpoints
   static const String _breaks = '$baseUrl/breaks';
   static const String breakSuggestion = '$_breaks/suggestion';
@@ -223,6 +238,11 @@ abstract final class ApiConstants {
   static const String ocrScanInvoice = '$_ocr/scan-invoice';
   static const String ocrScanToOrder = '$_ocr/scan-to-order';
   static const String ocrScanBatch = '$_ocr/scan-batch';
+
+  // Health Score endpoints
+  static const String _healthScore = '$baseUrl/health-score';
+  static const String healthScore = _healthScore;
+  static const String healthScoreTips = '$_healthScore/tips';
 
   // Sync endpoints
   static const String _sync = '$baseUrl/sync';

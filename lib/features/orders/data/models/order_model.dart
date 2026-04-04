@@ -74,6 +74,7 @@ class OrderModel {
     this.isPaused = false,
     this.nextScheduledDate,
     this.totalOccurrences,
+    this.trackingCode,
   });
 
   final String id;
@@ -110,6 +111,7 @@ class OrderModel {
   final bool isPaused;
   final String? nextScheduledDate;
   final int? totalOccurrences;
+  final String? trackingCode;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -151,6 +153,7 @@ class OrderModel {
         'isPaused': isPaused,
         'nextScheduledDate': nextScheduledDate,
         'totalOccurrences': totalOccurrences,
+        'trackingCode': trackingCode,
       };
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -200,6 +203,7 @@ class OrderModel {
       isPaused: json['isPaused'] as bool? ?? false,
       nextScheduledDate: json['nextScheduledDate'] as String?,
       totalOccurrences: json['totalOccurrences'] as int?,
+      trackingCode: json['trackingCode'] as String?,
     );
   }
 
@@ -251,6 +255,7 @@ class OrderModel {
       isPaused: isPaused ?? this.isPaused,
       nextScheduledDate: nextScheduledDate,
       totalOccurrences: totalOccurrences,
+      trackingCode: trackingCode,
     );
   }
 
