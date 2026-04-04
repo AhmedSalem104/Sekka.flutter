@@ -227,11 +227,11 @@ abstract final class AppStrings {
   static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static String get walletTitle => _isAr ? 'جيبي' : 'Wallet';
+  static String get walletTitle => _isAr ? 'محفظتك' : 'Wallet';
   static String get currentBalance =>
-      _isAr ? 'الفلوس اللي معاك' : 'Your money';
-  static String get cashOnHand => _isAr ? 'كاش في إيدك' : 'Cash on hand';
-  static String get pendingAmount => _isAr ? 'لسه مسلّمتوش' : 'Not settled';
+      _isAr ? 'رصيدك عند الشركة' : 'Your balance';
+  static String get cashOnHand => _isAr ? 'كاش معاك (فلوس شغل)' : 'Cash with you (work money)';
+  static String get pendingAmount => _isAr ? 'لازم ترجعه للشركاء' : 'Owed to partners';
   static String get todayCollected =>
       _isAr ? 'حصّلت النهارده' : 'Collected today';
   static String get todayCommissions =>
@@ -241,9 +241,9 @@ abstract final class AppStrings {
   static String get newSettlement =>
       _isAr ? 'سلّم فلوس' : 'Settle Cash';
   static String get allTransactions => _isAr ? 'الكل' : 'All';
-  static String get incomeFilter => _isAr ? 'داخل' : 'Income';
-  static String get expenseFilter => _isAr ? 'خارج' : 'Expenses';
-  static String get settlementsFilter => _isAr ? 'تسليمات' : 'Handovers';
+  static String get incomeFilter => _isAr ? 'جالك' : 'Income';
+  static String get expenseFilter => _isAr ? 'راح منك' : 'Expenses';
+  static String get settlementsFilter => _isAr ? 'سلّمته' : 'Settled';
   static String get noTransactions =>
       _isAr ? 'مفيش حركات لسه — لما تشتغل هتلاقيها هنا' : 'No transactions yet — they\'ll appear here once you start';
   static String get cashStatusSafe =>
@@ -308,17 +308,17 @@ abstract final class AppStrings {
 
   // Account Handover — Summary
   static String get dailySummary =>
-      _isAr ? 'يومك النهارده' : 'Today\'s Summary';
+      _isAr ? 'يومك النهاردا' : 'Today\'s Summary';
   static String get totalCollectedToday =>
-      _isAr ? 'حصّلت كام' : 'Collected';
+      _isAr ? 'جمعت من العملاء' : 'Collected from customers';
   static String get totalSettledToday =>
-      _isAr ? 'سلّمت كام' : 'Settled';
+      _isAr ? 'رجّعت للشركاء' : 'Returned to partners';
   static String get remainingBalance =>
-      _isAr ? 'فاضلك كام' : 'Remaining';
+      _isAr ? 'لسه معاك' : 'Still with you';
   static String get pendingPartnersCount =>
       _isAr ? 'شركاء مستنيين' : 'Partners waiting';
   static String get settlementCountToday =>
-      _isAr ? 'كام تسليمة' : 'Handovers';
+      _isAr ? 'عدد التسليمات' : 'Handovers';
 
   // Account Handover — Partner Balance
   static String get partnerBalance =>
@@ -451,15 +451,52 @@ abstract final class AppStrings {
   static String get paymentCancelled => _isAr ? 'ملغي' : 'Cancelled';
 
   // Invoices
-  static String get invoicesTitle => _isAr ? 'الفواتير' : 'Invoices';
+  static String get invoicesTitle => _isAr ? 'كشف حسابك' : 'Invoices';
   static String get invoiceDetail =>
-      _isAr ? 'تفاصيل الفاتورة' : 'Invoice details';
-  static String get downloadPdf => _isAr ? 'تحميل PDF' : 'Download PDF';
-  static String get noInvoices => _isAr ? 'مفيش فواتير' : 'No invoices';
-  static String get invoicePending => _isAr ? 'معلقة' : 'Pending';
-  static String get invoicePaid => _isAr ? 'مدفوعة' : 'Paid';
+      _isAr ? 'تفاصيل الكشف' : 'Invoice details';
+  static String get downloadPdf => _isAr ? 'نزّل PDF' : 'Download PDF';
+  static String get shareAsImage =>
+      _isAr ? 'ابعتها صورة' : 'Share as image';
+  static String get noInvoices => _isAr ? 'مفيش كشوفات لسه' : 'No invoices yet';
+  static String get noInvoicesDesc =>
+      _isAr ? 'أول ما يطلعلك كشف حساب هيظهر هنا' : 'Your invoices will show up here';
+  static String get invoicePending => _isAr ? 'مستنية' : 'Pending';
+  static String get invoicePaid => _isAr ? 'اتدفعت' : 'Paid';
   static String get invoiceOverdue => _isAr ? 'متأخرة' : 'Overdue';
-  static String get invoiceVoided => _isAr ? 'ملغاة' : 'Voided';
+  static String get invoiceVoided => _isAr ? 'ملغية' : 'Voided';
+  static String get invoiceAll => _isAr ? 'الكل' : 'All';
+  static String get invoiceNumber => _isAr ? 'كشف رقم ' : 'Invoice #';
+  static String get invoicePeriod => _isAr ? 'من — لـ' : 'Period';
+  static String get invoiceIssuedAt =>
+      _isAr ? 'طلع يوم' : 'Issued';
+  static String get invoiceDueDate =>
+      _isAr ? 'مستحق يوم' : 'Due';
+  static String get invoicePaidAt =>
+      _isAr ? 'اتدفع يوم' : 'Paid on';
+  static String get invoiceTotalOrders =>
+      _isAr ? 'طلباتك' : 'Your orders';
+  static String get invoiceTotalEarnings =>
+      _isAr ? 'كسبت' : 'Earned';
+  static String get invoiceCommissions =>
+      _isAr ? 'عمولة الشركة' : 'Commission';
+  static String get invoiceExpenses =>
+      _isAr ? 'مصاريف' : 'Expenses';
+  static String get invoiceNetAmount =>
+      _isAr ? 'اللي ليك' : 'Your take';
+  static String get invoiceLineItems =>
+      _isAr ? 'التفاصيل' : 'Details';
+  static String get invoiceSummaryTitle =>
+      _isAr ? 'حسابك باختصار' : 'Your summary';
+  static String get invoiceTotalPaid =>
+      _isAr ? 'قبضته' : 'Received';
+  static String get invoiceTotalOutstanding =>
+      _isAr ? 'فاضلّك' : 'Remaining';
+  static String get invoicePdfSaved =>
+      _isAr ? 'تمام! الكشف اتنزّل' : 'Invoice downloaded';
+  static String get invoicePdfError =>
+      _isAr ? 'مقدرش أنزّل الكشف — جرّب تاني' : 'Download failed — try again';
+  static String get invoiceImageSaved =>
+      _isAr ? 'تمام! الصورة جاهزة' : 'Image ready';
 
   // Home
   static String get goodMorning => _isAr ? 'صباح الخير' : 'Good morning';
@@ -754,6 +791,28 @@ abstract final class AppStrings {
       _isAr ? 'تم نسخ رابط التتبع!' : 'Tracking link copied!';
   static String get codeCopied =>
       _isAr ? 'تم نسخ الكود!' : 'Code copied!';
+  static String get referralsTitle =>
+      _isAr ? 'دعواتك' : 'Your invites';
+  static String get referralsTotalInvited =>
+      _isAr ? 'دعيتهم' : 'Invited';
+  static String get referralsActive =>
+      _isAr ? 'شغالين' : 'Active';
+  static String get referralsEarned =>
+      _isAr ? 'كسبت منهم' : 'Earned';
+  static String get referralsPending =>
+      _isAr ? 'مكافآت جاية' : 'Pending rewards';
+  static String get referralsEmpty =>
+      _isAr ? 'مدعيتش حد لسه' : 'No invites yet';
+  static String get referralsEmptyDesc =>
+      _isAr ? 'شارك كودك مع سواقين تانيين واكسبوا مع بعض' : 'Share your code with other drivers and earn together';
+  static String get referralStatusPending =>
+      _isAr ? 'مستني يسجل' : 'Pending';
+  static String get referralStatusActive =>
+      _isAr ? 'شغال' : 'Active';
+  static String get referralStatusExpired =>
+      _isAr ? 'انتهى' : 'Expired';
+  static String get referralJoined =>
+      _isAr ? 'سجّل يوم' : 'Joined';
   static String get haveInviteCode =>
       _isAr ? 'عندك كود دعوة من سائق تاني؟' : 'Got an invite code from another driver?';
   static String get enterInviteCode =>
@@ -1348,19 +1407,24 @@ abstract final class AppStrings {
   static const String addOrdersToRoute = 'أضف طلبات للمسار';
   static const String dragToReorder = 'اسحب عشان تعيد الترتيب';
 
-  // ── Sync ──
-  static const String syncStatus = 'حالة المزامنة';
-  static const String syncing = 'جاري المزامنة...';
-  static const String syncComplete = 'تم المزامنة';
-  static const String syncFailed = 'فشل المزامنة';
-  static const String syncNow = 'زامن دلوقتي';
-  static const String lastSyncAt = 'آخر مزامنة';
-  static const String pendingChanges = 'تغييرات معلقة';
+  // ── Sync / Connection ──
+  static const String syncStatus = 'حالة الاتصال';
+  static const String syncing = 'جاري التحديث...';
+  static const String syncComplete = 'متصل';
+  static const String syncFailed = 'فشل التحديث';
+  static const String syncNow = 'حدّث دلوقتي';
+  static const String lastSyncAt = 'آخر تحديث';
+  static const String pendingChanges = 'في انتظار الرفع';
   static const String conflicts = 'تعارضات';
   static const String resolveConflict = 'حل التعارض';
   static const String useLocal = 'استخدم المحلي';
   static const String useServer = 'استخدم من السيرفر';
-  static const String syncOffline = 'أنت أوفلاين — التغييرات هتتزامن لما النت يرجع';
+  static const String syncOffline = 'أنت أوفلاين';
+  static const String connectionStrong = 'النت كويس';
+  static const String connectionWeak = 'النت ضعيف';
+  static const String connectionOffline = 'مفيش نت';
+  static const String connectionOfflineHint = 'شغلك محفوظ — هيترفع أول ما النت يرجع';
+  static const String pendingUploads = 'حاجات مستنية ترتفع';
 
   // Badge
   static String get badgeTitle => _isAr ? 'بطاقتي' : 'My Badge';
@@ -1421,6 +1485,60 @@ abstract final class AppStrings {
       _isAr ? 'متأكد إنك عايز تمسح المكان ده؟' : 'Are you sure you want to delete this spot?';
   static String get usageCount =>
       _isAr ? 'استخدمته كام مرة' : 'Usage Count';
+
+  // ── Gamification ──
+  static String get gamificationTitle =>
+      _isAr ? 'التحديات والإنجازات' : 'Challenges & Achievements';
+  static String get gamificationChallenges =>
+      _isAr ? 'تحديات' : 'Challenges';
+  static String get gamificationAchievements =>
+      _isAr ? 'إنجازات' : 'Achievements';
+  static String get gamificationLeaderboard =>
+      _isAr ? 'الترتيب' : 'Leaderboard';
+  static String get gamificationPoints =>
+      _isAr ? 'نقطة' : 'Points';
+  static String get gamificationLevel =>
+      _isAr ? 'المستوى' : 'Level';
+  static String get gamificationTotalPoints =>
+      _isAr ? 'إجمالي النقاط' : 'Total Points';
+  static String get gamificationClaimReward =>
+      _isAr ? 'استلم المكافأة' : 'Claim Reward';
+  static String get gamificationClaimed =>
+      _isAr ? 'تم الاستلام' : 'Claimed';
+  static String get gamificationProgress =>
+      _isAr ? 'التقدم' : 'Progress';
+  static String get gamificationRewardPoints =>
+      _isAr ? 'نقاط المكافأة' : 'Reward Points';
+  static String get gamificationNoChallenges =>
+      _isAr ? 'لسه مفيش تحديات' : 'No challenges available';
+  static String get gamificationNoChallengesHint =>
+      _isAr ? 'استنى شوية — التحديات هتنزل قريب' : 'Challenges will appear here when available';
+  static String get gamificationNoAchievements =>
+      _isAr ? 'لسه مكسبتش إنجازات' : 'No achievements yet';
+  static String get gamificationNoAchievementsHint =>
+      _isAr ? 'خلّص التحديات وهتلاقي إنجازاتك هنا' : 'Complete challenges to earn achievements';
+  static String get gamificationNoLeaderboard =>
+      _isAr ? 'مفيش ترتيب لسه' : 'No leaderboard data';
+  static String get gamificationNoLeaderboardHint =>
+      _isAr ? 'لما المنافسة تبدأ هتلاقي ترتيبك هنا' : 'Leaderboard will show when competition starts';
+  static String get gamificationYourRank =>
+      _isAr ? 'ترتيبك' : 'Your Rank';
+  static String get gamificationPointsHistory =>
+      _isAr ? 'سجل النقاط' : 'Points History';
+  static String get gamificationNoHistory =>
+      _isAr ? 'مفيش نقاط لسه' : 'No points history';
+  static String get gamificationNoHistoryHint =>
+      _isAr ? 'كل نقطة هتكسبها هتتسجل هنا' : 'Points you earn will appear here';
+  static String get gamificationPeriodMonthly =>
+      _isAr ? 'الشهر ده' : 'Monthly';
+  static String get gamificationPeriodWeekly =>
+      _isAr ? 'الأسبوع ده' : 'Weekly';
+  static String get gamificationOrdersThisMonth =>
+      _isAr ? 'أوردر الشهر ده' : 'Orders this month';
+  static String get gamificationClaimSuccess =>
+      _isAr ? 'مبروك! المكافأة وصلتك' : 'Reward claimed!';
+  static String get gamificationLoadError =>
+      _isAr ? 'مش قادرين نجيب البيانات' : 'Could not load data';
 
   // ── Home Screen ──
   static String get statOrders =>

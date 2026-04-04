@@ -1,4 +1,3 @@
-import '../../../../shared/network/paginated_response.dart';
 import '../../domain/entities/invoice_entity.dart';
 import '../../domain/entities/invoice_summary_entity.dart';
 import '../../domain/repositories/invoice_repository.dart';
@@ -12,7 +11,7 @@ class InvoiceRepositoryImpl implements InvoiceRepository {
   final InvoiceRemoteDataSource _remote;
 
   @override
-  Future<PaginatedResponse<InvoiceEntity>> getInvoices({
+  Future<List<InvoiceEntity>> getInvoices({
     int pageNumber = 1,
     int pageSize = 20,
     int? status,

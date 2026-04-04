@@ -127,7 +127,20 @@
       "Bash(ADDR_ID=\"1d1675c9-6404-4f67-91ef-6b7befce2201\")",
       "Bash(__NEW_LINE_8fdd93dbfe30245e__ echo:*)",
       "Bash(__NEW_LINE_636489ebdb0e9831__ echo:*)",
-      "Bash(__NEW_LINE_8dd7a0c99e7a3978__ curl:*)"
+      "Bash(__NEW_LINE_8dd7a0c99e7a3978__ curl:*)",
+      "Bash(git pull:*)",
+      "WebFetch(domain:sekka.runasp.net)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImE2YzMzNTExLTFjMmItNDViMC1lMGQyLTA4ZGU5MGVlZGIxYyIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL25hbWUiOiLYotmK2YciLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9tb2JpbGVwaG9uZSI6IisyMDEwOTQxMTI0OTciLCJqdGkiOiIyYmU5Nzk4NS04ZTVhLTQ4YTktOWRmMS0wN2UzMDc0ZTAwZDkiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJEcml2ZXIiLCJleHAiOjE3NzUyNDkwNDcsImlzcyI6IlNla2thLkFQSSIsImF1ZCI6IlNla2thLk1vYmlsZSJ9.G7xBLWG9ypsy_VCDZGFkSoP9XD0_aJc_LplNgKXGQtg\")",
+      "Bash(mkdir -p \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features/privacy/data/datasources\")",
+      "Bash(mkdir -p \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features/privacy/data/models\")",
+      "Bash(mkdir -p \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features/privacy/data/repositories\")",
+      "Bash(mkdir -p \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features/privacy/domain/entities\")",
+      "Bash(mkdir -p \"C:/Users/B-SMART/Documents/GitHub/Sekka.flutter/lib/features/privacy/domain/repositories\")",
+      "Bash(__NEW_LINE_98150f9fc471676f__ echo:*)",
+      "Bash(__NEW_LINE_ae8b1bf627eb4798__ echo:*)",
+      "Bash(__NEW_LINE_6fb95547690d05a2__ echo:*)",
+      "Bash(curl -s -X POST \"https://sekka.runasp.net/api/v1/demo/convert\" -H \"Authorization: Bearer $TOKEN\" -H \"Content-Type: application/json\" -d '{\"\"phoneNumber\"\":\"\"01094112497\"\",\"\"password\"\":\"\"Ayafaisl2003#\"\"}')",
+      "Bash(__NEW_LINE_efc213df8fab0df7__ curl:*)"
     ]
   }
 }

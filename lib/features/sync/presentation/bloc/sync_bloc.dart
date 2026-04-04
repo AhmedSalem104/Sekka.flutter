@@ -1,7 +1,11 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
+import '../../data/models/sync_models.dart';
 import '../../domain/repositories/sync_repository.dart';
 import 'sync_event.dart';
 import 'sync_state.dart';
@@ -16,9 +20,47 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
     on<SyncNowRequested>(_onSyncNow);
     on<SyncResolveConflictRequested>(_onResolveConflict);
     on<SyncClearMessage>(_onClearMessage);
+    on<SyncConnectivityChanged>(_onConnectivityChanged);
+
+    // Listen to real-time connectivity changes
+    _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
+      final isOnline = results.isNotEmpty &&
+          !results.every((r) => r == ConnectivityResult.none);
+      add(SyncConnectivityChanged(isOnline: isOnline));
+    });
   }
 
   final SyncRepository _repository;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
+
+  @override
+  Future<void> close() {
+    _connectivitySub?.cancel();
+    return super.close();
+  }
+
+  void _onConnectivityChanged(
+    SyncConnectivityChanged event,
+    Emitter<SyncState> emit,
+  ) {
+    final current = state;
+    final loaded = current is SyncLoaded ? current : const SyncLoaded();
+    final oldStatus = loaded.status;
+
+    emit(loaded.copyWith(
+      status: () => SyncStatusModel(
+        lastSyncAt: oldStatus?.lastSyncAt,
+        pendingChanges: oldStatus?.pendingChanges ?? 0,
+        conflictsCount: oldStatus?.conflictsCount ?? 0,
+        isOnline: event.isOnline,
+      ),
+    ));
+
+    // Auto-sync when back online
+    if (event.isOnline && (oldStatus?.pendingChanges ?? 0) > 0) {
+      add(const SyncNowRequested());
+    }
+  }
 
   Future<void> _onStatusLoad(
     SyncStatusRequested event,

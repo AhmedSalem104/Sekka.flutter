@@ -17,14 +17,22 @@ class InvoiceSummaryModel extends InvoiceSummaryEntity {
   factory InvoiceSummaryModel.fromJson(Map<String, dynamic> json) {
     return InvoiceSummaryModel(
       totalInvoices: json['totalInvoices'] as int? ?? 0,
-      pendingInvoices: json['pendingInvoices'] as int? ?? 0,
+      pendingInvoices: json['pendingInvoices'] as int? ??
+          json['totalPending'] as int? ??
+          0,
       paidInvoices: json['paidInvoices'] as int? ?? 0,
       overdueInvoices: json['overdueInvoices'] as int? ?? 0,
-      totalEarnings: (json['totalEarnings'] as num?)?.toDouble() ?? 0,
+      totalEarnings: (json['totalEarnings'] as num?)?.toDouble() ??
+          (json['totalAmount'] as num?)?.toDouble() ??
+          0,
       totalCommissions: (json['totalCommissions'] as num?)?.toDouble() ?? 0,
-      totalNetAmount: (json['totalNetAmount'] as num?)?.toDouble() ?? 0,
+      totalNetAmount: (json['totalNetAmount'] as num?)?.toDouble() ??
+          (json['totalAmount'] as num?)?.toDouble() ??
+          0,
       totalPaid: (json['totalPaid'] as num?)?.toDouble() ?? 0,
-      totalOutstanding: (json['totalOutstanding'] as num?)?.toDouble() ?? 0,
+      totalOutstanding: (json['totalOutstanding'] as num?)?.toDouble() ??
+          (json['totalPending'] as num?)?.toDouble() ??
+          0,
       averageInvoiceAmount:
           (json['averageInvoiceAmount'] as num?)?.toDouble() ?? 0,
     );

@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
-import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/responsive.dart';
+import '../../../../shared/network/dio_client.dart';
+import '../../../referrals/data/repositories/referral_repository.dart';
+import '../../../referrals/presentation/bloc/referrals_bloc.dart';
+import '../../../referrals/presentation/bloc/referrals_event.dart';
+import '../../../referrals/presentation/screens/referrals_screen.dart';
 
 class ReferralCodeCard extends StatelessWidget {
   const ReferralCodeCard({
@@ -21,141 +25,82 @@ class ReferralCodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     if (code.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(AppSizes.lg),
-      decoration: BoxDecoration(
-        gradient: AppColors.primaryGradient,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title row with icon
-          Row(
+    return GestureDetector(
+      onTap: () => _openReferrals(context),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(AppSizes.lg),
+        decoration: BoxDecoration(
+          gradient: AppColors.primaryGradient,
+          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        ),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Row(
             children: [
+              // Icon
+              Container(
+                width: Responsive.r(48),
+                height: Responsive.r(48),
+                decoration: BoxDecoration(
+                  color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(Responsive.r(12)),
+                ),
+                child: Icon(
+                  IconsaxPlusLinear.gift,
+                  color: AppColors.textOnPrimary,
+                  size: Responsive.r(24),
+                ),
+              ),
+              SizedBox(width: Responsive.w(14)),
+
+              // Text
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.referralCode,
+                      style: AppTypography.titleMedium.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: Responsive.h(4)),
+                    Text(
+                      code,
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: AppColors.textOnPrimary,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Arrow
               Icon(
-                IconsaxPlusBold.gift,
-                color: AppColors.textOnPrimary,
-                size: AppSizes.iconLg,
-              ),
-              SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: Text(
-                  AppStrings.referralCode,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: AppColors.textOnPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                IconsaxPlusLinear.arrow_left_2,
+                color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                size: Responsive.r(18),
               ),
             ],
           ),
-          SizedBox(height: AppSizes.sm),
-
-          // Subtitle explanation
-          Text(
-            AppStrings.referralSubtitle,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textOnPrimary.withValues(alpha: 0.85),
-            ),
-          ),
-          SizedBox(height: AppSizes.md),
-
-          // Code display
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSizes.lg,
-              vertical: AppSizes.md,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  code,
-                  style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.textOnPrimary,
-                    letterSpacing: 3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: AppSizes.md),
-
-          // Action buttons
-          Row(
-            children: [
-              Expanded(
-                child: _ActionButton(
-                  icon: IconsaxPlusLinear.copy,
-                  label: AppStrings.copyCode,
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: code));
-                    context.showSnackBar(AppStrings.codeCopied);
-                  },
-                ),
-              ),
-              SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: _ActionButton(
-                  icon: IconsaxPlusLinear.share,
-                  label: AppStrings.shareCode,
-                  onTap: () {
-                    final shareText = AppStrings.currentLang == 'ar'
-                        ? 'سجّل في سِكّة واستخدم كود الدعوة بتاعي: $code\nhttps://sekka.app/join?ref=$code'
-                        : 'Join Sekka using my invite code: $code\nhttps://sekka.app/join?ref=$code';
-                    Share.share(shareText);
-                  },
-                ),
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
-}
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: AppColors.textOnPrimary, size: AppSizes.iconSm),
-            SizedBox(width: AppSizes.xs),
-            Text(
-              label,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textOnPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
+  void _openReferrals(BuildContext context) {
+    final dio = context.read<DioClient>().dio;
+    Navigator.push<void>(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => BlocProvider(
+          create: (_) => ReferralsBloc(
+            repository: ReferralRepository(dio),
+          )..add(const ReferralsLoadRequested()),
+          child: const ReferralsScreen(),
         ),
       ),
     );

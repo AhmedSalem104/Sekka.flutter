@@ -244,6 +244,17 @@ abstract final class ApiConstants {
   static const String healthScore = _healthScore;
   static const String healthScoreTips = '$_healthScore/tips';
 
+  // Gamification endpoints
+  static const String _gamification = '$baseUrl/gamification';
+  static const String gamificationChallenges = '$_gamification/challenges';
+  static const String gamificationAchievements = '$_gamification/achievements';
+  static const String gamificationLeaderboard = '$_gamification/leaderboard';
+  static String gamificationClaimChallenge(String challengeId) =>
+      '$_gamification/challenges/$challengeId/claim';
+  static const String gamificationPointsHistory = '$_gamification/points/history';
+  static const String gamificationPointsTotal = '$_gamification/points/total';
+  static const String gamificationLevel = '$_gamification/level';
+
   // Sync endpoints
   static const String _sync = '$baseUrl/sync';
   static const String syncPush = '$_sync/push';

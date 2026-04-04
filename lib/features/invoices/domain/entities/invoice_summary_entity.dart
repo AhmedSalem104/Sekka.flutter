@@ -25,6 +25,19 @@ class InvoiceSummaryEntity extends Equatable {
   final double totalOutstanding;
   final double averageInvoiceAmount;
 
+  Map<String, dynamic> toJson() => {
+        'totalInvoices': totalInvoices,
+        'pendingInvoices': pendingInvoices,
+        'paidInvoices': paidInvoices,
+        'overdueInvoices': overdueInvoices,
+        'totalEarnings': totalEarnings,
+        'totalCommissions': totalCommissions,
+        'totalNetAmount': totalNetAmount,
+        'totalPaid': totalPaid,
+        'totalOutstanding': totalOutstanding,
+        'averageInvoiceAmount': averageInvoiceAmount,
+      };
+
   @override
   List<Object?> get props => [totalInvoices, totalNetAmount, totalOutstanding];
 }

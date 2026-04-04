@@ -156,9 +156,13 @@ class _LoadedBody extends StatelessWidget {
   }
 
   List<Widget> _buildContent(bool isDark) => switch (state.tab) {
-        StatisticsTab.daily => _buildDaily(state.daily!, isDark),
-        StatisticsTab.weekly => _buildWeekly(state.weekly!, isDark),
-        StatisticsTab.monthly => _buildMonthly(state.monthly!, isDark),
+        StatisticsTab.daily when state.daily != null =>
+          _buildDaily(state.daily!, isDark),
+        StatisticsTab.weekly when state.weekly != null =>
+          _buildWeekly(state.weekly!, isDark),
+        StatisticsTab.monthly when state.monthly != null =>
+          _buildMonthly(state.monthly!, isDark),
+        _ => [const SekkaLoading()],
       };
 
   // ── Daily ──
@@ -411,7 +415,7 @@ class _LoadedBody extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: Responsive.h(12),
       crossAxisSpacing: Responsive.w(12),
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.25,
       children: [
         StatSummaryCard(
           label: AppStrings.totalOrders,

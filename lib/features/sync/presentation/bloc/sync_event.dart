@@ -35,3 +35,12 @@ final class SyncResolveConflictRequested extends SyncEvent {
 final class SyncClearMessage extends SyncEvent {
   const SyncClearMessage();
 }
+
+final class SyncConnectivityChanged extends SyncEvent {
+  const SyncConnectivityChanged({required this.isOnline});
+
+  final bool isOnline;
+
+  @override
+  List<Object?> get props => [isOnline];
+}

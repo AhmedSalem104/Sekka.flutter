@@ -155,12 +155,10 @@ class StatisticsBloc extends HydratedBloc<StatisticsEvent, StatisticsState> {
           emit(StatisticsLoaded(tab: tab, monthly: _cachedMonthly));
       }
     } on ApiException catch (e) {
-      if (current is! StatisticsLoaded) {
-        if (e.statusCode == 404) {
-          emit(StatisticsEmpty(tab: tab));
-        } else {
-          emit(StatisticsError(tab: tab, message: e.message));
-        }
+      if (e.statusCode == 404) {
+        emit(StatisticsEmpty(tab: tab));
+      } else {
+        emit(StatisticsError(tab: tab, message: e.message));
       }
     }
   }

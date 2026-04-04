@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as dev;
 
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
@@ -89,9 +90,11 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
 
   /// صلّح الـ status للطلبات اللي اتسلّمت محلياً بس الـ API لسه بيرجعها بـ status قديم
   List<OrderModel> _fixDeliveredStatuses(List<OrderModel> orders) {
+    print('[OrdersBloc] _fixDeliveredStatuses called. deliveredIds=${_deliveredOrderIds.length}: $_deliveredOrderIds');
     if (_deliveredOrderIds.isEmpty) return orders;
     return orders.map((o) {
       if (_deliveredOrderIds.contains(o.id) && o.status != OrderStatus.delivered) {
+        print('[OrdersBloc] FIXING order ${o.id} from ${o.status} → delivered');
         return o.copyWith(status: OrderStatus.delivered);
       }
       return o;
@@ -1873,8 +1876,16 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
                   Map<String, dynamic>.from(o as Map),
                 ))
             .toList();
+
+        // Restore delivered IDs from cache
+        final savedDeliveredIds =
+            (json['deliveredOrderIds'] as List<dynamic>?)
+                ?.cast<String>() ?? [];
+        _deliveredOrderIds.addAll(savedDeliveredIds);
+        print('[OrdersBloc] fromJson: restored ${savedDeliveredIds.length} deliveredIds: $savedDeliveredIds');
+
         return OrdersLoaded(
-          orders: orders,
+          orders: _fixDeliveredStatuses(orders),
           hasMore: json['hasMore'] as bool? ?? false,
           currentPage: json['currentPage'] as int? ?? 1,
         );
@@ -1891,6 +1902,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         'orders': state.orders.map((o) => o.toJson()).toList(),
         'hasMore': state.hasMore,
         'currentPage': state.currentPage,
+        'deliveredOrderIds': _deliveredOrderIds.toList(),
       };
     }
     return null;
