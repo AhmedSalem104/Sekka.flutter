@@ -1,7 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 
+import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/offline/offline_queue_service.dart';
 import '../../../../shared/offline/sync_queue_service.dart';
@@ -17,10 +18,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required AuthRepository repository,
     required TokenStorage tokenStorage,
     required UserStorage userStorage,
+    required Dio dio,
     required this.authStatusNotifier,
   })  : _repository = repository,
         _tokenStorage = tokenStorage,
         _userStorage = userStorage,
+        _dio = dio,
         super(const AuthInitial()) {
     on<AuthCheckRequested>(_onCheckAuth);
     on<AuthLoginRequested>(_onLogin);
@@ -29,11 +32,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthSessionExpired>(_onSessionExpired);
     on<AuthDeleteAccountRequested>(_onDeleteAccount);
     on<AuthConfirmDeletionRequested>(_onConfirmDeletion);
+    on<AuthDemoRequested>(_onDemo);
   }
 
   final AuthRepository _repository;
   final TokenStorage _tokenStorage;
   final UserStorage _userStorage;
+  final Dio _dio;
 
   /// Notifies GoRouter when auth state changes.
   final ValueNotifier<bool> authStatusNotifier;
@@ -130,6 +135,53 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     await _clearAllLocalData();
     authStatusNotifier.value = false;
     emit(const AuthUnauthenticated(message: 'الجلسة خلصت، سجّل دخولك تاني'));
+  }
+
+  Future<void> _onDemo(
+    AuthDemoRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.demoStart,
+      );
+      final body = response.data!;
+      if (body['isSuccess'] != true || body['data'] == null) {
+        emit(AuthUnauthenticated(
+          message: body['message'] as String? ?? 'فشل تشغيل الوضع التجريبي',
+        ));
+        return;
+      }
+
+      final data = body['data'] as Map<String, dynamic>;
+      final token = data['token'] as String;
+      final driverId = data['demoDriverId'] as String;
+      final expiresAt = DateTime.parse(data['expiresAt'] as String);
+
+      await _tokenStorage.saveTokens(
+        token: token,
+        refreshToken: '',
+        expiresAt: expiresAt,
+      );
+
+      final demoDriver = DriverModel(
+        id: driverId,
+        name: 'سائق تجريبي',
+        phone: '+201000000000',
+        vehicleType: 0,
+        joinedAt: DateTime.now(),
+      );
+      await _userStorage.saveDriver(demoDriver.toJson());
+
+      authStatusNotifier.value = true;
+      emit(AuthAuthenticated(demoDriver));
+    } on DioException catch (e) {
+      emit(AuthUnauthenticated(
+        message: e.response?.data?['message'] as String? ??
+            'مفيش إنترنت — جرّب تاني',
+      ));
+    }
   }
 
   Future<void> _onDeleteAccount(

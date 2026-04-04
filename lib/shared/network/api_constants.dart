@@ -12,6 +12,16 @@ abstract final class ApiConstants {
   static const String changePassword = '$_auth/change-password';
   static const String refreshToken = '$_auth/refresh-token';
   static const String logout = '$_auth/logout';
+
+  // App Config endpoints
+  static const String _config = '$baseUrl/config';
+  static const String configCheckVersion = '$_config/check-version';
+  static const String configNotices = '$_config/notices';
+  static const String configFeatures = '$_config/features';
+
+  // Demo endpoints
+  static const String demoStart = '$baseUrl/demo/start';
+  static const String demoData = '$baseUrl/demo/data';
   static const String registerDevice = '$_auth/register-device';
   static const String sessions = '$_auth/sessions';
   static const String logoutAll = '$_auth/logout-all';
@@ -244,6 +254,20 @@ abstract final class ApiConstants {
   static const String healthScore = _healthScore;
   static const String healthScoreTips = '$_healthScore/tips';
 
+  // Colleague Radar endpoints
+  static const String _colleagueRadar = '$baseUrl/colleague-radar';
+  static const String colleagueRadarNearby = '$_colleagueRadar/nearby';
+  static const String colleagueRadarHelpRequests =
+      '$_colleagueRadar/help-requests';
+  static const String colleagueRadarHelpRequestsNearby =
+      '$_colleagueRadar/help-requests/nearby';
+  static const String colleagueRadarMyRequests =
+      '$_colleagueRadar/help-requests/my';
+  static String colleagueRadarRespond(String id) =>
+      '$_colleagueRadar/help-requests/$id/respond';
+  static String colleagueRadarResolve(String id) =>
+      '$_colleagueRadar/help-requests/$id/resolve';
+
   // Gamification endpoints
   static const String _gamification = '$baseUrl/gamification';
   static const String gamificationChallenges = '$_gamification/challenges';
@@ -283,6 +307,8 @@ abstract final class ApiConstants {
     forgotPassword,
     resetPassword,
     refreshToken,
+    demoStart,
+    configCheckVersion,
   ];
 
   static bool isPublic(String url) =>

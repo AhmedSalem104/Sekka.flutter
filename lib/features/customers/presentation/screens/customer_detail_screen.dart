@@ -12,6 +12,7 @@ import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
+import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/status_badge.dart';
 import '../../../../shared/network/api_response.dart';
@@ -29,6 +30,8 @@ import '../../data/models/customer_interests_model.dart';
 import '../../data/models/customer_order_model.dart';
 import '../../data/models/customer_rating_model.dart';
 import '../../data/models/customer_recommendation_model.dart';
+import '../../data/models/caller_id_model.dart';
+import '../../data/repositories/caller_id_repository.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/customer_insights_repository.dart';
 import '../bloc/customer_detail_bloc.dart';
@@ -51,6 +54,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
   late final AddressRepository _addressRepo;
   List<AddressModel> _savedAddresses = [];
   bool _isLoadingAddresses = false;
+  late final CallerIdRepository _callerIdRepo;
+  CallerIdModel? _callerInfo;
+  bool _callerLoading = false;
 
   @override
   void initState() {
@@ -61,6 +67,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       repository: CustomerRepository(dioClient.dio),
       insightsRepository: CustomerInsightsRepository(dioClient.dio),
     );
+    _callerIdRepo = CallerIdRepository(dioClient.dio);
     _bloc.add(CustomerDetailLoadRequested(widget.customerId));
     _loadSavedAddresses();
   }
@@ -86,6 +93,20 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _loadCallerInfo(String phone) async {
+    if (_callerLoading) return;
+    setState(() => _callerLoading = true);
+    final result = await _callerIdRepo.lookup(phone);
+    if (!mounted) return;
+    setState(() {
+      _callerLoading = false;
+      _callerInfo = switch (result) {
+        ApiSuccess(:final data) => data,
+        _ => null,
+      };
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -97,6 +118,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
       body: BlocConsumer<CustomerDetailBloc, CustomerDetailState>(
         bloc: _bloc,
         listener: (context, state) {
+          if (state is CustomerDetailLoaded && _callerInfo == null && !_callerLoading) {
+            _loadCallerInfo(state.customer.phone);
+          }
           if (state is CustomerDetailActionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -300,6 +324,9 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                 ),
                 SizedBox(height: Responsive.h(24)),
               ],
+
+              // Caller ID section
+              _buildCallerIdSection(customer.phone, isDark),
 
               SizedBox(height: Responsive.h(20)),
             ],
@@ -2465,6 +2492,349 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           },
         );
       },
+    );
+  }
+
+  // ── Caller ID Section ──
+
+  String _contactTypeLabel(int type) => switch (type) {
+        0 => AppStrings.callerTypeUnknown,
+        1 => AppStrings.callerTypeCustomer,
+        2 => AppStrings.callerTypePartner,
+        3 => AppStrings.callerTypeDriver,
+        _ => AppStrings.callerTypeOther,
+      };
+
+  Widget _buildCallerIdSection(String phone, bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(AppStrings.callerId, isDark),
+        SizedBox(height: Responsive.h(12)),
+        if (_callerLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.all(16),
+              child: CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 2,
+              ),
+            ),
+          )
+        else if (_callerInfo != null)
+          _buildCallerInfoCard(_callerInfo!, isDark)
+        else
+          SekkaCard(
+            child: Row(
+              children: [
+                Icon(
+                  IconsaxPlusLinear.call,
+                  color: isDark
+                      ? AppColors.textCaptionDark
+                      : AppColors.textCaption,
+                  size: AppSizes.iconMd,
+                ),
+                SizedBox(width: AppSizes.md),
+                Expanded(
+                  child: Text(
+                    phone,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color:
+                          isDark ? AppColors.textBodyDark : AppColors.textBody,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _loadCallerInfo(phone),
+                  child: Text(
+                    AppStrings.callerCheckTruecaller,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        SizedBox(height: Responsive.h(24)),
+      ],
+    );
+  }
+
+  Widget _buildCallerInfoCard(CallerIdModel info, bool isDark) {
+    return SekkaCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Contact type + blocked badge
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.sm,
+                  vertical: AppSizes.xs,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                ),
+                child: Text(
+                  _contactTypeLabel(info.contactType),
+                  style: AppTypography.captionSmall.copyWith(
+                    color: AppColors.info,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (info.isBlocked) ...[
+                SizedBox(width: AppSizes.sm),
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSizes.sm,
+                    vertical: AppSizes.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.error.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  ),
+                  child: Text(
+                    AppStrings.blocked,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+              const Spacer(),
+              GestureDetector(
+                onTap: () => _showNoteSheet(info, isDark),
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: AppSizes.sm,
+                    vertical: AppSizes.xs,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        info.note != null
+                            ? IconsaxPlusLinear.edit
+                            : IconsaxPlusLinear.add,
+                        color: AppColors.primary,
+                        size: Responsive.r(12),
+                      ),
+                      SizedBox(width: AppSizes.xs),
+                      Text(
+                        info.note != null
+                            ? AppStrings.callerEditNote
+                            : AppStrings.callerAddNote,
+                        style: AppTypography.captionSmall.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          // Display name
+          if (info.displayName != null) ...[
+            SizedBox(height: AppSizes.md),
+            Row(
+              children: [
+                Icon(
+                  IconsaxPlusLinear.user,
+                  size: Responsive.r(14),
+                  color:
+                      isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+                ),
+                SizedBox(width: AppSizes.sm),
+                Text(
+                  info.displayName!,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
+              ],
+            ),
+          ],
+
+          // Last order + rating
+          if (info.lastOrderDate != null || info.averageRating != null) ...[
+            SizedBox(height: AppSizes.sm),
+            Row(
+              children: [
+                if (info.averageRating != null) ...[
+                  Icon(
+                    IconsaxPlusLinear.star_1,
+                    size: Responsive.r(14),
+                    color: AppColors.warning,
+                  ),
+                  SizedBox(width: AppSizes.xs),
+                  Text(
+                    info.averageRating!.toStringAsFixed(1),
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                    ),
+                  ),
+                  SizedBox(width: AppSizes.lg),
+                ],
+                if (info.lastOrderDate != null) ...[
+                  Icon(
+                    IconsaxPlusLinear.clock,
+                    size: Responsive.r(14),
+                    color: isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption,
+                  ),
+                  SizedBox(width: AppSizes.xs),
+                  Text(
+                    '${AppStrings.callerLastOrder}: ${info.lastOrderDate!.day}/${info.lastOrderDate!.month}/${info.lastOrderDate!.year}',
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+
+          // Note
+          if (info.note != null && info.note!.isNotEmpty) ...[
+            SizedBox(height: AppSizes.md),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(AppSizes.md),
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.backgroundDark
+                    : AppColors.background,
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    IconsaxPlusLinear.note_1,
+                    size: Responsive.r(14),
+                    color: AppColors.primary,
+                  ),
+                  SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: Text(
+                      info.note!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.textBodyDark
+                            : AppColors.textBody,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _showNoteSheet(CallerIdModel info, bool isDark) {
+    final controller = TextEditingController(text: info.note ?? '');
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSizes.sheetRadius),
+        ),
+      ),
+      backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSizes.pagePadding,
+          AppSizes.xxl,
+          AppSizes.pagePadding,
+          MediaQuery.of(ctx).viewInsets.bottom + AppSizes.xxxl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: Responsive.w(40),
+              height: Responsive.h(4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.borderDark : AppColors.border,
+                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+              ),
+            ),
+            SizedBox(height: AppSizes.xxl),
+            Text(
+              info.note != null
+                  ? AppStrings.callerEditNote
+                  : AppStrings.callerAddNote,
+              style: AppTypography.headlineSmall.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
+            SizedBox(height: AppSizes.xl),
+            SekkaInputField(
+              controller: controller,
+              label: AppStrings.callerNote,
+              hint: AppStrings.callerNoteHintCustomer,
+              prefixIcon: IconsaxPlusLinear.note_1,
+              maxLines: 3,
+            ),
+            SizedBox(height: AppSizes.xxl),
+            SekkaButton(
+              label: AppStrings.save,
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final note = controller.text.trim();
+                final result = await _callerIdRepo.createNote(
+                  phoneNumber: info.phoneNumber,
+                  contactType: info.contactType,
+                  displayName: info.displayName,
+                  note: note.isEmpty ? null : note,
+                );
+                if (!mounted) return;
+                if (result is ApiSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        AppStrings.callerNoteSaved,
+                        style: AppTypography.bodyMedium
+                            .copyWith(color: AppColors.textOnPrimary),
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                  _loadCallerInfo(info.phoneNumber);
+                }
+              },
+              icon: IconsaxPlusLinear.tick_circle,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

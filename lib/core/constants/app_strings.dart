@@ -9,6 +9,20 @@ abstract final class AppStrings {
   static String get appTagline =>
       _isAr ? 'شريك شغلك في الديليفري' : 'Your delivery work partner';
 
+  // Force Update
+  static String get forceUpdateTitle =>
+      _isAr ? 'لازم تحدّث التطبيق' : 'Update Required';
+  static String get forceUpdateMessage =>
+      _isAr ? 'فيه نسخة جديدة مهمة. حدّث عشان تقدر تكمّل.' : 'A critical update is available. Please update to continue.';
+  static String get forceUpdateButton =>
+      _isAr ? 'حدّث دلوقتي' : 'Update Now';
+  static String get optionalUpdateTitle =>
+      _isAr ? 'فيه تحديث جديد' : 'Update Available';
+  static String get optionalUpdateMessage =>
+      _isAr ? 'نسخة جديدة نزلت. عايز تحدّث؟' : 'A new version is available. Would you like to update?';
+  static String get later =>
+      _isAr ? 'بعدين' : 'Later';
+
   // Auth — General
   static String get welcome => _isAr ? 'أهلاً بيك!' : 'Welcome!';
   static String get welcomeSubtitle =>
@@ -1209,6 +1223,38 @@ abstract final class AppStrings {
   static String get callerId => _isAr ? 'معرّف المتصل' : 'Caller ID';
   static String get callerNote =>
       _isAr ? 'ملاحظة عن المتصل' : 'Caller note';
+  static String get callerAddNote =>
+      _isAr ? 'ضيف ملاحظة' : 'Add note';
+  static String get callerEditNote =>
+      _isAr ? 'عدّل الملاحظة' : 'Edit note';
+  static String get callerNoteHint =>
+      _isAr ? 'اكتب أي ملاحظة تفتكرها عن الرقم ده' : 'Write any note about this contact';
+  static String get callerNoteHintCustomer =>
+      _isAr ? 'مثلاً: بيتأخر في الاستلام' : 'e.g. Often late for pickup';
+  static String get callerNoteHintPartner =>
+      _isAr ? 'مثلاً: بيتأخر في تجهيز الأوردرات' : 'e.g. Slow order preparation';
+  static String get callerNoteSaved =>
+      _isAr ? 'تم حفظ الملاحظة' : 'Note saved';
+  static String get callerNoteDeleted =>
+      _isAr ? 'تم مسح الملاحظة' : 'Note deleted';
+  static String get callerLastOrder =>
+      _isAr ? 'آخر أوردر' : 'Last order';
+  static String get callerSpamWarning =>
+      _isAr ? 'الرقم ده ممكن يكون spam' : 'This number might be spam';
+  static String get callerContactType =>
+      _isAr ? 'نوع جهة الاتصال' : 'Contact type';
+  static String get callerTypeUnknown =>
+      _isAr ? 'مش معروف' : 'Unknown';
+  static String get callerTypeCustomer =>
+      _isAr ? 'عميل' : 'Customer';
+  static String get callerTypePartner =>
+      _isAr ? 'شريك' : 'Partner';
+  static String get callerTypeDriver =>
+      _isAr ? 'سائق' : 'Driver';
+  static String get callerTypeOther =>
+      _isAr ? 'تاني' : 'Other';
+  static String get callerCheckTruecaller =>
+      _isAr ? 'فحص الرقم' : 'Check number';
 
   // Payment Methods
   static String get paymentCash => _isAr ? 'كاش' : 'Cash';
@@ -1539,6 +1585,54 @@ abstract final class AppStrings {
       _isAr ? 'مبروك! المكافأة وصلتك' : 'Reward claimed!';
   static String get gamificationLoadError =>
       _isAr ? 'مش قادرين نجيب البيانات' : 'Could not load data';
+
+  // ── Colleague Radar ──
+  static String get radarTitle =>
+      _isAr ? 'رادار الزملاء' : 'Colleague Radar';
+  static String get radarTab =>
+      _isAr ? 'الزملاء' : 'Colleagues';
+  static String get radarNearbyDrivers =>
+      _isAr ? 'سواقين قريبين' : 'Nearby Drivers';
+  static String get radarNoNearby =>
+      _isAr ? 'مفيش زملاء قريبين منك' : 'No colleagues nearby';
+  static String get radarNoNearbyHint =>
+      _isAr ? 'الزملاء هيظهروا هنا لما يكونوا في نطاقك' : 'Colleagues will appear when nearby';
+  static String get radarHelpRequests =>
+      _isAr ? 'طلبات مساعدة' : 'Help Requests';
+  static String get radarMyRequests =>
+      _isAr ? 'طلباتي' : 'My Requests';
+  static String get radarNoRequests =>
+      _isAr ? 'مفيش طلبات مساعدة' : 'No help requests';
+  static String get radarNoRequestsHint =>
+      _isAr ? 'لو احتجت مساعدة ابعت طلب والزملاء هيوصلوك' : 'Send a help request and colleagues will reach you';
+  static String get radarSendHelp =>
+      _isAr ? 'ابعت طلب مساعدة' : 'Send Help Request';
+  static String get radarHelpTitle =>
+      _isAr ? 'عنوان المشكلة' : 'Problem Title';
+  static String get radarHelpDesc =>
+      _isAr ? 'وصف المشكلة' : 'Problem Description';
+  static String get radarHelpType =>
+      _isAr ? 'نوع المساعدة' : 'Help Type';
+  static String get radarRespond =>
+      _isAr ? 'هساعدك' : 'I\'ll Help';
+  static String get radarResolve =>
+      _isAr ? 'المشكلة اتحلت' : 'Resolved';
+  static String get radarRespondSuccess =>
+      _isAr ? 'تمام! انت قبلت تساعد' : 'You accepted to help!';
+  static String get radarResolveSuccess =>
+      _isAr ? 'الحمد لله اتحلت!' : 'Resolved!';
+  static String get radarAway =>
+      _isAr ? 'كم' : 'km';
+  static String get radarHelpTypeMechanical =>
+      _isAr ? 'عطلة ميكانيكية' : 'Mechanical';
+  static String get radarHelpTypeTire =>
+      _isAr ? 'كاوتش' : 'Tire';
+  static String get radarHelpTypeFuel =>
+      _isAr ? 'بنزين' : 'Fuel';
+  static String get radarHelpTypeOrder =>
+      _isAr ? 'محتاج حد يكمّل أوردر' : 'Need order help';
+  static String get radarHelpTypeOther =>
+      _isAr ? 'تاني' : 'Other';
 
   // ── Home Screen ──
   static String get statOrders =>

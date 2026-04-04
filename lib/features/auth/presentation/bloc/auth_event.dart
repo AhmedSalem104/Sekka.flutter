@@ -82,3 +82,7 @@ final class AuthConfirmDeletionRequested extends AuthEvent {
   @override
   List<Object?> get props => [otpCode];
 }
+
+final class AuthDemoRequested extends AuthEvent {
+  const AuthDemoRequested();
+}
