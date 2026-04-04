@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -28,22 +30,29 @@ import '../../../partners/presentation/bloc/partners_event.dart';
 import '../../../partners/presentation/bloc/partners_state.dart';
 
 class ContactsScreen extends StatefulWidget {
-  const ContactsScreen({super.key});
+  const ContactsScreen({super.key, this.visibilityNotifier});
+
+  /// Notified with `true` when this tab becomes visible.
+  final ValueNotifier<bool>? visibilityNotifier;
 
   @override
   State<ContactsScreen> createState() => _ContactsScreenState();
 }
 
 class _ContactsScreenState extends State<ContactsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final TabController _tabController;
   late final TextEditingController _searchController;
   late final CustomersBloc _customersBloc;
   late final PartnersBloc _partnersBloc;
+  Timer? _autoRefresh;
+
+  static const _refreshInterval = Duration(seconds: 30);
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
     _searchController = TextEditingController();
 
@@ -64,15 +73,66 @@ class _ContactsScreenState extends State<ContactsScreen>
     _partnersBloc.add(const PartnersLoadRequested());
 
     _tabController.addListener(_onTabChanged);
+    _startAutoRefresh();
+
+    widget.visibilityNotifier?.addListener(_onVisibilityChanged);
+  }
+
+  void _onVisibilityChanged() {
+    if (widget.visibilityNotifier?.value == true) {
+      _customersBloc.add(const CustomersLoadRequested());
+      _partnersBloc.add(const PartnersLoadRequested());
+    }
+  }
+
+  void _startAutoRefresh() {
+    _autoRefresh?.cancel();
+    _autoRefresh = Timer.periodic(_refreshInterval, (_) {
+      if (_searchController.text.isEmpty) {
+        _customersBloc.add(const CustomersLoadRequested());
+        _partnersBloc.add(const PartnersLoadRequested());
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _customersBloc.add(const CustomersLoadRequested());
+      _partnersBloc.add(const PartnersLoadRequested());
+    }
   }
 
   void _onTabChanged() {
     _searchController.clear();
+    // Reload data when switching tabs
+    if (_tabController.index == 0) {
+      _customersBloc.add(const CustomersLoadRequested());
+    } else {
+      _partnersBloc.add(const PartnersLoadRequested());
+    }
     setState(() {});
+  }
+
+  Future<void> _onRefreshCustomers() async {
+    _customersBloc.add(const CustomersLoadRequested());
+    await _customersBloc.stream.firstWhere(
+      (state) => state is CustomersLoaded || state is CustomersError,
+    );
+  }
+
+  Future<void> _onRefreshPartners() async {
+    _partnersBloc.add(const PartnersLoadRequested());
+    await _partnersBloc.stream.firstWhere(
+      (state) => state is PartnersLoaded || state is PartnersError,
+    );
   }
 
   @override
   void dispose() {
+    widget.visibilityNotifier?.removeListener(_onVisibilityChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    _autoRefresh?.cancel();
     _tabController.removeListener(_onTabChanged);
     _tabController.dispose();
     _searchController.dispose();
@@ -251,18 +311,32 @@ class _ContactsScreenState extends State<ContactsScreen>
                   _customersBloc.add(const CustomersLoadRequested()),
             ),
           CustomersLoaded(:final customers) => customers.isEmpty
-              ? const SekkaEmptyState(
-                  icon: IconsaxPlusLinear.profile_2user,
-                  title: 'مفيش عملاء',
-                  description: 'العملاء هيظهروا هنا لما تبدأ توصيل',
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(20),
+              ? RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _onRefreshCustomers,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SekkaEmptyState(
+                        icon: IconsaxPlusLinear.profile_2user,
+                        title: 'مفيش عملاء',
+                        description: 'العملاء هيظهروا هنا لما تبدأ توصيل',
+                      ),
+                    ],
                   ),
-                  itemCount: customers.length,
-                  itemBuilder: (_, index) =>
-                      _buildCustomerItem(customers[index], isDark),
+                )
+              : RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _onRefreshCustomers,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.w(20),
+                    ),
+                    itemCount: customers.length,
+                    itemBuilder: (_, index) =>
+                        _buildCustomerItem(customers[index], isDark),
+                  ),
                 ),
         };
       },
@@ -390,18 +464,32 @@ class _ContactsScreenState extends State<ContactsScreen>
                   _partnersBloc.add(const PartnersLoadRequested()),
             ),
           PartnersLoaded(:final partners) => partners.isEmpty
-              ? const SekkaEmptyState(
-                  icon: IconsaxPlusLinear.building_4,
-                  title: 'مفيش شركاء',
-                  description: 'مفيش شركاء متاحين دلوقتي',
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: Responsive.w(20),
+              ? RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _onRefreshPartners,
+                  child: ListView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: const [
+                      SekkaEmptyState(
+                        icon: IconsaxPlusLinear.building_4,
+                        title: 'مفيش شركاء',
+                        description: 'مفيش شركاء متاحين دلوقتي',
+                      ),
+                    ],
                   ),
-                  itemCount: partners.length,
-                  itemBuilder: (_, index) =>
-                      _buildPartnerItem(partners[index], isDark),
+                )
+              : RefreshIndicator(
+                  color: AppColors.primary,
+                  onRefresh: _onRefreshPartners,
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.w(20),
+                    ),
+                    itemCount: partners.length,
+                    itemBuilder: (_, index) =>
+                        _buildPartnerItem(partners[index], isDark),
+                  ),
                 ),
         };
       },

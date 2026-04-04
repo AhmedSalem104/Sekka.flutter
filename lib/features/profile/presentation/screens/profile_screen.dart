@@ -171,19 +171,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: AppSizes.sm),
 
-          ProfileSectionTile(
-            icon: IconsaxPlusLinear.timer_start,
-            label: AppStrings.shiftPerformanceTitle,
-            onTap: () => context.push(RouteNames.shiftSummary),
-          ),
-          SizedBox(height: AppSizes.sm),
-
-          ProfileSectionTile(
-            icon: IconsaxPlusLinear.chart_2,
-            label: AppStrings.detailedStats,
-            onTap: () => context.push(RouteNames.profileStats),
-          ),
-          SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
             icon: IconsaxPlusLinear.call_calling,

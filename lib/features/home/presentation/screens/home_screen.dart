@@ -163,20 +163,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final authState = context.watch<AuthBloc>().state;
     final driverName =
         authState is AuthAuthenticated ? authState.driver.name : '';
-    final profileState = context.watch<ProfileBloc>().state;
-
-    int totalOrders = 0;
-    int totalDelivered = 0;
-    String successRate = '0%';
-    if (profileState is ProfileLoaded) {
-      totalOrders = profileState.profile.totalOrders;
-      totalDelivered = profileState.profile.totalDelivered;
-      final rate = totalOrders > 0
-          ? ((totalDelivered / totalOrders) * 100).round()
-          : 0;
-      successRate = '$rate%';
-    }
-
     // Find in-transit order
     final ordersState = context.watch<OrdersBloc>().state;
     OrderModel? inTransitOrder;
@@ -233,27 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SizedBox(height: Responsive.h(20)),
-
-            // Stats row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _WelcomeStatItem(
-                  value: '$totalOrders',
-                  label: AppStrings.statOrders,
-                ),
-                _WelcomeStatItem(
-                  value: '$totalDelivered',
-                  label: AppStrings.statDelivered,
-                ),
-                _WelcomeStatItem(
-                  value: successRate,
-                  label: AppStrings.statSuccess,
-                ),
-              ],
-            ),
-
-            SizedBox(height: Responsive.h(16)),
 
             // Shift toggle button
             _buildShiftToggle(context),
@@ -1032,41 +997,6 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  WELCOME STAT ITEM — إحصائية في سيكشن الترحيب
-// ══════════════════════════════════════════════════════════════════════════
-
-class _WelcomeStatItem extends StatelessWidget {
-  const _WelcomeStatItem({
-    required this.value,
-    required this.label,
-  });
-
-  final String value;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: AppTypography.headlineSmall.copyWith(
-            color: AppColors.textOnPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        SizedBox(height: Responsive.h(2)),
-        Text(
-          label,
-          style: AppTypography.captionSmall.copyWith(
-            color: AppColors.textOnPrimary.withValues(alpha: 0.7),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 /// Notification icon with dynamic unread count badge.
 class _NotificationBadge extends StatefulWidget {
   const _NotificationBadge({

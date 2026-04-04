@@ -757,7 +757,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                             tabs: const [
                               Tab(text: AppStrings.manualEntry),
                               Tab(text: AppStrings.bulkImport),
-                              Tab(text: AppStrings.voiceEntry),
                               Tab(text: AppStrings.ocrEntry),
                             ],
                           ),
@@ -772,7 +771,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                           children: [
                             _buildSteppedForm(state, isLoading, isDark),
                             _buildBulkImportTab(isLoading, isDark),
-                            _buildVoiceEntryTab(isLoading, isDark),
                             _buildOcrTab(state, isLoading, isDark),
                           ],
                         ),

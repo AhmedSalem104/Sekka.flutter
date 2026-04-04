@@ -31,6 +31,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   late final TextEditingController _searchController;
   late final CustomersBloc _bloc;
   Timer? _debounce;
+  Timer? _autoRefresh;
+
+  static const _refreshInterval = Duration(seconds: 30);
 
   @override
   void initState() {
@@ -43,13 +46,30 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
       repository: repository,
       searchRepository: SearchRepository(dioClient.dio),
     );
-    if (_bloc.state is! CustomersLoaded) {
-      _bloc.add(const CustomersLoadRequested());
-    }
+    _bloc.add(const CustomersLoadRequested());
+    _startAutoRefresh();
+  }
+
+  void _startAutoRefresh() {
+    _autoRefresh?.cancel();
+    _autoRefresh = Timer.periodic(_refreshInterval, (_) {
+      if (_searchController.text.isEmpty) {
+        _bloc.add(const CustomersLoadRequested());
+      }
+    });
+  }
+
+  Future<void> _onRefresh() async {
+    _bloc.add(const CustomersLoadRequested());
+    // Wait for the BLoC to finish loading
+    await _bloc.stream.firstWhere(
+      (state) => state is CustomersLoaded || state is CustomersError,
+    );
   }
 
   @override
   void dispose() {
+    _autoRefresh?.cancel();
     _debounce?.cancel();
     _searchController.dispose();
     _bloc.close();
@@ -118,17 +138,31 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                         },
                       ),
                     CustomersLoaded(:final customers) => customers.isEmpty
-                        ? const SekkaEmptyState(
-                            icon: IconsaxPlusLinear.profile_2user,
-                            title: 'مفيش عملاء',
-                            description: 'العملاء هيظهروا هنا لما تبدأ توصيل',
-                          )
-                        : ListView.builder(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.w(20),
+                        ? RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: _onRefresh,
+                            child: ListView(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              children: const [
+                                SekkaEmptyState(
+                                  icon: IconsaxPlusLinear.profile_2user,
+                                  title: 'مفيش عملاء',
+                                  description:
+                                      'العملاء هيظهروا هنا لما تبدأ توصيل',
+                                ),
+                              ],
                             ),
-                            itemCount: customers.length,
-                            itemBuilder: (context, index) {
+                          )
+                        : RefreshIndicator(
+                            color: AppColors.primary,
+                            onRefresh: _onRefresh,
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: Responsive.w(20),
+                              ),
+                              itemCount: customers.length,
+                              itemBuilder: (context, index) {
                               final customer = customers[index];
                               final displayName =
                                   customer.name ?? customer.phone;
@@ -271,6 +305,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                                 ),
                               );
                             },
+                            ),
                           ),
                   };
                 },

@@ -3,6 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 import 'package:sekka/core/core.dart';
 
+import '../../../analytics/presentation/bloc/analytics_bloc.dart';
+import '../../../analytics/presentation/bloc/analytics_event.dart';
+import '../../../analytics/presentation/bloc/analytics_state.dart';
+import '../../../analytics/presentation/widgets/analytics_section.dart';
+import '../../../profile/presentation/bloc/profile_bloc.dart';
+import '../../../profile/presentation/bloc/profile_state.dart';
+import '../../../profile/presentation/widgets/health_score_card.dart';
+import '../../../shifts/domain/entities/shift_summary_entity.dart';
+import '../../../shifts/presentation/bloc/shift_bloc.dart';
+import '../../../shifts/presentation/bloc/shift_state.dart';
 import '../../domain/entities/daily_stats_entity.dart';
 import '../../domain/entities/monthly_stats_entity.dart';
 import '../../domain/entities/weekly_stats_entity.dart';
@@ -11,8 +21,19 @@ import '../widgets/stat_detail_row.dart';
 import '../widgets/stat_summary_card.dart';
 import '../widgets/stats_bar_chart.dart';
 
-class StatisticsScreen extends StatelessWidget {
+class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
+
+  @override
+  State<StatisticsScreen> createState() => _StatisticsScreenState();
+}
+
+class _StatisticsScreenState extends State<StatisticsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<AnalyticsBloc>().add(const AnalyticsLoadRequested());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +170,15 @@ class _LoadedBody extends StatelessWidget {
         children: [
           SizedBox(height: Responsive.h(8)),
           ..._buildContent(isDark),
+          SizedBox(height: Responsive.h(24)),
+
+          // ── Expandable Sections ──
+          _ShiftSummarySection(isDark: isDark),
+          SizedBox(height: Responsive.h(12)),
+          _HealthScoreSection(isDark: isDark),
+          SizedBox(height: Responsive.h(12)),
+          _AnalyticsSection(isDark: isDark),
+
           SizedBox(height: Responsive.h(40)),
         ],
       ),
@@ -483,5 +513,395 @@ class _LoadedBody extends StatelessWidget {
     } catch (_) {
       return dateStr;
     }
+  }
+}
+
+// ── Expandable Section Wrapper ──
+
+class _ExpandableSection extends StatelessWidget {
+  const _ExpandableSection({
+    required this.title,
+    required this.icon,
+    required this.iconColor,
+    required this.isDark,
+    required this.children,
+  });
+
+  final String title;
+  final IconData icon;
+  final Color iconColor;
+  final bool isDark;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.border,
+          width: 0.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: ExpansionTile(
+              initiallyExpanded: false,
+              tilePadding: EdgeInsets.symmetric(
+                horizontal: Responsive.w(16),
+                vertical: Responsive.h(4),
+              ),
+              childrenPadding: EdgeInsets.only(
+                right: Responsive.w(16),
+                left: Responsive.w(16),
+                bottom: Responsive.h(16),
+              ),
+              leading: Container(
+                width: Responsive.r(36),
+                height: Responsive.r(36),
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(Responsive.r(10)),
+                ),
+                child: Icon(icon, size: Responsive.r(18), color: iconColor),
+              ),
+              title: Text(
+                title,
+                style: AppTypography.titleMedium.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              iconColor:
+                  isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+              collapsedIconColor:
+                  isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+              children: children,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── 1. Shift Summary Section ──
+
+class _ShiftSummarySection extends StatelessWidget {
+  const _ShiftSummarySection({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ShiftBloc, ShiftState>(
+      builder: (context, state) {
+        final summary =
+            state is ShiftLoaded ? state.summary : null;
+
+        return _ExpandableSection(
+          title: AppStrings.shiftSummaryTitle,
+          icon: IconsaxPlusLinear.timer_start,
+          iconColor: AppColors.info,
+          isDark: isDark,
+          children: [
+            if (summary != null)
+              _ShiftStatsContent(summary: summary, isDark: isDark)
+            else
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: Center(
+                  child: Text(
+                    AppStrings.analyticsNoData,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ShiftStatsContent extends StatelessWidget {
+  const _ShiftStatsContent({
+    required this.summary,
+    required this.isDark,
+  });
+
+  final ShiftSummaryEntity summary;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.calendar_1,
+                label: AppStrings.totalShifts,
+                value: '${summary.totalShifts}',
+                color: AppColors.primary,
+                isDark: isDark,
+              ),
+            ),
+            SizedBox(width: Responsive.w(8)),
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.clock,
+                label: AppStrings.totalHoursWorked,
+                value: '${summary.totalHoursWorked.toStringAsFixed(1)} ${AppStrings.hours}',
+                color: AppColors.info,
+                isDark: isDark,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: Responsive.h(8)),
+        Row(
+          children: [
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.box_1,
+                label: AppStrings.totalOrdersCompleted,
+                value: '${summary.totalOrdersCompleted}',
+                color: AppColors.success,
+                isDark: isDark,
+              ),
+            ),
+            SizedBox(width: Responsive.w(8)),
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.money_recive,
+                label: AppStrings.totalEarnings,
+                value: '${summary.totalEarnings.toStringAsFixed(0)} ${AppStrings.currency}',
+                color: AppColors.warning,
+                isDark: isDark,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: Responsive.h(8)),
+        Row(
+          children: [
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.routing_2,
+                label: AppStrings.totalDistanceKm,
+                value: summary.totalDistanceKm.toStringAsFixed(1),
+                color: AppColors.statusReturned,
+                isDark: isDark,
+              ),
+            ),
+            SizedBox(width: Responsive.w(8)),
+            Expanded(
+              child: _ShiftMiniCard(
+                icon: IconsaxPlusLinear.timer_1,
+                label: AppStrings.avgShiftDuration,
+                value: '${summary.averageShiftDurationHours.toStringAsFixed(1)} ${AppStrings.hours}',
+                color: AppColors.statusOnTheWay,
+                isDark: isDark,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ShiftMiniCard extends StatelessWidget {
+  const _ShiftMiniCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.isDark,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(Responsive.w(12)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(Responsive.r(12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: Responsive.r(16), color: color),
+          SizedBox(height: Responsive.h(6)),
+          Text(
+            value,
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          SizedBox(height: Responsive.h(2)),
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: isDark
+                  ? AppColors.textCaptionDark
+                  : AppColors.textCaption,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 2. Health Score Section ──
+
+class _HealthScoreSection extends StatelessWidget {
+  const _HealthScoreSection({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<ProfileBloc, ProfileState>(
+      builder: (context, profileState) {
+        final healthScore = profileState is ProfileLoaded
+            ? profileState.healthScore
+            : null;
+
+        return _ExpandableSection(
+          title: AppStrings.healthScore,
+          icon: IconsaxPlusLinear.health,
+          iconColor: AppColors.success,
+          isDark: isDark,
+          children: [
+            if (healthScore != null)
+              HealthScoreCard(healthScore: healthScore)
+            else
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: Center(
+                  child: Text(
+                    AppStrings.analyticsNoData,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// ── 3. Analytics Section ──
+
+class _AnalyticsSection extends StatelessWidget {
+  const _AnalyticsSection({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<AnalyticsBloc, AnalyticsState>(
+      builder: (context, state) {
+        return _ExpandableSection(
+          title: AppStrings.analyticsTitle,
+          icon: IconsaxPlusLinear.chart_1,
+          iconColor: AppColors.primary,
+          isDark: isDark,
+          children: [
+            if (state is AnalyticsLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: const SekkaLoading(),
+              )
+            else if (state is AnalyticsLoaded) ...[
+              ProfitabilityTrendsCard(data: state.profitabilityTrends),
+              SizedBox(height: Responsive.h(10)),
+              TimeAnalysisCard(data: state.timeAnalysis),
+              SizedBox(height: Responsive.h(10)),
+              RegionAnalysisCard(data: state.regionAnalysis),
+              SizedBox(height: Responsive.h(10)),
+              SourceBreakdownCard(data: state.sourceBreakdown),
+              SizedBox(height: Responsive.h(10)),
+              CustomerProfitabilityCard(data: state.customerProfitability),
+              SizedBox(height: Responsive.h(10)),
+              CancellationReportCard(data: state.cancellationReport),
+            ] else if (state is AnalyticsError)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        state.message,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody,
+                        ),
+                      ),
+                      SizedBox(height: Responsive.h(8)),
+                      TextButton(
+                        onPressed: () => context
+                            .read<AnalyticsBloc>()
+                            .add(const AnalyticsLoadRequested()),
+                        child: Text(
+                          AppStrings.retry,
+                          style: AppTypography.titleMedium
+                              .copyWith(color: AppColors.primary),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: Center(
+                  child: Text(
+                    AppStrings.analyticsNoData,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
+    );
   }
 }

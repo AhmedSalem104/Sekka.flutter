@@ -18,6 +18,7 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
+  final _contactsVisibility = ValueNotifier<bool>(false);
 
   void _openProfile() {
     Navigator.push(
@@ -29,7 +30,7 @@ class _MainShellState extends State<MainShell> {
   late final List<Widget> _screens = [
     HomeScreen(onAvatarTap: _openProfile),
     const OrdersListScreen(),
-    const ContactsScreen(),
+    ContactsScreen(visibilityNotifier: _contactsVisibility),
     const WalletScreen(),
     const SettlementsScreen(),
   ];
@@ -63,6 +64,12 @@ class _MainShellState extends State<MainShell> {
   ];
 
   @override
+  void dispose() {
+    _contactsVisibility.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _currentIndex == 0,
@@ -84,7 +91,11 @@ class _MainShellState extends State<MainShell> {
               bottom: 0,
               child: SekkaBottomNav(
                 currentIndex: _currentIndex,
-                onTap: (index) => setState(() => _currentIndex = index),
+                onTap: (index) {
+                  setState(() => _currentIndex = index);
+                  // Notify contacts tab when it becomes visible
+                  _contactsVisibility.value = index == 2;
+                },
                 items: _navItems,
               ),
             ),
