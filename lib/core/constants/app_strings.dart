@@ -387,7 +387,7 @@ abstract final class AppStrings {
   static String get totalOrders =>
       _isAr ? 'إجمالي الطلبات' : 'Total orders';
   static String get totalEarningsLabel =>
-      _isAr ? 'إجمالي الأرباح' : 'Total earnings';
+      _isAr ? 'الإجمالي' : 'Total earnings';
   static String get totalDistance => _isAr ? 'المسافة' : 'Distance';
   static String get successRate =>
       _isAr ? 'نسبة النجاح' : 'Success rate';
@@ -508,7 +508,7 @@ abstract final class AppStrings {
 
   // Orders
   static String get orders => _isAr ? 'الطلبات' : 'Orders';
-  static String get addOrder => _isAr ? 'أضف طلب' : 'Add Order';
+  static String get addOrder => _isAr ? 'ضيف طلب' : 'Add Order';
   static String get orderDetails =>
       _isAr ? 'تفاصيل الطلب' : 'Order Details';
   static const String trackOnMap = 'تابع ع الخريطة';
@@ -743,7 +743,7 @@ abstract final class AppStrings {
   // Order Status
   static String get statusNew => _isAr ? 'جديد' : 'New';
   static String get statusOnTheWay =>
-      _isAr ? 'في الطريق' : 'On the way';
+      _isAr ? 'ف السكة' : 'On the way';
   static String get statusArrived => _isAr ? 'وصلت' : 'Arrived';
   static String get statusDelivered =>
       _isAr ? 'تم التسليم' : 'Delivered';
@@ -756,10 +756,10 @@ abstract final class AppStrings {
   // Wallet
   static String get wallet => _isAr ? 'المحفظة' : 'Wallet';
   static String get todayEarnings =>
-      _isAr ? 'أرباح اليوم' : 'Today\'s earnings';
+      _isAr ? 'كسب النهارده' : 'Today\'s earnings';
   static String get totalCollected =>
       _isAr ? 'إجمالي التحصيل' : 'Total collected';
-  static String get netProfit => _isAr ? 'صافي الربح' : 'Net profit';
+  static String get netProfit => _isAr ? 'الصافي' : 'Net profit';
 
   // Profile
   static String get profileTitle => _isAr ? 'البروفايل' : 'Profile';
@@ -820,7 +820,7 @@ abstract final class AppStrings {
   static String get inviteCodeHint =>
       _isAr ? 'مثال: SEK-XXXXXXXX' : 'Example: SEK-XXXXXXXX';
   static String get detailedStats =>
-      _isAr ? 'الإحصائيات التفصيلية' : 'Detailed statistics';
+      _isAr ? 'إحصائياتك بالتفصيل' : 'Detailed statistics';
   static String get emergencyContacts =>
       _isAr ? 'جهات الطوارئ' : 'Emergency contacts';
   static String get addContact =>
@@ -870,23 +870,23 @@ abstract final class AppStrings {
   static String get expenseNotes => _isAr ? 'ملاحظات' : 'Notes';
 
   // Health Score
-  static String get healthScore => _isAr ? 'مؤشر الأداء' : 'Health Score';
+  static String get healthScore => _isAr ? 'أداءك عامل إزاي' : 'Health Score';
   static String get successRateScore =>
-      _isAr ? 'نسبة النجاح' : 'Success Rate';
+      _isAr ? 'نسبة التوصيل' : 'Success Rate';
   static String get customerRatingScore =>
-      _isAr ? 'تقييم العملاء' : 'Customer Rating';
+      _isAr ? 'رأي الزباين' : 'Customer Rating';
   static String get commitmentScore =>
-      _isAr ? 'الالتزام' : 'Commitment';
+      _isAr ? 'التزامك' : 'Commitment';
   static String get activityScore =>
-      _isAr ? 'النشاط' : 'Activity';
+      _isAr ? 'نشاطك' : 'Activity';
   static String get cashHandlingScore =>
-      _isAr ? 'إدارة الكاش' : 'Cash Handling';
-  static String get healthStatusGood => _isAr ? 'ممتاز' : 'Good';
-  static String get healthStatusAverage => _isAr ? 'متوسط' : 'Average';
-  static String get healthStatusPoor => _isAr ? 'ضعيف' : 'Poor';
-  static String get trendUp => _isAr ? 'صاعد' : 'Improving';
-  static String get trendDown => _isAr ? 'هابط' : 'Declining';
-  static String get trendStable => _isAr ? 'مستقر' : 'Stable';
+      _isAr ? 'تعاملك مع الفلوس' : 'Cash Handling';
+  static String get healthStatusGood => _isAr ? 'تمام' : 'Good';
+  static String get healthStatusAverage => _isAr ? 'نص نص' : 'Average';
+  static String get healthStatusPoor => _isAr ? 'محتاج تحسين' : 'Poor';
+  static String get trendUp => _isAr ? 'بيتحسن' : 'Improving';
+  static String get trendDown => _isAr ? 'بينزل' : 'Declining';
+  static String get trendStable => _isAr ? 'ثابت' : 'Stable';
 
   // Settings
   static String get settings => _isAr ? 'الإعدادات' : 'Settings';
@@ -1404,7 +1404,7 @@ abstract final class AppStrings {
   static const String noActiveOrders = 'مفيش طلبات نشطة';
   static const String addOrderToRoute = 'ضيف طلب للمسار';
   static const String routeIsEmpty = 'المسار فاضي';
-  static const String addOrdersToRoute = 'أضف طلبات للمسار';
+  static const String addOrdersToRoute = 'ضيف طلبات للمسار';
   static const String dragToReorder = 'اسحب عشان تعيد الترتيب';
 
   // ── Sync / Connection ──
@@ -1547,6 +1547,16 @@ abstract final class AppStrings {
       _isAr ? 'تسليم' : 'Delivered';
   static String get statSuccess =>
       _isAr ? 'نجاح' : 'Success';
+  static String get welcomeBack =>
+      _isAr ? 'أهلاً بيك' : 'Welcome back';
+  static String get startDeliveringNow =>
+      _isAr ? 'ابدأ وصّل طلباتك!' : 'Start delivering your orders!';
+  static String get addOrdersToStart =>
+      _isAr ? 'ضيف طلباتك وابدأ التوصيل' : 'Add your orders and start delivering';
+  static String get detailedStatistics =>
+      _isAr ? 'إحصائياتك بالتفصيل' : 'Detailed Statistics';
+  static String get viewDetailedStatsHint =>
+      _isAr ? 'تابع أداءك وأرباحك بالتفصيل' : 'Track your performance and earnings in detail';
   static String get optimizeYourRoute =>
       _isAr ? 'حسّن مسارك' : 'Optimize Your Route';
   static String get optimizeRouteHint =>
@@ -1574,7 +1584,7 @@ abstract final class AppStrings {
   static String get shiftSummaryTitle =>
       _isAr ? 'ملخص الورديات' : 'Shift Summary';
   static String get shiftPerformanceTitle =>
-      _isAr ? 'ملخص الأداء والورديات' : 'Performance & Shifts';
+      _isAr ? 'أداءك والورديات' : 'Performance & Shifts';
   static String get totalShifts =>
       _isAr ? 'إجمالي الورديات' : 'Total Shifts';
   static String get totalHoursWorked =>

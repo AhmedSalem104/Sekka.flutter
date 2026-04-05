@@ -23,6 +23,7 @@ import '../../../notifications/presentation/screens/notifications_screen.dart';
 import '../../../orders/data/models/order_model.dart';
 import '../../../orders/presentation/bloc/orders_bloc.dart';
 import '../../../orders/presentation/bloc/orders_state.dart';
+import '../../../orders/presentation/screens/create_order_screen.dart';
 import '../../../orders/presentation/screens/order_detail_screen.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
@@ -96,15 +97,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: Responsive.h(16)),
                 _buildAppBar(context, isDark),
                 SizedBox(height: Responsive.h(20)),
-                _buildWelcomeSection(context, isDark),
+                _buildGreetingSection(context, isDark),
                 SizedBox(height: Responsive.h(20)),
-                _buildEarningsCard(context, isDark),
+                _buildOrangeSection(context, isDark),
                 SizedBox(height: Responsive.h(24)),
                 _buildBreakSection(context, isDark),
                 SizedBox(height: Responsive.h(24)),
                 _buildRouteCard(context, isDark),
                 SizedBox(height: Responsive.h(24)),
                 _buildParkingCard(context, isDark),
+                SizedBox(height: Responsive.h(24)),
+                _buildStatisticsCard(context, isDark),
                 SizedBox(height: Responsive.h(120)),
               ],
             ),
@@ -136,6 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final imageUrl = profileState is ProfileLoaded
         ? profileState.profile.profileImageUrl
         : null;
+    final authState = context.watch<AuthBloc>().state;
+    final fullName =
+        authState is AuthAuthenticated ? authState.driver.name : '';
+    final firstName = fullName.split(' ').first;
 
     return Row(
       children: [
@@ -143,7 +150,30 @@ class _HomeScreenState extends State<HomeScreen> {
           onTap: widget.onAvatarTap,
           child: SekkaAvatar(imageUrl: imageUrl, size: 46),
         ),
-        const Spacer(),
+        SizedBox(width: Responsive.w(10)),
+        Expanded(
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${AppStrings.welcomeBack}، $firstName',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+        _buildSmallShiftToggle(context, isDark),
+        SizedBox(width: Responsive.w(8)),
         const SyncStatusChip(),
         SizedBox(width: Responsive.w(8)),
         _NotificationBadge(
@@ -155,15 +185,188 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
-  //  WELCOME SECTION — الترحيب (باللون الأساسي)
+  //  GREETING SECTION — الترحيب + اللوكيشن + احصائيات صغيرة
   // ══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildWelcomeSection(BuildContext context, bool isDark) {
-    final greeting = DateTime.now().arabicGreeting;
-    final authState = context.watch<AuthBloc>().state;
-    final driverName =
-        authState is AuthAuthenticated ? authState.driver.name : '';
-    // Find in-transit order
+  Widget _buildGreetingSection(BuildContext context, bool isDark) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Location
+          _LocationChipNeutral(isDark: isDark),
+          SizedBox(height: Responsive.h(12)),
+
+          // Small daily stats row (3 fields)
+          BlocBuilder<DailyStatsBloc, DailyStatsState>(
+            builder: (context, state) {
+              final stats = state is DailyStatsLoaded ? state.stats : null;
+              return Row(
+                children: [
+                  Icon(
+                    IconsaxPlusLinear.money_recive,
+                    size: Responsive.r(14),
+                    color: AppColors.success,
+                  ),
+                  SizedBox(width: Responsive.w(4)),
+                  Text(
+                    stats != null
+                        ? '${stats.netProfit.toInt()} ${AppStrings.currency}'
+                        : '--',
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: Responsive.w(12)),
+                  Icon(
+                    IconsaxPlusLinear.wallet_money,
+                    size: Responsive.r(14),
+                    color: AppColors.warning,
+                  ),
+                  SizedBox(width: Responsive.w(4)),
+                  Text(
+                    stats != null
+                        ? '${stats.earnings.toInt()} ${AppStrings.currency}'
+                        : '--',
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: Responsive.w(12)),
+                  Icon(
+                    IconsaxPlusLinear.box_1,
+                    size: Responsive.r(14),
+                    color: AppColors.info,
+                  ),
+                  SizedBox(width: Responsive.w(4)),
+                  Text(
+                    stats != null
+                        ? '${stats.totalOrders} ${AppStrings.statOrders}'
+                        : '--',
+                    style: AppTypography.captionSmall.copyWith(
+                      color: isDark
+                          ? AppColors.textBodyDark
+                          : AppColors.textBody,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Small Shift Toggle Button ──
+
+  Widget _buildSmallShiftToggle(BuildContext context, bool isDark) {
+    return BlocBuilder<ShiftBloc, ShiftState>(
+      builder: (context, state) {
+        final isActive = state is ShiftLoaded && state.isActive;
+        final isToggling = state is ShiftLoaded && state.isToggling;
+        final isLoading = state is ShiftLoading || isToggling;
+
+        return GestureDetector(
+          onTap: isLoading
+              ? null
+              : () {
+                  if (isActive) {
+                    _showEndShiftDialog(context);
+                  } else {
+                    context
+                        .read<ShiftBloc>()
+                        .add(const ShiftStartRequested());
+                  }
+                },
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.w(12),
+              vertical: Responsive.h(6),
+            ),
+            decoration: BoxDecoration(
+              gradient: isActive
+                  ? null
+                  : const LinearGradient(
+                      colors: [
+                        AppColors.gradientStart,
+                        AppColors.gradientEnd,
+                      ],
+                    ),
+              color: isActive ? AppColors.error.withValues(alpha: 0.1) : null,
+              borderRadius: BorderRadius.circular(Responsive.r(8)),
+              border: isActive
+                  ? Border.all(color: AppColors.error.withValues(alpha: 0.3))
+                  : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isLoading)
+                  SizedBox(
+                    width: Responsive.r(12),
+                    height: Responsive.r(12),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: isActive
+                          ? AppColors.error
+                          : AppColors.textOnPrimary,
+                    ),
+                  )
+                else
+                  Icon(
+                    isActive
+                        ? IconsaxPlusBold.stop_circle
+                        : IconsaxPlusBold.play_circle,
+                    size: Responsive.r(14),
+                    color: isActive
+                        ? AppColors.error
+                        : AppColors.textOnPrimary,
+                  ),
+                SizedBox(width: Responsive.w(4)),
+                Text(
+                  isActive
+                      ? AppStrings.shiftEnd
+                      : AppStrings.shiftStart,
+                  style: AppTypography.captionSmall.copyWith(
+                    color: isActive
+                        ? AppColors.error
+                        : AppColors.textOnPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (isActive) ...[
+                  SizedBox(width: Responsive.w(4)),
+                  Container(
+                    width: Responsive.r(6),
+                    height: Responsive.r(6),
+                    decoration: const BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  ORANGE SECTION — أضف طلب / طلب في الطريق
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildOrangeSection(BuildContext context, bool isDark) {
     final ordersState = context.watch<OrdersBloc>().state;
     OrderModel? inTransitOrder;
     if (ordersState is OrdersLoaded) {
@@ -174,8 +377,6 @@ class _HomeScreenState extends State<HomeScreen> {
         inTransitOrder = transitOrders.first;
       }
     }
-
-    final today = DateTime.now().arabicDate;
 
     return Container(
       width: double.infinity,
@@ -190,53 +391,77 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Directionality(
         textDirection: TextDirection.rtl,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Greeting + name
-            Text(
-              '$greeting، $driverName',
-              style: AppTypography.headlineSmall.copyWith(
-                color: AppColors.textOnPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: Responsive.h(4)),
+        child: inTransitOrder != null
+            ? _buildInTransitOrder(context, inTransitOrder)
+            : _buildAddOrderCta(context),
+      ),
+    );
+  }
 
-            // Date + Location
-            Row(
+  Widget _buildAddOrderCta(BuildContext context) {
+    return Row(
+      children: [
+        // Text side
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppStrings.startDeliveringNow,
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.textOnPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: Responsive.h(4)),
+              Text(
+                AppStrings.addOrdersToStart,
+                style: AppTypography.captionSmall.copyWith(
+                  color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(width: Responsive.w(12)),
+        // Button side
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => const CreateOrderScreen(),
+            ),
+          ),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: Responsive.w(16),
+              vertical: Responsive.h(10),
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.textOnPrimary,
+              borderRadius: BorderRadius.circular(Responsive.r(12)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
+                Icon(
+                  IconsaxPlusBold.add_circle,
+                  color: AppColors.primary,
+                  size: Responsive.r(18),
+                ),
+                SizedBox(width: Responsive.w(6)),
                 Text(
-                  today,
+                  AppStrings.addOrder,
                   style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(width: Responsive.w(12)),
-                const _LocationChip(),
               ],
             ),
-            SizedBox(height: Responsive.h(20)),
-
-            // Shift toggle button
-            _buildShiftToggle(context),
-
-            // Divider + in-transit order (if exists)
-            if (inTransitOrder != null) ...[
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
-                child: Divider(
-                  color: AppColors.textOnPrimary.withValues(alpha: 0.2),
-                  height: 1,
-                ),
-              ),
-              _buildInTransitOrder(context, inTransitOrder),
-            ],
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -305,11 +530,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildShiftToggle(BuildContext context) {
     return BlocConsumer<ShiftBloc, ShiftState>(
       listenWhen: (prev, curr) {
-        // Listen for shift toggle success
         if (prev is ShiftLoaded && curr is ShiftLoaded) {
           return prev.isActive != curr.isActive;
         }
-        // Listen for errors
         if (curr is ShiftError) return true;
         return false;
       },
@@ -340,10 +563,8 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       builder: (context, state) {
-        final isActive =
-            state is ShiftLoaded && state.isActive;
-        final isToggling =
-            state is ShiftLoaded && state.isToggling;
+        final isActive = state is ShiftLoaded && state.isActive;
+        final isToggling = state is ShiftLoaded && state.isToggling;
         final isLoading = state is ShiftLoading || isToggling;
 
         return GestureDetector(
@@ -360,14 +581,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
           child: Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(
-              vertical: Responsive.h(12),
-            ),
+            padding: EdgeInsets.symmetric(vertical: Responsive.h(14)),
             decoration: BoxDecoration(
-              color: isActive
-                  ? AppColors.textOnPrimary
-                  : AppColors.textOnPrimary.withValues(alpha: 0.2),
+              gradient: isActive
+                  ? null
+                  : const LinearGradient(
+                      colors: [
+                        AppColors.gradientStart,
+                        AppColors.gradientEnd,
+                      ],
+                    ),
+              color: isActive ? AppColors.error.withValues(alpha: 0.1) : null,
               borderRadius: BorderRadius.circular(Responsive.r(12)),
+              border: isActive
+                  ? Border.all(color: AppColors.error.withValues(alpha: 0.3))
+                  : null,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -379,7 +607,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: isActive
-                          ? AppColors.primary
+                          ? AppColors.error
                           : AppColors.textOnPrimary,
                     ),
                   )
@@ -390,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         : IconsaxPlusBold.play_circle,
                     size: Responsive.r(20),
                     color: isActive
-                        ? AppColors.primary
+                        ? AppColors.error
                         : AppColors.textOnPrimary,
                   ),
                 SizedBox(width: Responsive.w(8)),
@@ -400,7 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       : AppStrings.shiftStart,
                   style: AppTypography.titleMedium.copyWith(
                     color: isActive
-                        ? AppColors.primary
+                        ? AppColors.error
                         : AppColors.textOnPrimary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -890,6 +1118,130 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   // ══════════════════════════════════════════════════════════════════════════
+  //  STATISTICS CARD — احصائياتي
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildStatisticsCard(BuildContext context, bool isDark) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            Responsive.w(20),
+            Responsive.h(50),
+            Responsive.w(20),
+            Responsive.h(20),
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.surfaceDark : AppColors.surface,
+            borderRadius: BorderRadius.circular(Responsive.r(16)),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textHeadline.withValues(alpha: 0.06),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            textDirection: TextDirection.rtl,
+            children: [
+              Text(
+                AppStrings.detailedStatistics,
+                style: AppTypography.titleLarge.copyWith(
+                  color: isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: Responsive.h(4)),
+              Text(
+                AppStrings.viewDetailedStatsHint,
+                style: AppTypography.bodySmall.copyWith(
+                  color: isDark
+                      ? AppColors.textBodyDark
+                      : AppColors.textCaption,
+                ),
+              ),
+              SizedBox(height: Responsive.h(14)),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: GestureDetector(
+                  onTap: () {
+                    final dioClient = context.read<DioClient>();
+                    final dataSource = StatisticsRemoteDataSource(dioClient);
+                    final repository = StatisticsRepositoryImpl(
+                      remoteDataSource: dataSource,
+                    );
+                    Navigator.push<void>(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => BlocProvider(
+                          create: (_) {
+                            final bloc =
+                                StatisticsBloc(repository: repository);
+                            if (bloc.state is! StatisticsLoaded) {
+                              bloc.add(const StatisticsTabChanged(
+                                  StatisticsTab.weekly));
+                            }
+                            return bloc;
+                          },
+                          child: const StatisticsScreen(),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: Responsive.w(16),
+                      vertical: Responsive.h(10),
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColors.gradientStart,
+                          AppColors.gradientEnd,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(Responsive.r(10)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      AppStrings.detailedStatistics,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: Responsive.h(-20),
+          left: 0,
+          child: Image.asset(
+            'assets/images/statistics_card.png',
+            height: Responsive.h(100),
+            fit: BoxFit.contain,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
   //  PARKING CARD — أماكن الركن
   // ══════════════════════════════════════════════════════════════════════════
 
@@ -1088,7 +1440,7 @@ class _NotificationBadgeState extends State<_NotificationBadge> {
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-//  LOCATION CHIP — الموقع الحالي
+//  LOCATION CHIP — الموقع الحالي (on primary — for orange sections)
 // ══════════════════════════════════════════════════════════════════════════
 
 class _LocationChip extends StatefulWidget {
@@ -1187,6 +1539,114 @@ class _LocationChipState extends State<_LocationChip> {
           _locationText,
           style: AppTypography.captionSmall.copyWith(
             color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+//  LOCATION CHIP NEUTRAL — الموقع الحالي (neutral colors)
+// ══════════════════════════════════════════════════════════════════════════
+
+class _LocationChipNeutral extends StatefulWidget {
+  const _LocationChipNeutral({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  State<_LocationChipNeutral> createState() => _LocationChipNeutralState();
+}
+
+class _LocationChipNeutralState extends State<_LocationChipNeutral> {
+  String _locationText = AppStrings.locatingPosition;
+  bool _hasLocation = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchLocation();
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) setState(() => _locationText = AppStrings.locationServiceDisabled);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) setState(() => _locationText = AppStrings.locationPermissionDenied);
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 15),
+        ),
+      );
+
+      try {
+        final placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty && mounted) {
+          final place = placemarks.first;
+          final parts = <String>[
+            if (place.subLocality?.isNotEmpty == true) place.subLocality!,
+            if (place.locality?.isNotEmpty == true) place.locality!,
+            if (place.administrativeArea?.isNotEmpty == true)
+              place.administrativeArea!,
+          ];
+          setState(() {
+            _locationText =
+                parts.isNotEmpty ? parts.join('، ') : place.country ?? '';
+            _hasLocation = true;
+          });
+          return;
+        }
+      } catch (_) {}
+
+      if (mounted) {
+        setState(() {
+          _locationText =
+              '${position.latitude.toStringAsFixed(4)}, ${position.longitude.toStringAsFixed(4)}';
+          _hasLocation = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _locationText = AppStrings.locationFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          _hasLocation
+              ? IconsaxPlusBold.location
+              : IconsaxPlusLinear.location,
+          size: Responsive.r(14),
+          color: AppColors.primary,
+        ),
+        SizedBox(width: Responsive.w(4)),
+        Text(
+          _locationText,
+          style: AppTypography.captionSmall.copyWith(
+            color: widget.isDark
+                ? AppColors.textCaptionDark
+                : AppColors.textCaption,
           ),
         ),
       ],

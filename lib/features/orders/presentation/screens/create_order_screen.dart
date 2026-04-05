@@ -727,8 +727,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                           ),
                           child: TabBar(
                             controller: _tabController,
-                            isScrollable: true,
-                            tabAlignment: TabAlignment.start,
                             indicator: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius:
@@ -744,16 +742,8 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                               fontWeight: FontWeight.w700,
                             ),
                             unselectedLabelStyle: AppTypography.titleMedium,
-                            labelPadding: EdgeInsets.symmetric(
-                              horizontal: Responsive.w(6),
-                            ),
-                            indicatorPadding: EdgeInsets.symmetric(
-                              horizontal: Responsive.w(1),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: Responsive.w(2),
-                              vertical: Responsive.w(3),
-                            ),
+                            labelPadding: EdgeInsets.zero,
+                            padding: EdgeInsets.all(Responsive.w(3)),
                             tabs: const [
                               Tab(text: AppStrings.manualEntry),
                               Tab(text: AppStrings.bulkImport),
