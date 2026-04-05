@@ -4,8 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
+import '../../../../shared/network/api_result.dart';
+import '../../../../shared/network/dio_client.dart';
+import '../../../app_config/app_config_service.dart';
+import '../../../app_config/data/repositories/app_config_repository.dart';
+import '../../../app_config/presentation/screens/force_update_screen.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -55,9 +63,30 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _navigate() async {
     final bloc = context.read<AuthBloc>();
+    final configRepo = AppConfigRepository(context.read<DioClient>().dio);
+    final config = AppConfigService.instance;
+
     await Future<void>.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
+    // ── 1. Load app config (version + features + notices) ──
+    await _loadAppConfig(configRepo, config);
+    if (!mounted) return;
+
+    // ── 2. Force update check ──
+    if (config.needsForceUpdate) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => ForceUpdateScreen(
+            updateUrl: config.versionCheck?.updateUrl,
+            message: config.versionCheck?.message,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // ── 3. Onboarding check ──
     final prefs = await SharedPreferences.getInstance();
     final hasSeenOnboarding = prefs.getBool('has_seen_onboarding') ?? false;
 
@@ -68,10 +97,9 @@ class _SplashScreenState extends State<SplashScreen>
       return;
     }
 
-    // Check if user has a stored token
+    // ── 4. Auth check ──
     bloc.add(const AuthCheckRequested());
 
-    // Wait for the auth check to complete
     await bloc.stream.firstWhere(
       (state) => state is AuthAuthenticated || state is AuthUnauthenticated,
     );
@@ -80,9 +108,137 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (bloc.state is AuthAuthenticated) {
       context.go(RouteNames.main);
+      // Show optional update dialog after entering home
+      if (config.versionCheck != null &&
+          !config.versionCheck!.isUpToDate &&
+          !config.versionCheck!.isForceUpdate) {
+        _showOptionalUpdateDialog();
+      }
+      // Show notices
+      _showNotices(config);
     } else {
       context.go(RouteNames.auth);
     }
+  }
+
+  Future<void> _loadAppConfig(
+    AppConfigRepository repo,
+    AppConfigService config,
+  ) async {
+    final results = await (
+      repo.checkVersion(),
+      repo.getFeatures(),
+      repo.getNotices(),
+    ).wait;
+
+    final (version, features, notices) = results;
+
+    if (version case ApiSuccess(:final data)) {
+      config.setVersionCheck(data);
+    }
+    if (features case ApiSuccess(:final data)) {
+      config.setFeatures(data);
+    }
+    if (notices case ApiSuccess(:final data)) {
+      config.setNotices(data);
+    }
+  }
+
+  void _showOptionalUpdateDialog() {
+    if (!mounted) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        ),
+        title: Text(
+          AppStrings.optionalUpdateTitle,
+          style: AppTypography.headlineSmall.copyWith(
+            color:
+                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+          ),
+        ),
+        content: Text(
+          AppStrings.optionalUpdateMessage,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              AppStrings.later,
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              final url = AppConfigService.instance.versionCheck?.updateUrl;
+              if (url != null) {
+                // ignore: avoid ignoring, but launchUrl is fire-and-forget here
+              }
+            },
+            child: Text(
+              AppStrings.forceUpdateButton,
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNotices(AppConfigService config) {
+    if (!mounted || config.notices.isEmpty) return;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Show first notice as a dialog
+    final notice = config.notices.first;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        ),
+        title: Text(
+          notice.title,
+          style: AppTypography.headlineSmall.copyWith(
+            color:
+                isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
+          ),
+        ),
+        content: Text(
+          notice.message,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              AppStrings.ok,
+              style: AppTypography.titleMedium.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

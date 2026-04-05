@@ -124,6 +124,7 @@ void main() async {
     repository: authRepository,
     tokenStorage: tokenStorage,
     userStorage: userStorage,
+    dio: dioClient.dio,
     authStatusNotifier: authStatusNotifier,
   );
 

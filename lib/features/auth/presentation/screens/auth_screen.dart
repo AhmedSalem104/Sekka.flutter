@@ -149,6 +149,20 @@ class _AuthScreenState extends State<AuthScreen> {
                           ? _buildLoginForm()
                           : _buildSignUpForm(),
                     ),
+                    BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        return SekkaButton(
+                          label: AppStrings.tryWithoutRegister,
+                          onPressed: state is AuthLoading
+                              ? null
+                              : () => context
+                                  .read<AuthBloc>()
+                                  .add(const AuthDemoRequested()),
+                          type: SekkaButtonType.text,
+                        );
+                      },
+                    ),
+                    SizedBox(height: AppSizes.xl),
                   ],
                 );
               },

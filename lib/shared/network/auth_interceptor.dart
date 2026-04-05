@@ -43,6 +43,12 @@ class AuthInterceptor extends QueuedInterceptor {
     final oldToken = await _tokenStorage.getToken();
     final refreshToken = await _tokenStorage.getRefreshToken();
 
+    // Demo mode — token starts with "demo_", skip refresh & session expiry
+    if (oldToken != null && oldToken.startsWith('demo_')) {
+      handler.next(err);
+      return;
+    }
+
     if (oldToken == null || refreshToken == null) {
       _onSessionExpired();
       handler.next(err);
