@@ -54,3 +54,16 @@ final class ColleagueRadarResolveRequested extends ColleagueRadarEvent {
   @override
   List<Object?> get props => [requestId];
 }
+
+final class ColleagueRadarUpdateLocation extends ColleagueRadarEvent {
+  const ColleagueRadarUpdateLocation({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  final double latitude;
+  final double longitude;
+
+  @override
+  List<Object?> get props => [latitude, longitude];
+}

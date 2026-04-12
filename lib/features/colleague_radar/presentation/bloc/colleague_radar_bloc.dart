@@ -15,6 +15,7 @@ class ColleagueRadarBloc
     on<ColleagueRadarCreateHelpRequest>(_onCreate);
     on<ColleagueRadarRespondRequested>(_onRespond);
     on<ColleagueRadarResolveRequested>(_onResolve);
+    on<ColleagueRadarUpdateLocation>(_onUpdateLocation);
   }
 
   final ColleagueRadarRepository repository;
@@ -132,6 +133,17 @@ class ColleagueRadarBloc
           actionMessage: error.arabicMessage,
         ));
     }
+  }
+
+  Future<void> _onUpdateLocation(
+    ColleagueRadarUpdateLocation event,
+    Emitter<ColleagueRadarState> emit,
+  ) async {
+    // Fire and forget — don't block event queue
+    repository.updateLocation(
+      latitude: event.latitude,
+      longitude: event.longitude,
+    );
   }
 
   Future<void> _onResolve(

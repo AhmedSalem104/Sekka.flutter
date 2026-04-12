@@ -100,4 +100,20 @@ class ColleagueRadarRepository {
         () => _dio.post(ApiConstants.colleagueRadarResolve(requestId)),
         parser: (_) {},
       );
+
+  /// POST /colleague-radar/location
+  Future<ApiResult<bool>> updateLocation({
+    required double latitude,
+    required double longitude,
+  }) =>
+      ApiHelper.execute(
+        () => _dio.post(
+          ApiConstants.colleagueRadarLocation,
+          data: {
+            'latitude': latitude,
+            'longitude': longitude,
+          },
+        ),
+        parser: (data) => data as bool,
+      );
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
@@ -418,31 +420,58 @@ class ColleagueRadarTabContent extends StatefulWidget {
 }
 
 class _ColleagueRadarTabContentState extends State<ColleagueRadarTabContent> {
+  Timer? _locationTimer;
+
   @override
   void initState() {
     super.initState();
     _loadWithLocation();
+    _locationTimer = Timer.periodic(
+      const Duration(minutes: 5),
+      (_) => _updateLocation(),
+    );
   }
 
-  Future<void> _loadWithLocation() async {
+  @override
+  void dispose() {
+    _locationTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<Position?> _getPosition() async {
     try {
-      final position = await Geolocator.getCurrentPosition(
+      return await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.medium,
         ),
-      );
-      if (!mounted) return;
-      context.read<ColleagueRadarBloc>().add(
-            ColleagueRadarLoadRequested(
-              latitude: position.latitude,
-              longitude: position.longitude,
-            ),
-          );
+      ).timeout(const Duration(seconds: 10));
     } catch (_) {
-      if (!mounted) return;
-      // Fallback with zeros — API will return empty
+      return null;
+    }
+  }
+
+  Future<void> _updateLocation() async {
+    final position = await _getPosition();
+    if (!mounted || position == null) return;
+    context.read<ColleagueRadarBloc>().add(
+          ColleagueRadarUpdateLocation(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ),
+        );
+  }
+
+  Future<void> _loadWithLocation() async {
+    final position = await _getPosition();
+    if (!mounted) return;
+    final lat = position?.latitude ?? 0;
+    final lng = position?.longitude ?? 0;
+    context.read<ColleagueRadarBloc>().add(
+          ColleagueRadarLoadRequested(latitude: lat, longitude: lng),
+        );
+    if (position != null) {
       context.read<ColleagueRadarBloc>().add(
-            const ColleagueRadarLoadRequested(latitude: 0, longitude: 0),
+            ColleagueRadarUpdateLocation(latitude: lat, longitude: lng),
           );
     }
   }
@@ -527,115 +556,125 @@ class _RadarBody extends StatelessWidget {
       );
     }
 
-    return ListView(
-      padding: EdgeInsets.all(AppSizes.pagePadding),
+    return Column(
       children: [
-        // My active requests
-        if (hasMyRequests) ...[
-          Text(
-            AppStrings.radarMyRequests,
-            style: AppTypography.titleMedium.copyWith(
-              color:
-                  isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-            ),
-          ),
-          SizedBox(height: AppSizes.sm),
-          ...state.myRequests
-              .where((r) => !r.isResolved)
-              .map((r) => Padding(
-                    padding: EdgeInsets.only(bottom: AppSizes.sm),
-                    child: _HelpRequestCard(
-                      request: r,
-                      isDark: isDark,
-                      isMine: true,
-                    ),
-                  )),
-          SizedBox(height: AppSizes.lg),
-        ],
-
-        // Nearby help requests
-        if (hasRequests) ...[
-          Text(
-            AppStrings.radarHelpRequests,
-            style: AppTypography.titleMedium.copyWith(
-              color:
-                  isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-            ),
-          ),
-          SizedBox(height: AppSizes.sm),
-          ...state.nearbyRequests.map((r) => Padding(
-                padding: EdgeInsets.only(bottom: AppSizes.sm),
-                child: _HelpRequestCard(
-                  request: r,
-                  isDark: isDark,
-                  isMine: false,
-                ),
-              )),
-          SizedBox(height: AppSizes.lg),
-        ],
-
-        // Nearby drivers
-        if (hasNearby) ...[
-          Text(
-            '${AppStrings.radarNearbyDrivers} (${state.nearbyDrivers.length})',
-            style: AppTypography.titleMedium.copyWith(
-              color:
-                  isDark ? AppColors.textHeadlineDark : AppColors.textHeadline,
-            ),
-          ),
-          SizedBox(height: AppSizes.sm),
-          ...state.nearbyDrivers.map((d) => Padding(
-                padding: EdgeInsets.only(bottom: AppSizes.sm),
-                child: SekkaCard(
-                  child: Row(
-                    children: [
-                      Container(
-                        width: Responsive.r(40),
-                        height: Responsive.r(40),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          IconsaxPlusLinear.user,
-                          color: AppColors.success,
-                          size: AppSizes.iconMd,
-                        ),
-                      ),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          d.driverName,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: isDark
-                                ? AppColors.textHeadlineDark
-                                : AppColors.textHeadline,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${d.distanceKm.toStringAsFixed(1)} ${AppStrings.radarAway}',
-                        style: AppTypography.captionSmall.copyWith(
-                          color: isDark
-                              ? AppColors.textCaptionDark
-                              : AppColors.textCaption,
-                        ),
-                      ),
-                    ],
+        Expanded(
+          child: ListView(
+            padding: EdgeInsets.all(AppSizes.pagePadding),
+            children: [
+              // My active requests
+              if (hasMyRequests) ...[
+                Text(
+                  AppStrings.radarMyRequests,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
                   ),
                 ),
-              )),
-        ],
+                SizedBox(height: AppSizes.sm),
+                ...state.myRequests
+                    .where((r) => !r.isResolved)
+                    .map((r) => Padding(
+                          padding: EdgeInsets.only(bottom: AppSizes.sm),
+                          child: _HelpRequestCard(
+                            request: r,
+                            isDark: isDark,
+                            isMine: true,
+                          ),
+                        )),
+                SizedBox(height: AppSizes.lg),
+              ],
 
-        SizedBox(height: AppSizes.lg),
+              // Nearby help requests
+              if (hasRequests) ...[
+                Text(
+                  AppStrings.radarHelpRequests,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
+                SizedBox(height: AppSizes.sm),
+                ...state.nearbyRequests.map((r) => Padding(
+                      padding: EdgeInsets.only(bottom: AppSizes.sm),
+                      child: _HelpRequestCard(
+                        request: r,
+                        isDark: isDark,
+                        isMine: false,
+                      ),
+                    )),
+                SizedBox(height: AppSizes.lg),
+              ],
 
-        // Send help button
-        SekkaButton(
-          label: AppStrings.radarSendHelp,
-          icon: IconsaxPlusLinear.danger,
-          onPressed: () => _showCreateHelpSheet(context),
+              // Nearby drivers
+              if (hasNearby) ...[
+                Text(
+                  '${AppStrings.radarNearbyDrivers} (${state.nearbyDrivers.length})',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                  ),
+                ),
+                SizedBox(height: AppSizes.sm),
+                ...state.nearbyDrivers.map((d) => Padding(
+                      padding: EdgeInsets.only(bottom: AppSizes.sm),
+                      child: SekkaCard(
+                        child: Row(
+                          children: [
+                            Container(
+                              width: Responsive.r(40),
+                              height: Responsive.r(40),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.success.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                IconsaxPlusLinear.user,
+                                color: AppColors.success,
+                                size: AppSizes.iconMd,
+                              ),
+                            ),
+                            SizedBox(width: AppSizes.md),
+                            Expanded(
+                              child: Text(
+                                d.driverName,
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: isDark
+                                      ? AppColors.textHeadlineDark
+                                      : AppColors.textHeadline,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${d.distanceKm.toStringAsFixed(1)} ${AppStrings.radarAway}',
+                              style: AppTypography.captionSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+              ],
+            ],
+          ),
         ),
-        SizedBox(height: AppSizes.xl),
+
+        // Fixed bottom button
+        Padding(
+          padding: EdgeInsets.all(AppSizes.pagePadding),
+          child: SekkaButton(
+            label: AppStrings.radarSendHelp,
+            icon: IconsaxPlusLinear.danger,
+            onPressed: () => _showCreateHelpSheet(context),
+          ),
+        ),
       ],
     );
   }
@@ -773,26 +812,68 @@ class _HelpRequestCard extends StatelessWidget {
               ),
               const Spacer(),
               if (!isMine && request.isPending)
-                SekkaButton(
-                  label: AppStrings.radarRespond,
+                OutlinedButton.icon(
                   onPressed: () => context
                       .read<ColleagueRadarBloc>()
                       .add(ColleagueRadarRespondRequested(
                         requestId: request.id,
                       )),
-                  type: SekkaButtonType.secondary,
-                  icon: IconsaxPlusLinear.like_1,
+                  icon: Icon(
+                    IconsaxPlusLinear.like_1,
+                    size: Responsive.r(14),
+                  ),
+                  label: Text(
+                    AppStrings.radarRespond,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: const BorderSide(
+                      color: AppColors.primary,
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusPill),
+                    ),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.md,
+                      vertical: AppSizes.xs,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
               if (isMine && !request.isResolved)
-                SekkaButton(
-                  label: AppStrings.radarResolve,
+                TextButton.icon(
                   onPressed: () => context
                       .read<ColleagueRadarBloc>()
                       .add(ColleagueRadarResolveRequested(
                         requestId: request.id,
                       )),
-                  type: SekkaButtonType.text,
-                  icon: IconsaxPlusLinear.tick_circle,
+                  icon: Icon(
+                    IconsaxPlusLinear.tick_circle,
+                    size: Responsive.r(14),
+                    color: AppColors.warning,
+                  ),
+                  label: Text(
+                    AppStrings.radarResolve,
+                    style: AppTypography.captionSmall.copyWith(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.sm,
+                      vertical: AppSizes.xs,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
             ],
           ),
