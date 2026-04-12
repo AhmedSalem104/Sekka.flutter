@@ -309,6 +309,15 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
           );
           return false;
         }
+        // Delivery coordinates required — needed for navigation later
+        if (_deliveryLat == null || _deliveryLng == null) {
+          SekkaMessageDialog.show(
+            context,
+            message: AppStrings.deliveryLocationRequired,
+            type: SekkaMessageType.error,
+          );
+          return false;
+        }
         return true;
       case 2:
         // Step 3: amount required

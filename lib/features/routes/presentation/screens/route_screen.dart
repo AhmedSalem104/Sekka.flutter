@@ -238,7 +238,11 @@ class _ActiveRouteView extends StatelessWidget {
             horizontal: AppSizes.pagePadding,
             vertical: AppSizes.md,
           ),
-          child: _RouteStatsCard(route: route, isDark: isDark),
+          child: _RouteStatsCard(
+            route: route,
+            isLoading: isLoading,
+            isDark: isDark,
+          ),
         ),
 
         // Orders header + add button
@@ -359,7 +363,7 @@ class _ActiveRouteView extends StatelessWidget {
 
         // Bottom actions
         _BottomActions(
-          routeId: route.id,
+          route: route,
           isLoading: isLoading,
           isDark: isDark,
         ),
@@ -372,19 +376,41 @@ class _ActiveRouteView extends StatelessWidget {
 //  BOTTOM ACTIONS — إنهاء المسار
 // ══════════════════════════════════════════════════════════════════════════
 
-class _BottomActions extends StatelessWidget {
+class _BottomActions extends StatefulWidget {
   const _BottomActions({
-    required this.routeId,
+    required this.route,
     required this.isLoading,
     required this.isDark,
   });
 
-  final String routeId;
+  final RouteModel route;
   final bool isLoading;
   final bool isDark;
 
   @override
+  State<_BottomActions> createState() => _BottomActionsState();
+}
+
+class _BottomActionsState extends State<_BottomActions> {
+  bool _isOpeningMap = false;
+
+  /// First order that hasn't been delivered yet (status != 4 = delivered).
+  /// Returns null if all orders are done or the route is empty.
+  RouteOrderModel? get _nextOrder {
+    for (final order in widget.route.orders) {
+      if (order.status != 4) return order;
+    }
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final next = _nextOrder;
+    final hasNext = next != null && next.deliveryAddress.isNotEmpty;
+    final label = hasNext
+        ? '${AppStrings.deliverNext} — ${next.customerName ?? ''}'
+        : AppStrings.allOrdersDelivered;
+
     return Container(
       padding: EdgeInsets.fromLTRB(
         AppSizes.pagePadding,
@@ -393,7 +419,7 @@ class _BottomActions extends StatelessWidget {
         AppSizes.lg + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        color: widget.isDark ? AppColors.surfaceDark : AppColors.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -404,12 +430,17 @@ class _BottomActions extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // تابع ع الخريطة
+          // وصّل التالي
           Expanded(
+            flex: 2,
             child: SekkaButton(
-              label: AppStrings.trackOnMap,
+              label: label,
+              icon: IconsaxPlusLinear.routing,
               type: SekkaButtonType.secondary,
-              onPressed: () => _openMapForRoute(context),
+              isLoading: _isOpeningMap,
+              onPressed: _isOpeningMap || !hasNext
+                  ? null
+                  : () => _navigateToOrder(next),
             ),
           ),
           SizedBox(width: AppSizes.sm),
@@ -417,8 +448,8 @@ class _BottomActions extends StatelessWidget {
           Expanded(
             child: SekkaButton(
               label: AppStrings.completeRoute,
-              isLoading: isLoading,
-              onPressed: isLoading
+              isLoading: widget.isLoading,
+              onPressed: widget.isLoading
                   ? null
                   : () => _confirmComplete(context),
             ),
@@ -428,11 +459,76 @@ class _BottomActions extends StatelessWidget {
     );
   }
 
-  Future<void> _openMapForRoute(BuildContext context) async {
-    final uri = Uri.parse('https://www.google.com/maps');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+  /// Open Google Maps in turn-by-turn navigation mode for a single
+  /// destination. Uses the `google.navigation:` Android intent which
+  /// triggers actual navigation (not preview). Falls back to a https
+  /// URL if the intent isn't handled.
+  Future<void> _navigateToOrder(RouteOrderModel order) async {
+    if (order.deliveryAddress.isEmpty) {
+      _showError(AppStrings.noCoordinatesAvailable);
+      return;
     }
+
+    setState(() => _isOpeningMap = true);
+
+    final query = Uri.encodeComponent(order.deliveryAddress);
+    final navIntent = Uri.parse('google.navigation:q=$query&mode=d');
+    final fallbackUrl = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=$query'
+      '&travelmode=driving'
+      '&dir_action=navigate',
+    );
+
+    var launched = false;
+    try {
+      launched = await launchUrl(
+        navIntent,
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      launched = false;
+    }
+
+    if (!launched) {
+      try {
+        launched = await launchUrl(
+          fallbackUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (_) {
+        launched = false;
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _isOpeningMap = false);
+
+    if (!launched) {
+      _showError(AppStrings.couldNotOpenNavigation);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Directionality(
+            textDirection: TextDirection.rtl,
+            child: Text(
+              message,
+              style: AppTypography.bodyMedium
+                  .copyWith(color: AppColors.textOnPrimary),
+            ),
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          ),
+        ),
+      );
   }
 
   void _confirmComplete(BuildContext context) {
@@ -441,14 +537,15 @@ class _BottomActions extends StatelessWidget {
       builder: (_) => Directionality(
         textDirection: TextDirection.rtl,
         child: AlertDialog(
-          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+          backgroundColor:
+              widget.isDark ? AppColors.surfaceDark : AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.cardRadius),
           ),
           title: Text(
             AppStrings.completeRoute,
             style: AppTypography.headlineSmall.copyWith(
-              color: isDark
+              color: widget.isDark
                   ? AppColors.textHeadlineDark
                   : AppColors.textHeadline,
             ),
@@ -456,7 +553,9 @@ class _BottomActions extends StatelessWidget {
           content: Text(
             AppStrings.confirmCompleteRoute,
             style: AppTypography.bodyMedium.copyWith(
-              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+              color: widget.isDark
+                  ? AppColors.textBodyDark
+                  : AppColors.textBody,
             ),
           ),
           actions: [
@@ -465,7 +564,9 @@ class _BottomActions extends StatelessWidget {
               child: Text(
                 AppStrings.cancel,
                 style: AppTypography.titleMedium.copyWith(
-                  color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+                  color: widget.isDark
+                      ? AppColors.textBodyDark
+                      : AppColors.textBody,
                 ),
               ),
             ),
@@ -473,7 +574,7 @@ class _BottomActions extends StatelessWidget {
               onPressed: () {
                 Navigator.pop(context);
                 context.read<RouteBloc>().add(
-                      RouteCompleteRequested(routeId: routeId),
+                      RouteCompleteRequested(routeId: widget.route.id),
                     );
               },
               child: Text(
@@ -495,42 +596,140 @@ class _BottomActions extends StatelessWidget {
 // ══════════════════════════════════════════════════════════════════════════
 
 class _RouteStatsCard extends StatelessWidget {
-  const _RouteStatsCard({required this.route, required this.isDark});
+  const _RouteStatsCard({
+    required this.route,
+    required this.isLoading,
+    required this.isDark,
+  });
 
   final RouteModel route;
+  final bool isLoading;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
     return SekkaCard(
-      child: Row(
+      child: Column(
         children: [
-          _StatItem(
-            icon: IconsaxPlusLinear.timer_1,
-            label: AppStrings.estimatedTime,
-            value: '${route.estimatedTimeMinutes} د',
-            isDark: isDark,
+          // Header + re-optimize button
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  AppStrings.routeStats,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isDark
+                        ? AppColors.textHeadlineDark
+                        : AppColors.textHeadline,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Material(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+                  onTap: isLoading || route.orders.isEmpty
+                      ? null
+                      : () => _reOptimize(context),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: AppSizes.lg,
+                      vertical: AppSizes.sm,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isLoading)
+                          SizedBox(
+                            width: AppSizes.iconSm,
+                            height: AppSizes.iconSm,
+                            child: const CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.textOnPrimary,
+                            ),
+                          )
+                        else
+                          Icon(
+                            IconsaxPlusLinear.magic_star,
+                            size: AppSizes.iconMd,
+                            color: AppColors.textOnPrimary,
+                          ),
+                        SizedBox(width: AppSizes.xs),
+                        Text(
+                          AppStrings.reOptimize,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textOnPrimary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-          _divider(),
-          _StatItem(
-            icon: IconsaxPlusLinear.routing_2,
-            label: AppStrings.totalRouteDistance,
-            value:
-                '${route.totalDistanceKm.toStringAsFixed(1)} ${AppStrings.km}',
-            isDark: isDark,
+          SizedBox(height: AppSizes.md),
+          // Stats row
+          Row(
+            children: [
+              _StatItem(
+                icon: IconsaxPlusLinear.timer_1,
+                label: AppStrings.estimatedTime,
+                value: '${route.estimatedTimeMinutes} د',
+                isDark: isDark,
+              ),
+              _divider(),
+              _StatItem(
+                icon: IconsaxPlusLinear.routing_2,
+                label: AppStrings.totalRouteDistance,
+                value:
+                    '${route.totalDistanceKm.toStringAsFixed(1)} ${AppStrings.km}',
+                isDark: isDark,
+              ),
+              if (route.efficiencyScore != null) ...[
+                _divider(),
+                _StatItem(
+                  icon: IconsaxPlusLinear.medal_star,
+                  label: AppStrings.efficiencyScore,
+                  value: '${route.efficiencyScore}%',
+                  isDark: isDark,
+                ),
+              ],
+            ],
           ),
-          if (route.efficiencyScore != null) ...[
-            _divider(),
-            _StatItem(
-              icon: IconsaxPlusLinear.medal_star,
-              label: AppStrings.efficiencyScore,
-              value: '${route.efficiencyScore}%',
-              isDark: isDark,
-            ),
-          ],
         ],
       ),
     );
+  }
+
+  Future<void> _reOptimize(BuildContext context) async {
+    // Get current location for start point
+    double? lat;
+    double? lng;
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+      lat = position.latitude;
+      lng = position.longitude;
+    } catch (_) {
+      // GPS unavailable
+    }
+
+    if (!context.mounted) return;
+    context.read<RouteBloc>().add(
+          RouteOptimizeRequested(
+            orderIds: route.orders.map((o) => o.orderId).toList(),
+            startLatitude: lat,
+            startLongitude: lng,
+          ),
+        );
   }
 
   Widget _divider() {
@@ -714,6 +913,26 @@ class _RouteOrderTile extends StatelessWidget {
             ),
             SizedBox(width: AppSizes.sm),
 
+            // Per-stop navigate button
+            if (order.deliveryAddress.isNotEmpty)
+              Material(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: const CircleBorder(),
+                child: InkWell(
+                  customBorder: const CircleBorder(),
+                  onTap: () => _navigateToStop(order),
+                  child: Padding(
+                    padding: EdgeInsets.all(AppSizes.sm),
+                    child: Icon(
+                      IconsaxPlusLinear.routing,
+                      size: AppSizes.iconSm,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+              ),
+            SizedBox(width: AppSizes.xs),
+
             // Drag handle
             Icon(
               IconsaxPlusLinear.menu,
@@ -724,6 +943,36 @@ class _RouteOrderTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _navigateToStop(RouteOrderModel o) async {
+    final query = Uri.encodeComponent(o.deliveryAddress);
+    final navIntent = Uri.parse('google.navigation:q=$query&mode=d');
+    final fallbackUrl = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=$query'
+      '&travelmode=driving'
+      '&dir_action=navigate',
+    );
+    try {
+      final ok = await launchUrl(
+        navIntent,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!ok) {
+        await launchUrl(
+          fallbackUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+    } catch (_) {
+      try {
+        await launchUrl(
+          fallbackUrl,
+          mode: LaunchMode.externalApplication,
+        );
+      } catch (_) {}
+    }
   }
 }
 

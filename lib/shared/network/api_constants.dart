@@ -214,6 +214,14 @@ abstract final class ApiConstants {
   static const String ordersTimeSlots = '$_orders/time-slots';
   static String orderBookSlot(String id) => '$_orders/$id/book-slot';
 
+  // Map endpoints
+  static const String _map = '$baseUrl/map';
+  static const String mapGeocode = '$_map/geocode';
+  static const String mapReverseGeocode = '$_map/reverse-geocode';
+  static const String mapDistance = '$_map/distance';
+  static const String mapNavigate = '$_map/navigate';
+  static const String mapNavigateMultiStop = '$_map/navigate/multi-stop';
+
   // Route endpoints
   static const String _routes = '$baseUrl/routes';
   static const String routesOptimize = '$_routes/optimize';
@@ -267,6 +275,7 @@ abstract final class ApiConstants {
       '$_colleagueRadar/help-requests/$id/respond';
   static String colleagueRadarResolve(String id) =>
       '$_colleagueRadar/help-requests/$id/resolve';
+  static const String colleagueRadarLocation = '$_colleagueRadar/location';
 
   // Gamification endpoints
   static const String _gamification = '$baseUrl/gamification';

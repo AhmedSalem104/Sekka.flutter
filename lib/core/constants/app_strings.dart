@@ -545,6 +545,9 @@ abstract final class AppStrings {
   static String get notScheduled => _isAr ? 'مش محدد' : 'Not scheduled';
   static String get deliveryAddressRequired =>
       _isAr ? 'لازم تكتب عنوان التسليم' : 'Delivery address is required';
+  static String get deliveryLocationRequired => _isAr
+      ? 'لازم تحدد مكان التسليم على الخريطة'
+      : 'Pick the delivery location on the map';
   static String get amountRequired =>
       _isAr ? 'لازم تكتب المبلغ' : 'Amount is required';
   static String get amountInvalid =>
@@ -1452,6 +1455,14 @@ abstract final class AppStrings {
   static const String routeIsEmpty = 'المسار فاضي';
   static const String addOrdersToRoute = 'ضيف طلبات للمسار';
   static const String dragToReorder = 'اسحب عشان تعيد الترتيب';
+  static const String noCoordinatesAvailable =
+      'مفيش إحداثيات للطلبات — مينفعش نفتح الخريطة';
+  static const String couldNotOpenNavigation = 'مش قادرين نفتح التنقل';
+  static const String routeStats = 'إحصائيات المسار';
+  static const String reOptimize = 'حسّن المسار';
+  static const String deliverNext = 'وصّل';
+  static const String allOrdersDelivered = 'كل الطلبات اتسلمت';
+  static const String navigate = 'تنقّل';
 
   // ── Sync / Connection ──
   static const String syncStatus = 'حالة الاتصال';
