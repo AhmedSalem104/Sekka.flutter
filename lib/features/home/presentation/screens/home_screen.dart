@@ -1108,7 +1108,9 @@ class _HomeScreenState extends State<HomeScreen> {
           top: Responsive.h(-20),
           left: 0,
           child: Image.asset(
-            'assets/images/route_optimize.png',
+            isDark
+                ? 'assets/images/route_optimize_dark.png'
+                : 'assets/images/route_optimize.png',
             height: Responsive.h(100),
             fit: BoxFit.contain,
           ),
@@ -1232,7 +1234,9 @@ class _HomeScreenState extends State<HomeScreen> {
           top: Responsive.h(-20),
           left: 0,
           child: Image.asset(
-            'assets/images/statistics_card.png',
+            isDark
+                ? 'assets/images/statistics_card_dark.png'
+                : 'assets/images/statistics_card.png',
             height: Responsive.h(100),
             fit: BoxFit.contain,
           ),
@@ -1338,7 +1342,9 @@ class _HomeScreenState extends State<HomeScreen> {
           top: Responsive.h(-20),
           left: 0,
           child: Image.asset(
-            'assets/images/parking_spot.png',
+            isDark
+                ? 'assets/images/parking_spot_dark.png'
+                : 'assets/images/parking_spot.png',
             height: Responsive.h(100),
             fit: BoxFit.contain,
           ),

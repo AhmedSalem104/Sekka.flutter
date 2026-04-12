@@ -40,18 +40,8 @@ class SekkaBottomNav extends StatelessWidget {
       child: Container(
         height: Responsive.h(60),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: AppColors.primary,
           borderRadius: BorderRadius.circular(Responsive.r(16)),
-          border: Border.all(
-            color: AppColors.border.withValues(alpha: 0.4),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.textHeadline.withValues(alpha: 0.08),
-              blurRadius: 24,
-              offset: const Offset(0, -2),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -72,8 +62,8 @@ class SekkaBottomNav extends StatelessWidget {
                     Icon(
                       isActive ? item.activeIcon : item.icon,
                       color: isActive
-                          ? AppColors.primary
-                          : AppColors.textCaption,
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.6),
                       size: Responsive.r(22),
                     ),
                     SizedBox(height: Responsive.h(4)),
@@ -81,8 +71,8 @@ class SekkaBottomNav extends StatelessWidget {
                       item.label,
                       style: AppTypography.captionSmall.copyWith(
                         color: isActive
-                            ? AppColors.primary
-                            : AppColors.textCaption,
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.6),
                         fontWeight:
                             isActive ? FontWeight.w700 : FontWeight.w400,
                       ),

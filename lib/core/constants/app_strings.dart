@@ -1666,7 +1666,7 @@ abstract final class AppStrings {
   static String get shiftStart =>
       _isAr ? 'ابدأ الوردية' : 'Start Shift';
   static String get shiftEnd =>
-      _isAr ? 'أنهي الوردية' : 'End Shift';
+      _isAr ? 'إنهي الوردية' : 'End Shift';
   static String get shiftActive =>
       _isAr ? 'الوردية شغّالة' : 'Shift Active';
   static String get shiftInactive =>
