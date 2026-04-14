@@ -850,16 +850,6 @@ abstract final class AppStrings {
       _isAr ? 'مثال: SEK-XXXXXXXX' : 'Example: SEK-XXXXXXXX';
   static String get detailedStats =>
       _isAr ? 'إحصائياتك بالتفصيل' : 'Detailed statistics';
-  static String get emergencyContacts =>
-      _isAr ? 'جهات الطوارئ' : 'Emergency contacts';
-  static String get addContact =>
-      _isAr ? 'إضافة جهة اتصال' : 'Add contact';
-  static String get noContacts =>
-      _isAr ? 'مفيش جهات طوارئ' : 'No emergency contacts';
-  static String get contactName => _isAr ? 'اسم الشخص' : 'Contact name';
-  static String get contactPhone =>
-      _isAr ? 'رقم الموبايل' : 'Phone number';
-  static String get contactRelation => _isAr ? 'العلاقة' : 'Relationship';
   static String get expenses => _isAr ? 'المصروفات' : 'Expenses';
   static String get addExpense => _isAr ? 'إضافة مصروف' : 'Add expense';
   static String get noExpenses => _isAr ? 'مفيش مصروفات' : 'No expenses';
@@ -1331,64 +1321,6 @@ abstract final class AppStrings {
       _isAr
           ? 'المحادثة دي اتقفلت. افتح محادثة جديدة لو محتاج مساعدة.'
           : 'This conversation is closed. Start a new one if you need help.';
-
-  // SOS
-  static String get sosEmergency =>
-      _isAr ? 'حالة طوارئ' : 'Emergency';
-  static String get sosSubtitle =>
-      _isAr
-          ? 'اضغط الزر لإرسال إشارة طوارئ\nلجهات الاتصال والإدارة'
-          : 'Press the button to send an emergency signal\nto your contacts and management';
-  static String get sosActivated =>
-      _isAr ? 'تم تفعيل الطوارئ' : 'Emergency activated';
-  static String get sosActivatedSubtitle =>
-      _isAr
-          ? 'تم إبلاغ جهات الطوارئ والإدارة\nابقى في مكانك'
-          : 'Emergency contacts and management have been notified\nStay where you are';
-  static String get sosResolve =>
-      _isAr ? 'تم حل المشكلة' : 'Issue resolved';
-  static String get sosDismiss =>
-      _isAr ? 'كان بالغلط' : 'False alarm';
-  static String get sosSelectProblem =>
-      _isAr ? 'إيه المشكلة؟' : 'What\'s the problem?';
-  static String get sosAddNotes =>
-      _isAr ? 'تفاصيل أكتر (اختياري)' : 'More details (optional)';
-  static String get sosNotesHint =>
-      _isAr ? 'اكتب أي تفاصيل ممكن تساعد...' : 'Write any details that might help...';
-  static String get sosSendSignal =>
-      _isAr ? 'ابعت إشارة طوارئ' : 'Send emergency signal';
-  static String get sosResolutionNote =>
-      _isAr ? 'إيه اللي حصل؟' : 'What happened?';
-  static String get sosResolutionHint =>
-      _isAr ? 'اكتب ملخص للحل...' : 'Write a resolution summary...';
-  static String get sosConfirmResolve =>
-      _isAr ? 'تأكيد الحل' : 'Confirm resolution';
-  static String get sosDismissConfirm =>
-      _isAr ? 'متأكد إن دي كانت بالغلط؟' : 'Are you sure this was a false alarm?';
-  static String get sosHistory =>
-      _isAr ? 'سجل الطوارئ' : 'Emergency history';
-  static String get sosNoHistory =>
-      _isAr ? 'مفيش حالات طوارئ سابقة' : 'No previous emergencies';
-  static String get sosNoHistoryDesc =>
-      _isAr ? 'لو حصل أي طوارئ هيظهر هنا' : 'Any emergencies will appear here';
-  static String get sosWasFalseAlarm =>
-      _isAr ? 'كان إنذار كاذب' : 'Was a false alarm';
-  static String get sosStatusActive => _isAr ? 'نشط' : 'Active';
-  static String get sosStatusResolved =>
-      _isAr ? 'تم الحل' : 'Resolved';
-  static String get sosStatusDismissed => _isAr ? 'ملغي' : 'Dismissed';
-  static String get sosStatusExpired => _isAr ? 'منتهي' : 'Expired';
-  static String get sosProblemAccident =>
-      _isAr ? 'حادث سير' : 'Traffic accident';
-  static String get sosProblemVehicle =>
-      _isAr ? 'عطل في المركبة' : 'Vehicle breakdown';
-  static String get sosProblemTheft => _isAr ? 'سرقة' : 'Theft';
-  static String get sosProblemAssault => _isAr ? 'اعتداء' : 'Assault';
-  static String get sosProblemHealth =>
-      _isAr ? 'حالة صحية طارئة' : 'Medical emergency';
-  static String get sosProblemRoadBlock =>
-      _isAr ? 'طريق مغلق' : 'Road blocked';
-  static String get sosProblemOther => _isAr ? 'أخرى' : 'Other';
 
   // General
   static String get retry => _isAr ? 'حاول تاني' : 'Retry';

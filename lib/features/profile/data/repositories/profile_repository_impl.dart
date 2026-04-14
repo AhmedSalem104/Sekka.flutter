@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../../../../shared/network/paginated_response.dart';
-import '../../domain/entities/emergency_contact_entity.dart';
 import '../../domain/entities/expense_entity.dart';
 import '../../domain/entities/health_score_entity.dart';
 import '../../domain/entities/leaderboard_entity.dart';
@@ -33,10 +32,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<LeaderboardEntity> getLeaderboard() => _remote.getLeaderboard();
 
   @override
-  Future<List<EmergencyContactEntity>> getEmergencyContacts() =>
-      _remote.getEmergencyContacts();
-
-  @override
   Future<PaginatedResponse<ExpenseEntity>> getExpenses({
     int pageNumber = 1,
     int pageSize = 20,
@@ -57,16 +52,6 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<String> uploadLicenseImage(File imageFile) =>
       _remote.uploadLicenseImage(imageFile);
-
-  @override
-  Future<EmergencyContactEntity> addEmergencyContact(
-    Map<String, dynamic> data,
-  ) =>
-      _remote.addEmergencyContact(data);
-
-  @override
-  Future<void> deleteEmergencyContact(String id) =>
-      _remote.deleteEmergencyContact(id);
 
   @override
   Future<void> addExpense(Map<String, dynamic> data) =>

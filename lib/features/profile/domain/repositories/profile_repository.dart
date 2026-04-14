@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import '../../../../shared/network/paginated_response.dart';
-import '../entities/emergency_contact_entity.dart';
 import '../entities/expense_entity.dart';
 import '../entities/health_score_entity.dart';
 import '../entities/leaderboard_entity.dart';
@@ -20,8 +19,6 @@ abstract class ProfileRepository {
 
   Future<LeaderboardEntity> getLeaderboard();
 
-  Future<List<EmergencyContactEntity>> getEmergencyContacts();
-
   Future<PaginatedResponse<ExpenseEntity>> getExpenses({
     int pageNumber = 1,
     int pageSize = 20,
@@ -34,12 +31,6 @@ abstract class ProfileRepository {
   Future<void> deleteProfileImage();
 
   Future<String> uploadLicenseImage(File imageFile);
-
-  Future<EmergencyContactEntity> addEmergencyContact(
-    Map<String, dynamic> data,
-  );
-
-  Future<void> deleteEmergencyContact(String id);
 
   Future<void> addExpense(Map<String, dynamic> data);
 }
