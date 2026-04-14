@@ -742,6 +742,18 @@ abstract final class AppStrings {
       _isAr ? 'تمام! الطلبات اتضافت' : 'Orders imported!';
   static String get transferSuccess =>
       _isAr ? 'تمام! الطلب اتحوّل' : 'Order transferred!';
+  static String get transferToColleague =>
+      _isAr ? 'حوّل لزميل' : 'Transfer to colleague';
+  static String get transferPickColleague =>
+      _isAr ? 'اختار زميل قريب منك' : 'Pick a nearby colleague';
+  static String get transferReason =>
+      _isAr ? 'السبب (اختياري)' : 'Reason (optional)';
+  static String get transferConfirmMsg =>
+      _isAr ? 'هتحوّل الطلب لـ' : 'Transfer order to';
+  static String get transferNoNearby =>
+      _isAr ? 'مفيش زملاء قريبين دلوقتي' : 'No colleagues nearby';
+  static String get transferLoading =>
+      _isAr ? 'بنجيب الزملاء القريبين...' : 'Loading nearby colleagues...';
   static String get partialDeliverySuccess =>
       _isAr ? 'تمام! التسليم الجزئي اتسجّل' : 'Partial delivery recorded!';
   static String get waitingStarted =>

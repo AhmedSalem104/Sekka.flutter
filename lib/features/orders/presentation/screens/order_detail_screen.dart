@@ -35,6 +35,7 @@ import '../../data/models/order_model.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
+import '../widgets/transfer_order_sheet.dart';
 import 'create_order_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -620,6 +621,18 @@ class _OrderHeaderCard extends StatelessWidget {
                 order.deliveryLatitude,
                 order.deliveryLongitude,
               ),
+            ),
+          ],
+
+          // ── حوّل لزميل (لأي طلب نشط لسه ما اتسلّمش) ──
+          if (order.status.isActive) ...[
+            SizedBox(height: AppSizes.sm),
+            SekkaButton(
+              label: AppStrings.transferToColleague,
+              icon: IconsaxPlusLinear.user_octagon,
+              type: SekkaButtonType.secondary,
+              onPressed: () =>
+                  TransferOrderSheet.show(context, orderId: order.id),
             ),
           ],
         ],

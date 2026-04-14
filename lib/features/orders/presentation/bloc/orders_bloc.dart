@@ -1167,7 +1167,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
 
     try {
       await _repository.transferOrder(event.orderId, {
-        'targetDriverId': event.targetDriverId,
+        'toDriverId': event.targetDriverId,
         if (event.reason != null) 'reason': event.reason,
       });
 
