@@ -59,19 +59,15 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
     }
   }
 
-  /// Proactively fetch balances for every partner so the checklist shows
-  /// real amounts on first paint (instead of lazy-loading on tap).
+  /// Proactively fetch balances for every partner in parallel (single event,
+  /// handled with Future.wait in the bloc). Much faster than firing a
+  /// PartnerBalanceRequested per partner (which serializes).
   void _loadAllPartnerBalances() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final bloc = context.read<SettlementBloc>();
-      final state = bloc.state;
-      if (state is! SettlementLoaded) return;
-      for (final partner in state.partners) {
-        if (!state.partnerBalances.containsKey(partner.id)) {
-          bloc.add(PartnerBalanceRequested(partner.id));
-        }
-      }
+      context
+          .read<SettlementBloc>()
+          .add(const AllPartnerBalancesRequested());
     });
   }
 
@@ -181,13 +177,21 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
   }
 
   Widget _buildContent(SettlementLoaded state, bool isDark) {
-    // Partners that owe us money (or whose balance we haven't loaded yet —
-    // we still show them so the driver isn't surprised by "missing" partners).
+    // Balances are still loading in batch → show skeleton, don't flash the
+    // full partner list only to filter it down a second later.
+    final balancesPending = state.isLoadingBalances ||
+        (state.partners.isNotEmpty && state.partnerBalances.isEmpty);
+
+    // Partners who actually owe us money (pendingBalance > 0 OR orders
+    // still in flight). Only computed once balances are known.
     final unsettled = <PartnerModel>[];
-    for (final p in state.partners) {
-      final b = state.partnerBalances[p.id];
-      if (b == null || b.pendingBalance > 0 || b.pendingOrderCount > 0) {
-        unsettled.add(p);
+    if (!balancesPending) {
+      for (final p in state.partners) {
+        final b = state.partnerBalances[p.id];
+        if (b == null) continue; // silently failed fetch — skip, don't mislead
+        if (b.pendingBalance > 0 || b.pendingOrderCount > 0) {
+          unsettled.add(p);
+        }
       }
     }
 
@@ -223,6 +227,11 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
           // 2. Unsettled partners checklist (the primary focus)
           if (state.partners.isEmpty)
             _EmptyPartnersState(isDark: isDark)
+          else if (balancesPending)
+            _BalancesLoadingSkeleton(
+              count: state.partners.length.clamp(1, 4),
+              isDark: isDark,
+            )
           else if (unsettled.isEmpty)
             _AllSettledState(isDark: isDark)
           else ...[
@@ -335,6 +344,80 @@ class _SectionHeader extends StatelessWidget {
 // ════════════════════════════════════════════════════════════════════════
 // ── Empty states ──
 // ════════════════════════════════════════════════════════════════════════
+
+class _BalancesLoadingSkeleton extends StatelessWidget {
+  const _BalancesLoadingSkeleton({
+    required this.count,
+    required this.isDark,
+  });
+
+  final int count;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionHeader(
+          title: AppStrings.settleUnsettledTitle,
+          isDark: isDark,
+          muted: true,
+        ),
+        SizedBox(height: AppSizes.sm),
+        for (var i = 0; i < count; i++) ...[
+          Container(
+            padding: EdgeInsets.all(AppSizes.md),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.surfaceDark : AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: Responsive.r(40),
+                  height: Responsive.r(40),
+                  decoration: BoxDecoration(
+                    color: AppColors.border.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: Responsive.w(120),
+                        height: Responsive.h(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.border.withValues(alpha: 0.5),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.chipRadius),
+                        ),
+                      ),
+                      SizedBox(height: Responsive.h(8)),
+                      Container(
+                        width: Responsive.w(80),
+                        height: Responsive.h(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.border.withValues(alpha: 0.3),
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.chipRadius),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: AppSizes.xs),
+        ],
+      ],
+    );
+  }
+}
 
 class _AllSettledState extends StatelessWidget {
   const _AllSettledState({required this.isDark});

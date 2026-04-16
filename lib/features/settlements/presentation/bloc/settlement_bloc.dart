@@ -37,6 +37,7 @@ class SettlementBloc extends HydratedBloc<SettlementEvent, SettlementState> {
     on<SettlementReceiptUpload>(_onUploadReceipt);
     on<SettlementFilterChanged>(_onFilterChanged);
     on<PartnerBalanceRequested>(_onPartnerBalance);
+    on<AllPartnerBalancesRequested>(_onAllPartnerBalances);
     on<PartnerCreateRequested>(_onCreatePartner);
   }
 
@@ -251,6 +252,44 @@ class SettlementBloc extends HydratedBloc<SettlementEvent, SettlementState> {
     } on ApiException {
       // Silently fail — balance will show as unavailable
     }
+  }
+
+  /// Fetch balances for every partner in parallel, emit once at the end.
+  /// Significantly faster than firing [PartnerBalanceRequested] per partner
+  /// (which serializes through the bloc's event queue).
+  Future<void> _onAllPartnerBalances(
+    AllPartnerBalancesRequested event,
+    Emitter<SettlementState> emit,
+  ) async {
+    final current = state;
+    if (current is! SettlementLoaded) return;
+    if (current.partners.isEmpty) return;
+
+    emit(current.copyWith(isLoadingBalances: true));
+
+    final results = await Future.wait(
+      current.partners.map(
+        (p) => _repository
+            .getPartnerBalance(p.id)
+            .then<PartnerBalanceEntity?>((b) => b)
+            .catchError((_) => null),
+      ),
+    );
+
+    final balances = <String, PartnerBalanceEntity>{
+      ...current.partnerBalances,
+    };
+    for (var i = 0; i < current.partners.length; i++) {
+      final b = results[i];
+      if (b != null) balances[current.partners[i].id] = b;
+    }
+
+    final latest = state;
+    if (latest is! SettlementLoaded) return;
+    emit(latest.copyWith(
+      partnerBalances: balances,
+      isLoadingBalances: false,
+    ));
   }
 
   Future<void> _onCreatePartner(

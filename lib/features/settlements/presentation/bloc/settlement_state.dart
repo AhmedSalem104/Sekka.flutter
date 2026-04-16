@@ -21,6 +21,7 @@ final class SettlementLoaded extends SettlementState {
     required this.settlements,
     required this.partners,
     this.partnerBalances = const {},
+    this.isLoadingBalances = false,
     this.hasMore = true,
     this.currentPage = 1,
     this.isLoadingMore = false,
@@ -34,6 +35,9 @@ final class SettlementLoaded extends SettlementState {
   final List<SettlementEntity> settlements;
   final List<PartnerModel> partners;
   final Map<String, PartnerBalanceEntity> partnerBalances;
+
+  /// True while a batch balance fetch is running for all partners.
+  final bool isLoadingBalances;
   final bool hasMore;
   final int currentPage;
   final bool isLoadingMore;
@@ -47,6 +51,7 @@ final class SettlementLoaded extends SettlementState {
     List<SettlementEntity>? settlements,
     List<PartnerModel>? partners,
     Map<String, PartnerBalanceEntity>? partnerBalances,
+    bool? isLoadingBalances,
     bool? hasMore,
     int? currentPage,
     bool? isLoadingMore,
@@ -61,6 +66,7 @@ final class SettlementLoaded extends SettlementState {
       settlements: settlements ?? this.settlements,
       partners: partners ?? this.partners,
       partnerBalances: partnerBalances ?? this.partnerBalances,
+      isLoadingBalances: isLoadingBalances ?? this.isLoadingBalances,
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -80,6 +86,7 @@ final class SettlementLoaded extends SettlementState {
         settlements,
         partners,
         partnerBalances,
+        isLoadingBalances,
         hasMore,
         currentPage,
         isLoadingMore,

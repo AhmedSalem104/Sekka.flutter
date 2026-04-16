@@ -105,3 +105,9 @@ final class PartnerBalanceRequested extends SettlementEvent {
   @override
   List<Object?> get props => [partnerId];
 }
+
+/// Load balances for ALL partners in parallel — the checklist view needs
+/// this on mount so it can show real amounts in one paint (no tap-to-load).
+final class AllPartnerBalancesRequested extends SettlementEvent {
+  const AllPartnerBalancesRequested();
+}
