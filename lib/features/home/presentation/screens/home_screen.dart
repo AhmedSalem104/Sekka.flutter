@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -25,6 +26,8 @@ import '../../../orders/presentation/bloc/orders_bloc.dart';
 import '../../../orders/presentation/bloc/orders_state.dart';
 import '../../../orders/presentation/screens/create_order_screen.dart';
 import '../../../orders/presentation/screens/order_detail_screen.dart';
+import '../../../orders/presentation/widgets/deliver_bottom_sheet.dart';
+import '../../../settlements/presentation/screens/create_settlement_screen.dart';
 import '../../../profile/presentation/bloc/profile_bloc.dart';
 import '../../../profile/presentation/bloc/profile_event.dart';
 import '../../../profile/presentation/bloc/profile_state.dart';
@@ -53,6 +56,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   Timer? _autoRefreshTimer;
+  Timer? _shiftDurationTimer;
 
   @override
   void initState() {
@@ -62,12 +66,30 @@ class _HomeScreenState extends State<HomeScreen> {
       const Duration(seconds: 30),
       (_) => _refreshAll(),
     );
+    // Tick every 30s to keep shift-duration pill fresh
+    _shiftDurationTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) {
+        if (mounted) setState(() {});
+      },
+    );
   }
 
   @override
   void dispose() {
     _autoRefreshTimer?.cancel();
+    _shiftDurationTimer?.cancel();
     super.dispose();
+  }
+
+  String _formatShiftDuration(DateTime startTime) {
+    final diff = DateTime.now().difference(startTime);
+    final hours = diff.inHours;
+    final minutes = diff.inMinutes.remainder(60);
+    if (hours > 0) {
+      return '$hours${AppStrings.hour} $minutes${AppStrings.minute}';
+    }
+    return '$minutes${AppStrings.minute}';
   }
 
   void _refreshAll() {
@@ -100,6 +122,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _buildGreetingSection(context, isDark),
                 SizedBox(height: Responsive.h(20)),
                 _buildOrangeSection(context, isDark),
+                SizedBox(height: Responsive.h(16)),
+                _buildQuickActions(context, isDark),
                 SizedBox(height: Responsive.h(24)),
                 _buildBreakSection(context, isDark),
                 SizedBox(height: Responsive.h(24)),
@@ -368,14 +392,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildOrangeSection(BuildContext context, bool isDark) {
     final ordersState = context.watch<OrdersBloc>().state;
+    final shiftState = context.watch<ShiftBloc>().state;
+
+    final isShiftActive = shiftState is ShiftLoaded && shiftState.isActive;
+    final currentShift =
+        shiftState is ShiftLoaded ? shiftState.currentShift : null;
+
     OrderModel? inTransitOrder;
+    bool hasActiveOrder = false;
     if (ordersState is OrdersLoaded) {
-      final transitOrders = ordersState.orders
+      final activeOrders = ordersState.orders.where((o) =>
+          o.status == OrderStatus.pending ||
+          o.status == OrderStatus.accepted ||
+          o.status == OrderStatus.pickedUp ||
+          o.status == OrderStatus.inTransit ||
+          o.status == OrderStatus.arrivedAtDestination);
+      hasActiveOrder = activeOrders.isNotEmpty;
+      final transit = activeOrders
           .where((o) => o.status == OrderStatus.inTransit)
           .toList();
-      if (transitOrders.isNotEmpty) {
-        inTransitOrder = transitOrders.first;
-      }
+      if (transit.isNotEmpty) inTransitOrder = transit.first;
+    }
+
+    final Widget content;
+    if (inTransitOrder != null) {
+      content = _buildInTransitOrder(context, inTransitOrder);
+    } else if (isShiftActive) {
+      content = _buildIdleHero(context);
+    } else {
+      content = _buildAddOrderCta(context);
     }
 
     return Container(
@@ -391,9 +436,239 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: Directionality(
         textDirection: TextDirection.rtl,
-        child: inTransitOrder != null
-            ? _buildInTransitOrder(context, inTransitOrder)
-            : _buildAddOrderCta(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (isShiftActive && currentShift != null) ...[
+              Row(
+                children: [
+                  _buildShiftPill(currentShift.startTime),
+                  const Spacer(),
+                  if (inTransitOrder == null)
+                    _buildSmallAddOrderButton(context),
+                ],
+              ),
+              SizedBox(height: Responsive.h(12)),
+            ],
+            content,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShiftPill(DateTime startTime) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.w(10),
+        vertical: Responsive.h(5),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.textOnPrimary.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(Responsive.r(100)),
+        border: Border.all(
+          color: AppColors.textOnPrimary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: Responsive.r(7),
+            height: Responsive.r(7),
+            decoration: const BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+            ),
+          ),
+          SizedBox(width: Responsive.w(6)),
+          Text(
+            '${_formatShiftDuration(startTime)} • ${AppStrings.shiftActive}',
+            style: AppTypography.captionSmall.copyWith(
+              color: AppColors.textOnPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallAddOrderButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => const CreateOrderScreen(),
+        ),
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.w(12),
+          vertical: Responsive.h(5),
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.textOnPrimary,
+          borderRadius: BorderRadius.circular(Responsive.r(100)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              IconsaxPlusBold.add_circle,
+              size: Responsive.r(14),
+              color: AppColors.primary,
+            ),
+            SizedBox(width: Responsive.w(4)),
+            Text(
+              AppStrings.addOrder,
+              style: AppTypography.captionSmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIdleHero(BuildContext context) {
+    final shiftState = context.watch<ShiftBloc>().state;
+    final shift = shiftState is ShiftLoaded ? shiftState.currentShift : null;
+    final earnings = shift?.earningsTotal ?? 0;
+    final ordersCount = shift?.ordersCompleted ?? 0;
+
+    final profileState = context.watch<ProfileBloc>().state;
+    final cash =
+        profileState is ProfileLoaded ? profileState.profile.cashOnHand : 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Metrics row: earnings | orders count (compact)
+        Row(
+          children: [
+            Expanded(
+              child: _IdleMetricTile(
+                icon: IconsaxPlusBold.wallet_money,
+                label: AppStrings.shiftEarnings,
+                value: '${earnings.toInt()} ${AppStrings.currency}',
+              ),
+            ),
+            SizedBox(width: Responsive.w(8)),
+            Expanded(
+              child: _IdleMetricTile(
+                icon: IconsaxPlusBold.box_1,
+                label: AppStrings.shiftOrders,
+                value: '$ordersCount',
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: Responsive.h(8)),
+        // Cash section (compact)
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: Responsive.w(12),
+            vertical: Responsive.h(8),
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+            borderRadius: BorderRadius.circular(Responsive.r(10)),
+            border: Border.all(
+              color: AppColors.textOnPrimary.withValues(alpha: 0.25),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                IconsaxPlusBold.empty_wallet,
+                size: Responsive.r(16),
+                color: AppColors.textOnPrimary,
+              ),
+              SizedBox(width: Responsive.w(8)),
+              Expanded(
+                child: Text(
+                  AppStrings.cashWithYouNow,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textOnPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '${cash.toInt()} ${AppStrings.currency}',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textOnPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  QUICK ACTIONS — 4 كروت إجراءات سريعة
+  // ══════════════════════════════════════════════════════════════════════════
+
+  Widget _buildQuickActions(BuildContext context, bool isDark) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Row(
+        children: [
+          Expanded(
+            child: _QuickActionCard(
+              icon: IconsaxPlusLinear.money_send,
+              label: AppStrings.quickSettleCash,
+              isDark: isDark,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const CreateSettlementScreen(),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: Responsive.w(8)),
+          Expanded(
+            child: _QuickActionCard(
+              icon: IconsaxPlusLinear.add_circle,
+              label: AppStrings.quickAddOrder,
+              isDark: isDark,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (_) => const CreateOrderScreen(),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: Responsive.w(8)),
+          Expanded(
+            child: _QuickActionCard(
+              icon: IconsaxPlusLinear.add,
+              label: '',
+              isDark: isDark,
+              isPlaceholder: true,
+              onTap: () {},
+            ),
+          ),
+          SizedBox(width: Responsive.w(8)),
+          Expanded(
+            child: _QuickActionCard(
+              icon: IconsaxPlusLinear.add,
+              label: '',
+              isDark: isDark,
+              isPlaceholder: true,
+              onTap: () {},
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1006,9 +1281,47 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+          SizedBox(height: Responsive.h(14)),
+          Row(
+            children: [
+              Expanded(
+                child: _InTransitActionButton(
+                  icon: IconsaxPlusLinear.map,
+                  label: AppStrings.trackOnMap,
+                  onTap: () => _openOrderOnMap(order),
+                ),
+              ),
+              SizedBox(width: Responsive.w(10)),
+              Expanded(
+                child: _InTransitActionButton(
+                  icon: IconsaxPlusBold.tick_circle,
+                  label: AppStrings.deliverShort,
+                  filled: true,
+                  onTap: () => showDeliverBottomSheet(
+                    context,
+                    orderId: order.id,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _openOrderOnMap(OrderModel order) async {
+    final lat = order.deliveryLatitude;
+    final lng = order.deliveryLongitude;
+    final String query = (lat != null && lng != null && lat != 0 && lng != 0)
+        ? '$lat,$lng'
+        : Uri.encodeComponent(order.deliveryAddress);
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$query',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1656,6 +1969,211 @@ class _LocationChipNeutralState extends State<_LocationChipNeutral> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QuickActionCard extends StatelessWidget {
+  const _QuickActionCard({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+    required this.onTap,
+    this.isPlaceholder = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool isDark;
+  final VoidCallback onTap;
+  final bool isPlaceholder;
+
+  @override
+  Widget build(BuildContext context) {
+    if (isPlaceholder) {
+      return SizedBox(height: Responsive.h(86));
+    }
+
+    final bg = isDark ? AppColors.surfaceDark : AppColors.surface;
+    final iconColor = AppColors.primary;
+    final textColor =
+        isDark ? AppColors.textHeadlineDark : AppColors.textHeadline;
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: Responsive.h(86),
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.w(4),
+          vertical: Responsive.h(8),
+        ),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(Responsive.r(14)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.textHeadline.withValues(alpha: 0.06),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: Responsive.r(34),
+              height: Responsive.r(34),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: Responsive.r(18),
+                color: iconColor,
+              ),
+            ),
+            if (label.isNotEmpty) ...[
+              SizedBox(height: Responsive.h(6)),
+              Text(
+                label,
+                style: AppTypography.captionSmall.copyWith(
+                  color: textColor,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IdleMetricTile extends StatelessWidget {
+  const _IdleMetricTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.w(10),
+        vertical: Responsive.h(8),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(Responsive.r(10)),
+        border: Border.all(
+          color: AppColors.textOnPrimary.withValues(alpha: 0.25),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            icon,
+            size: Responsive.r(16),
+            color: AppColors.textOnPrimary,
+          ),
+          SizedBox(width: Responsive.w(6)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textOnPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  value,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textOnPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InTransitActionButton extends StatelessWidget {
+  const _InTransitActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.filled = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = filled
+        ? AppColors.textOnPrimary
+        : AppColors.textOnPrimary.withValues(alpha: 0.15);
+    final fg = filled ? AppColors.primary : AppColors.textOnPrimary;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: Responsive.w(12),
+          vertical: Responsive.h(10),
+        ),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(Responsive.r(10)),
+          border: filled
+              ? null
+              : Border.all(
+                  color: AppColors.textOnPrimary.withValues(alpha: 0.3),
+                ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: Responsive.r(16), color: fg),
+            SizedBox(width: Responsive.w(6)),
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.captionSmall.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

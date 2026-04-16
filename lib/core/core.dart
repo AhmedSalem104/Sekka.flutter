@@ -19,6 +19,7 @@ export 'theme/app_typography.dart';
 export 'widgets/sekka_back_button.dart';
 export 'widgets/sekka_button.dart';
 export 'widgets/sekka_input_field.dart';
+export 'widgets/sekka_dropdown_field.dart';
 export 'widgets/sekka_card.dart';
 export 'widgets/sekka_search_bar.dart';
 export 'widgets/status_badge.dart';
@@ -34,6 +35,9 @@ export 'widgets/sekka_progress_bar.dart';
 export 'widgets/sekka_expandable_section.dart';
 export 'widgets/sekka_toggle_tile.dart';
 export 'widgets/sekka_hint_tip.dart';
+export 'widgets/sekka_tab_bar.dart';
+export 'widgets/sekka_segmented_tabs.dart';
+export 'widgets/sekka_star_rating.dart';
 
 // Extensions
 export 'extensions/context_extensions.dart';

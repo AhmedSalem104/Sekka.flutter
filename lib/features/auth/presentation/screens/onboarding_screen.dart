@@ -172,7 +172,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SekkaButton(
-                      label: 'يلا نبدأ!',
+                      label: 'نبدأ دلوقتي!',
                       onPressed: _onGetStarted,
                     ),
                     SizedBox(height: Responsive.h(16)),

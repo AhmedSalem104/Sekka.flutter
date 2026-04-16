@@ -17,6 +17,7 @@ import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
+import '../../../../core/widgets/sekka_segmented_tabs.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../colleague_radar/data/repositories/colleague_radar_repository.dart';
 import '../../../colleague_radar/presentation/bloc/colleague_radar_bloc.dart';
@@ -160,32 +161,17 @@ class _NavigationTabBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark
-            ? AppColors.surfaceDark
-            : AppColors.border.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-      ),
-      child: TabBar(
-        controller: tabController,
-        indicator: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-        ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: AppColors.textOnPrimary,
-        unselectedLabelColor:
-            isDark ? AppColors.textBodyDark : AppColors.textBody,
-        labelStyle: AppTypography.titleMedium,
-        unselectedLabelStyle: AppTypography.titleMedium,
-        tabs: [
-          Tab(text: AppStrings.tabRouteOptimize),
-          Tab(text: AppStrings.tabParkingSpots),
-          Tab(text: AppStrings.radarTab),
+    return AnimatedBuilder(
+      animation: tabController,
+      builder: (_, __) => SekkaSegmentedTabs(
+        labels: [
+          AppStrings.tabRouteOptimize,
+          AppStrings.tabParkingSpots,
+          AppStrings.radarTab,
         ],
+        selectedIndex: tabController.index,
+        controller: tabController,
+        onChanged: (_) {},
       ),
     );
   }

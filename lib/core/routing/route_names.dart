@@ -19,7 +19,6 @@ abstract final class RouteNames {
   // Profile
   static const String editProfile = '/edit-profile';
   static const String profileStats = '/profile-stats';
-  static const String emergencyContacts = '/emergency-contacts';
   static const String profileExpenses = '/profile-expenses';
   static const String settings = '/settings';
   static const String privacy = '/privacy';
@@ -45,8 +44,6 @@ abstract final class RouteNames {
 
   // Communication
   static const String notifications = '/notifications';
-  static const String sos = '/sos';
-  static const String sosHistory = '/sos-history';
   static const String chat = '/chat';
 
   // Badge

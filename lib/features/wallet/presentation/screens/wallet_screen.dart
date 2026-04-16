@@ -238,29 +238,39 @@ class _WalletScreenState extends State<WalletScreen> {
                     decoration: BoxDecoration(
                       color: isActive
                           ? AppColors.primary
-                          : isDark
+                          : (isDark
                               ? AppColors.surfaceDark
-                              : AppColors.background,
+                              : AppColors.surface),
                       borderRadius:
-                          BorderRadius.circular(AppSizes.radiusPill),
+                          BorderRadius.circular(AppSizes.radiusMd),
                       border: Border.all(
                         color: isActive
                             ? AppColors.primary
-                            : isDark
+                            : (isDark
                                 ? AppColors.borderDark
-                                : AppColors.border,
-                        width: 1.5,
+                                : AppColors.border),
+                        width: 0.5,
                       ),
+                      boxShadow: isActive
+                          ? [
+                              BoxShadow(
+                                color: AppColors.primary
+                                    .withValues(alpha: 0.25),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       filterLabels[index],
-                      style: AppTypography.bodySmall.copyWith(
+                      style: AppTypography.titleMedium.copyWith(
                         color: isActive
                             ? AppColors.textOnPrimary
-                            : isDark
-                                ? AppColors.textBodyDark
-                                : AppColors.textBody,
+                            : (isDark
+                                ? AppColors.textCaptionDark
+                                : AppColors.textCaption),
                         fontWeight:
                             isActive ? FontWeight.w700 : FontWeight.w500,
                       ),

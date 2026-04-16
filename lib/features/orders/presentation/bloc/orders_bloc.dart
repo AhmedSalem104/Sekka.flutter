@@ -194,6 +194,10 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         event.statusFilter ?? (current is OrdersLoaded ? current.statusFilter : null);
     final searchTerm =
         event.searchTerm ?? (current is OrdersLoaded ? current.searchTerm : null);
+    final dateFrom =
+        event.dateFrom ?? (current is OrdersLoaded ? current.dateFrom : null);
+    final dateTo =
+        event.dateTo ?? (current is OrdersLoaded ? current.dateTo : null);
 
     // Only show loading spinner if no cached data
     if (!event.refresh && current is! OrdersLoaded) {
@@ -205,17 +209,26 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         page: 1,
         status: statusFilter,
         searchTerm: searchTerm,
+        dateFrom: dateFrom,
+        dateTo: dateTo,
       );
 
-      await _fetchAndCacheRecurring();
-      final allOrders = _mergeWithRecurring(
-        _fixDeliveredStatuses(result.items),
-      );
+      final fixed = _fixDeliveredStatuses(result.items);
+      final hasDateFilter = dateFrom != null || dateTo != null;
+      List<OrderModel> allOrders;
+      if (hasDateFilter) {
+        allOrders = fixed;
+      } else {
+        await _fetchAndCacheRecurring();
+        allOrders = _mergeWithRecurring(fixed);
+      }
 
       emit(OrdersLoaded(
         orders: allOrders,
         statusFilter: statusFilter,
         searchTerm: searchTerm ?? '',
+        dateFrom: dateFrom,
+        dateTo: dateTo,
         hasMore: result.hasNextPage,
         currentPage: 1,
       ));
@@ -250,6 +263,8 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         page: nextPage,
         status: current.statusFilter,
         searchTerm: current.searchTerm.isEmpty ? null : current.searchTerm,
+        dateFrom: current.dateFrom,
+        dateTo: current.dateTo,
       );
 
       emit(current.copyWith(
@@ -271,32 +286,54 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
   ) async {
     final current = state;
     if (current is! OrdersLoaded) {
-      add(OrdersLoadRequested(statusFilter: event.status));
+      add(OrdersLoadRequested(
+        statusFilter: event.status,
+        dateFrom: event.dateFrom,
+        dateTo: event.dateTo,
+      ));
       return;
     }
 
+    final newStatus = event.status ?? current.statusFilter;
+    final newDateFrom =
+        event.clearDate ? null : (event.dateFrom ?? current.dateFrom);
+    final newDateTo =
+        event.clearDate ? null : (event.dateTo ?? current.dateTo);
+
     emit(current.copyWith(
-      statusFilter: () => event.status,
+      statusFilter: () => newStatus,
+      dateFrom: () => newDateFrom,
+      dateTo: () => newDateTo,
       isLoadingMore: true,
     ));
 
     try {
       final result = await _repository.getOrders(
         page: 1,
-        status: event.status,
+        status: newStatus,
         searchTerm: current.searchTerm.isEmpty ? null : current.searchTerm,
+        dateFrom: newDateFrom,
+        dateTo: newDateTo,
       );
 
+      final fixed = _fixDeliveredStatuses(result.items);
+      final hasDateFilter = newDateFrom != null || newDateTo != null;
+      final merged = hasDateFilter ? fixed : _mergeWithRecurring(fixed);
+
       emit(current.copyWith(
-        orders: _mergeWithRecurring(_fixDeliveredStatuses(result.items)),
-        statusFilter: () => event.status,
+        orders: merged,
+        statusFilter: () => newStatus,
+        dateFrom: () => newDateFrom,
+        dateTo: () => newDateTo,
         hasMore: result.hasNextPage,
         currentPage: 1,
         isLoadingMore: false,
       ));
     } on ApiException {
       emit(current.copyWith(
-        statusFilter: () => event.status,
+        statusFilter: () => newStatus,
+        dateFrom: () => newDateFrom,
+        dateTo: () => newDateTo,
         isLoadingMore: false,
       ));
     }

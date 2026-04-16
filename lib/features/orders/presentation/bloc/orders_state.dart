@@ -23,6 +23,8 @@ final class OrdersLoaded extends OrdersState {
     required this.orders,
     this.statusFilter,
     this.searchTerm = '',
+    this.dateFrom,
+    this.dateTo,
     this.hasMore = true,
     this.currentPage = 1,
     this.isLoadingMore = false,
@@ -47,6 +49,8 @@ final class OrdersLoaded extends OrdersState {
   final List<OrderModel> orders;
   final int? statusFilter;
   final String searchTerm;
+  final String? dateFrom;
+  final String? dateTo;
   final bool hasMore;
   final int currentPage;
   final bool isLoadingMore;
@@ -71,6 +75,8 @@ final class OrdersLoaded extends OrdersState {
     List<OrderModel>? orders,
     int? Function()? statusFilter,
     String? searchTerm,
+    String? Function()? dateFrom,
+    String? Function()? dateTo,
     bool? hasMore,
     int? currentPage,
     bool? isLoadingMore,
@@ -96,6 +102,8 @@ final class OrdersLoaded extends OrdersState {
       statusFilter:
           statusFilter != null ? statusFilter() : this.statusFilter,
       searchTerm: searchTerm ?? this.searchTerm,
+      dateFrom: dateFrom != null ? dateFrom() : this.dateFrom,
+      dateTo: dateTo != null ? dateTo() : this.dateTo,
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -131,6 +139,8 @@ final class OrdersLoaded extends OrdersState {
         orders,
         statusFilter,
         searchTerm,
+        dateFrom,
+        dateTo,
         hasMore,
         currentPage,
         isLoadingMore,

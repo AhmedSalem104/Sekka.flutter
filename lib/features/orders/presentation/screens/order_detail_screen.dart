@@ -20,6 +20,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_back_button.dart';
 import '../../../../core/widgets/sekka_button.dart';
+import '../../../../core/widgets/sekka_star_rating.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
@@ -35,6 +36,7 @@ import '../../data/models/order_model.dart';
 import '../bloc/orders_bloc.dart';
 import '../bloc/orders_event.dart';
 import '../bloc/orders_state.dart';
+import '../widgets/deliver_bottom_sheet.dart';
 import 'create_order_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -408,8 +410,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 SizedBox(height: AppSizes.md),
                 _PhotosSection(photos: order.photos),
               ],
-              if (order.status == OrderStatus.inTransit ||
-                  order.status == OrderStatus.arrivedAtDestination) ...[
+              if (order.status == OrderStatus.arrivedAtDestination) ...[
                 SizedBox(height: AppSizes.md),
                 _WaitingTimerSection(orderId: widget.orderId),
               ],
@@ -1797,21 +1798,7 @@ class _ActionArea extends StatelessWidget {
   }
 
   void _showDeliverSheet(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppSizes.radiusXl),
-        ),
-      ),
-      builder: (_) => BlocProvider.value(
-        value: context.read<OrdersBloc>(),
-        child: _DeliverBottomSheet(
-          orderId: orderId,
-        ),
-      ),
-    );
+    showDeliverBottomSheet(context, orderId: orderId);
   }
 
   void _showFailSheet(BuildContext context) {
@@ -1935,131 +1922,7 @@ class _ActionChip extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-//  BOTTOM SHEET 1: DELIVER
-// ═══════════════════════════════════════════════════════════════════════════
-class _DeliverBottomSheet extends StatefulWidget {
-  const _DeliverBottomSheet({
-    required this.orderId,
-  });
-
-  final String orderId;
-
-  @override
-  State<_DeliverBottomSheet> createState() => _DeliverBottomSheetState();
-}
-
-class _DeliverBottomSheetState extends State<_DeliverBottomSheet> {
-  final _notesCtrl = TextEditingController();
-  int _rating = 5;
-  double? _lat;
-  double? _lng;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchLocation();
-  }
-
-  Future<void> _fetchLocation() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.high,
-          timeLimit: Duration(seconds: 10),
-        ),
-      );
-      if (mounted) {
-        setState(() {
-          _lat = position.latitude;
-          _lng = position.longitude;
-        });
-      }
-    } catch (_) {
-      // موقع مش متاح — مش مشكلة، optional
-    }
-  }
-
-  @override
-  void dispose() {
-    _notesCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSizes.pagePadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHandle(),
-                SizedBox(height: AppSizes.lg),
-                Text(AppStrings.confirmDelivery, style: AppTypography.headlineSmall),
-                SizedBox(height: AppSizes.lg),
-                // Star rating
-                Text('قيّم العميل', style: AppTypography.titleMedium),
-                SizedBox(height: AppSizes.sm),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(5, (i) {
-                    return IconButton(
-                      icon: Icon(
-                        i < _rating
-                            ? IconsaxPlusBold.star_1
-                            : IconsaxPlusLinear.star_1,
-                        color: i < _rating
-                            ? AppColors.warning
-                            : AppColors.textCaption,
-                        size: AppSizes.iconXl,
-                      ),
-                      onPressed: () => setState(() => _rating = i + 1),
-                    );
-                  }),
-                ),
-                SizedBox(height: AppSizes.md),
-                SekkaInputField(
-                  controller: _notesCtrl,
-                  hint: AppStrings.additionalNotes,
-                  maxLines: 3,
-                  prefixIcon: IconsaxPlusLinear.note_text,
-                ),
-                SizedBox(height: AppSizes.xl),
-                SekkaButton(
-                  label: AppStrings.confirmDelivery,
-                  onPressed: () {
-                    context.read<OrdersBloc>().add(
-                          OrderDeliverRequested(
-                            orderId: widget.orderId,
-                            latitude: _lat,
-                            longitude: _lng,
-                            notes: _notesCtrl.text.isEmpty
-                                ? null
-                                : _notesCtrl.text,
-                            rating: _rating,
-                          ),
-                        );
-                    Navigator.pop(context);
-                  },
-                ),
-                SizedBox(height: AppSizes.md),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-//  BOTTOM SHEET 2: FAIL
+//  BOTTOM SHEET: FAIL
 // ═══════════════════════════════════════════════════════════════════════════
 class _FailBottomSheet extends StatefulWidget {
   const _FailBottomSheet({required this.orderId});

@@ -26,7 +26,6 @@ import '../../features/home/presentation/screens/main_shell.dart';
 import '../../features/orders/presentation/screens/create_order_screen.dart';
 import '../../features/orders/presentation/screens/order_detail_screen.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
-import '../../features/profile/presentation/screens/emergency_contacts_screen.dart';
 import '../../features/profile/presentation/screens/expenses_screen.dart';
 import '../../features/profile/presentation/screens/profile_stats_screen.dart';
 import '../../features/privacy/data/datasources/privacy_remote_datasource.dart';
@@ -43,8 +42,6 @@ import '../../features/notifications/data/repositories/notification_repository.d
 import '../../features/notifications/presentation/bloc/notifications_bloc.dart';
 import '../../features/notifications/presentation/bloc/notifications_event.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
-import '../../features/sos/data/repositories/sos_repository.dart';
-import '../../features/sos/presentation/screens/sos_history_screen.dart';
 import '../../features/invoices/data/datasources/invoice_remote_datasource.dart';
 import '../../features/invoices/data/repositories/invoice_repository_impl.dart';
 import '../../features/invoices/presentation/bloc/invoices_bloc.dart';
@@ -257,11 +254,7 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         path: RouteNames.profileStats,
         builder: (_, __) => const ProfileStatsScreen(),
       ),
-      GoRoute(
-        path: RouteNames.emergencyContacts,
-        builder: (_, __) => const EmergencyContactsScreen(),
-      ),
-      GoRoute(
+GoRoute(
         path: RouteNames.profileExpenses,
         builder: (_, __) => const ExpensesScreen(),
       ),
@@ -329,16 +322,7 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
         },
       ),
 
-      // SOS
-      GoRoute(
-        path: RouteNames.sosHistory,
-        builder: (context, __) {
-          final dio = context.read<DioClient>().dio;
-          return SosHistoryScreen(repository: SosRepository(dio));
-        },
-      ),
-
-      // Badge
+// Badge
       GoRoute(
         path: RouteNames.badge,
         builder: (context, __) {

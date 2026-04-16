@@ -6,14 +6,14 @@ class StatSummaryCard extends StatelessWidget {
     super.key,
     required this.label,
     required this.value,
-    required this.icon,
+    this.icon,
     this.iconColor,
     this.valueColor,
   });
 
   final String label;
   final String value;
-  final IconData icon;
+  final IconData? icon;
   final Color? iconColor;
   final Color? valueColor;
 
@@ -24,45 +24,34 @@ class StatSummaryCard extends StatelessWidget {
     return SekkaCard(
       color: isDark ? AppColors.surfaceDark : AppColors.surface,
       padding: EdgeInsets.symmetric(
-        vertical: Responsive.h(16),
-        horizontal: Responsive.w(12),
+        vertical: Responsive.h(10),
+        horizontal: Responsive.w(10),
       ),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: Responsive.r(40),
-            height: Responsive.r(40),
-            decoration: BoxDecoration(
-              color: (iconColor ?? AppColors.primary).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-            child: Icon(
-              icon,
-              size: Responsive.r(20),
-              color: iconColor ?? AppColors.primary,
-            ),
-          ),
-          SizedBox(height: Responsive.h(10)),
           Text(
-            value,
-            style: AppTypography.headlineSmall.copyWith(
-              color: valueColor ??
-                  (isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline),
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color:
+                  isDark ? AppColors.textCaptionDark : AppColors.textCaption,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           SizedBox(height: Responsive.h(4)),
           Text(
-            label,
-            style: AppTypography.captionSmall.copyWith(
-              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+            value,
+            style: AppTypography.titleLarge.copyWith(
+              color: valueColor ??
+                  (isDark
+                      ? AppColors.textHeadlineDark
+                      : AppColors.textHeadline),
+              fontWeight: FontWeight.w700,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
           ),
         ],
       ),

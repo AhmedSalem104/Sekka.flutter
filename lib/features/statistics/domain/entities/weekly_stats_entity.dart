@@ -46,11 +46,31 @@ class DailyBreakdown extends Equatable {
     required this.date,
     required this.orders,
     required this.earnings,
+    this.successfulOrders = 0,
+    this.failedOrders = 0,
+    this.cancelledOrders = 0,
+    this.postponedOrders = 0,
+    this.commissions = 0,
+    this.expenses = 0,
+    this.netProfit = 0,
+    this.distanceKm = 0,
+    this.timeWorkedMinutes = 0,
+    this.cashCollected = 0,
   });
 
   final String date;
   final int orders;
   final double earnings;
+  final int successfulOrders;
+  final int failedOrders;
+  final int cancelledOrders;
+  final int postponedOrders;
+  final double commissions;
+  final double expenses;
+  final double netProfit;
+  final double distanceKm;
+  final int timeWorkedMinutes;
+  final double cashCollected;
 
   @override
   List<Object?> get props => [date, orders, earnings];

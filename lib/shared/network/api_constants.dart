@@ -55,6 +55,7 @@ abstract final class ApiConstants {
   static const String statisticsWeekly = '$_statistics/weekly';
   static const String statisticsMonthly = '$_statistics/monthly';
   static const String statisticsHeatmap = '$_statistics/heatmap';
+  static const String statisticsToday = '$_statistics/today';
   static const String statisticsExport = '$_statistics/export';
 
   // Payment Request endpoints
@@ -78,9 +79,6 @@ abstract final class ApiConstants {
   static const String profileStats = '$_profile/stats';
   static const String profileBadges = '$_profile/badges';
   static const String profileActivityLog = '$_profile/activity-log';
-  static const String profileEmergencyContacts = '$_profile/emergency-contacts';
-  static String profileEmergencyContact(String id) =>
-      '$_profile/emergency-contacts/$id';
   static const String profileSubscription = '$_profile/subscription';
   static const String profileSubscriptionUpgrade =
       '$_profile/subscription/upgrade';
@@ -177,13 +175,6 @@ abstract final class ApiConstants {
   static const String _badge = '$baseUrl/badge';
   static const String badge = _badge;
   static String badgeVerify(String qrToken) => '$_badge/verify/$qrToken';
-
-  // SOS endpoints
-  static const String _sos = '$baseUrl/sos';
-  static const String sosActivate = '$_sos/activate';
-  static String sosDismiss(String id) => '$_sos/$id/dismiss';
-  static String sosResolve(String id) => '$_sos/$id/resolve';
-  static const String sosHistory = '$_sos/history';
 
   // Search endpoint
   static const String search = '$baseUrl/search';

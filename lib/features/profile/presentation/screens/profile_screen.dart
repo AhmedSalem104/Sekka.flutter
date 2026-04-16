@@ -171,15 +171,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SizedBox(height: AppSizes.sm),
 
-
-          ProfileSectionTile(
-            icon: IconsaxPlusLinear.call_calling,
-            label: AppStrings.emergencyContacts,
-            onTap: () => context.push(RouteNames.emergencyContacts),
-          ),
-          SizedBox(height: AppSizes.sm),
-
-
           ProfileSectionTile(
             icon: IconsaxPlusLinear.money_send,
             label: AppStrings.expenses,

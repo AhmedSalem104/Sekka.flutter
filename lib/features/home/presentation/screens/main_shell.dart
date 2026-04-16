@@ -49,7 +49,7 @@ class _MainShellState extends State<MainShell> {
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.profile_2user,
       activeIcon: IconsaxPlusBold.profile_2user,
-      label: 'جهاتي',
+      label: 'عملائي',
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.wallet_2,

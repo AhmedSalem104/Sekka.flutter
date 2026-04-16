@@ -7,7 +7,6 @@ import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../../shared/network/paginated_response.dart';
-import '../models/emergency_contact_model.dart';
 import '../models/expense_model.dart';
 import '../models/health_score_model.dart';
 import '../models/leaderboard_model.dart';
@@ -109,24 +108,6 @@ class ProfileRemoteDataSource {
         throw ApiException(message: apiResponse.message ?? '');
       }
       return apiResponse.data!;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    }
-  }
-
-  Future<List<EmergencyContactModel>> getEmergencyContacts() async {
-    try {
-      final response = await _dio
-          .get<Map<String, dynamic>>(ApiConstants.profileEmergencyContacts);
-      final json = response.data!;
-      if (json['isSuccess'] != true) {
-        throw ApiException(message: json['message'] as String? ?? '');
-      }
-      final data = json['data'] as List<dynamic>? ?? [];
-      return data
-          .map((e) =>
-              EmergencyContactModel.fromJson(e as Map<String, dynamic>))
-          .toList();
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }
@@ -250,42 +231,6 @@ class ProfileRemoteDataSource {
         throw ApiException(message: json['message'] as String? ?? '');
       }
       return json['data'] as String? ?? '';
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    }
-  }
-
-  Future<EmergencyContactModel> addEmergencyContact(
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      final response = await _dio.post<Map<String, dynamic>>(
-        ApiConstants.profileEmergencyContacts,
-        data: data,
-      );
-      final apiResponse = ApiResponse<EmergencyContactModel>.fromJson(
-        response.data!,
-        fromJsonT: (d) =>
-            EmergencyContactModel.fromJson(d as Map<String, dynamic>),
-      );
-      if (!apiResponse.isSuccess || apiResponse.data == null) {
-        throw ApiException(message: apiResponse.message ?? '');
-      }
-      return apiResponse.data!;
-    } on DioException catch (e) {
-      throw ApiException.fromDioException(e);
-    }
-  }
-
-  Future<void> deleteEmergencyContact(String id) async {
-    try {
-      final response = await _dio.delete<Map<String, dynamic>>(
-        ApiConstants.profileEmergencyContact(id),
-      );
-      final json = response.data!;
-      if (json['isSuccess'] != true) {
-        throw ApiException(message: json['message'] as String? ?? '');
-      }
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

@@ -70,7 +70,7 @@ abstract final class AppStrings {
   static String get emailOptional =>
       _isAr ? 'الإيميل (مش لازم)' : 'Email (optional)';
   static String get createAccount =>
-      _isAr ? 'يلا نسجّل!' : 'Create Account';
+      _isAr ? 'سجّل دلوقتي!' : 'Create Account';
 
   // Auth — Forgot / Reset Password
   static String get resetPassword =>
@@ -96,8 +96,8 @@ abstract final class AppStrings {
   static String get accountCreated =>
       _isAr ? 'حسابك جاهز!' : 'Account created!';
   static String get welcomeToSekka =>
-      _isAr ? 'أهلاً بيك في سِكّة\nيلا نبدأ شغل' : 'Welcome to Sekka\nLet\'s get to work';
-  static String get startNow => _isAr ? 'يلا بينا!' : 'Let\'s Go!';
+      _isAr ? 'أهلاً بيك في سِكّة\nنبدأ شغل' : 'Welcome to Sekka\nLet\'s get to work';
+  static String get startNow => _isAr ? 'نبدأ!' : 'Let\'s Go!';
 
   // Auth — Sessions
   static String get activeSessions =>
@@ -361,6 +361,11 @@ abstract final class AppStrings {
       _isAr ? 'فلتر بالنوع' : 'Filter by type';
   static String get filterByDate =>
       _isAr ? 'فلتر بالتاريخ' : 'Filter by date';
+  static String get today => _isAr ? 'النهارده' : 'Today';
+  static String get yesterday => _isAr ? 'امبارح' : 'Yesterday';
+  static String get pickDay => _isAr ? 'اختار يوم' : 'Pick a day';
+  static String get clearFilter => _isAr ? 'مسح الفلتر' : 'Clear filter';
+  static String get apply => _isAr ? 'تطبيق' : 'Apply';
   static String get allPartners => _isAr ? 'كل الشركاء' : 'All partners';
   static String get allTypes => _isAr ? 'كل الأنواع' : 'All types';
 
@@ -398,10 +403,25 @@ abstract final class AppStrings {
   static String get dailyStats => _isAr ? 'يومي' : 'Daily';
   static String get weeklyStats => _isAr ? 'أسبوعي' : 'Weekly';
   static String get monthlyStats => _isAr ? 'شهري' : 'Monthly';
+  static String get heatmapStats => _isAr ? 'الخريطة الحرارية' : 'Heatmap';
+  static String get statsToday => _isAr ? 'النهاردة' : 'Today';
+  static String get selectDay => _isAr ? 'اختار يوم' : 'Select day';
+  static String get selectWeek => _isAr ? 'اختار أسبوع' : 'Select week';
+  static String get peakHoursTitle =>
+      _isAr ? 'أزحم الساعات' : 'Peak hours';
+  static String get peakHoursHint => _isAr
+      ? 'الأيام والساعات اللي بتعمل فيها أكبر كسب'
+      : 'Days & hours where you earn the most';
+  static String get noHeatmapData =>
+      _isAr ? 'لسه مفيش بيانات كفاية لعرض الخريطة' : 'Not enough data yet';
   static String get totalOrders =>
       _isAr ? 'إجمالي الطلبات' : 'Total orders';
   static String get totalEarningsLabel =>
       _isAr ? 'الإجمالي' : 'Total earnings';
+  static String get weeklyEarningsChartTitle =>
+      _isAr ? 'كسبك ع مدار الأسبوع' : 'Earnings across the week';
+  static String get monthlyEarningsChartTitle =>
+      _isAr ? 'كسبك ع مدار الشهر' : 'Earnings across the month';
   static String get totalDistance => _isAr ? 'المسافة' : 'Distance';
   static String get successRate =>
       _isAr ? 'نسبة النجاح' : 'Success rate';
@@ -516,7 +536,7 @@ abstract final class AppStrings {
   static String get goodMorning => _isAr ? 'صباح الخير' : 'Good morning';
   static String get goodEvening => _isAr ? 'مساء الخير' : 'Good evening';
   static String get todayOrders => _isAr ? 'طلبات اليوم' : 'Today\'s orders';
-  static String get startTrip => _isAr ? 'يلا نبدأ!' : 'Let\'s go!';
+  static String get startTrip => _isAr ? 'ابدأ الرحلة!' : 'Let\'s go!';
   static String get noOrders =>
       _isAr ? 'مفيش طلبات — أضف طلباتك' : 'No orders — add your orders';
 
@@ -531,7 +551,7 @@ abstract final class AppStrings {
   static String get address => _isAr ? 'العنوان' : 'Address';
   static String get amount => _isAr ? 'المبلغ' : 'Amount';
   static String get note => _isAr ? 'ملاحظة' : 'Note';
-  static String get confirmAdd => _isAr ? 'يلا أضيف!' : 'Add';
+  static String get confirmAdd => _isAr ? 'تمام، أضيف!' : 'Add';
   static String get pickupAddress =>
       _isAr ? 'هتستلم منين؟' : 'Pickup address';
   static String get deliveryAddress =>
@@ -571,7 +591,7 @@ abstract final class AppStrings {
           ? 'انسخ الطلبات من واتساب أو أي مكان والصقها هنا.\nكل سطر = طلب واحد'
           : 'Copy orders from WhatsApp or anywhere and paste here.\nOne order per line';
   static String get importOrders =>
-      _isAr ? 'يلا نستورد!' : 'Import';
+      _isAr ? 'استورد دلوقتي!' : 'Import';
   static String get separator => _isAr ? 'الفاصل' : 'Separator';
 
   // Address Selection
@@ -680,7 +700,7 @@ abstract final class AppStrings {
   static String get pickedUpOrder =>
       _isAr ? 'استلمت الشحنة' : 'Picked Up';
   static String get startDelivery =>
-      _isAr ? 'يلا نوصّل!' : 'Start Delivery';
+      _isAr ? 'ابدأ التوصيل!' : 'Start Delivery';
   static String get failDelivery =>
       _isAr ? 'معرفتش أسلّم' : 'Delivery Failed';
   static String get cancelOrder => _isAr ? 'ألغي الطلب' : 'Cancel Order';
@@ -688,6 +708,7 @@ abstract final class AppStrings {
       _isAr ? 'جرّب تاني' : 'Retry Delivery';
   static String get confirmDelivery =>
       _isAr ? 'أكّد التسليم' : 'Confirm Delivery';
+  static String get deliverShort => _isAr ? 'سلّم' : 'Deliver';
   static String get collectedAmount =>
       _isAr ? 'حصّلت كام؟' : 'Amount collected';
   static String get failReason => _isAr ? 'إيه السبب؟' : 'Reason';
@@ -838,16 +859,6 @@ abstract final class AppStrings {
       _isAr ? 'مثال: SEK-XXXXXXXX' : 'Example: SEK-XXXXXXXX';
   static String get detailedStats =>
       _isAr ? 'إحصائياتك بالتفصيل' : 'Detailed statistics';
-  static String get emergencyContacts =>
-      _isAr ? 'جهات الطوارئ' : 'Emergency contacts';
-  static String get addContact =>
-      _isAr ? 'إضافة جهة اتصال' : 'Add contact';
-  static String get noContacts =>
-      _isAr ? 'مفيش جهات طوارئ' : 'No emergency contacts';
-  static String get contactName => _isAr ? 'اسم الشخص' : 'Contact name';
-  static String get contactPhone =>
-      _isAr ? 'رقم الموبايل' : 'Phone number';
-  static String get contactRelation => _isAr ? 'العلاقة' : 'Relationship';
   static String get expenses => _isAr ? 'المصروفات' : 'Expenses';
   static String get addExpense => _isAr ? 'إضافة مصروف' : 'Add expense';
   static String get noExpenses => _isAr ? 'مفيش مصروفات' : 'No expenses';
@@ -1320,64 +1331,6 @@ abstract final class AppStrings {
           ? 'المحادثة دي اتقفلت. افتح محادثة جديدة لو محتاج مساعدة.'
           : 'This conversation is closed. Start a new one if you need help.';
 
-  // SOS
-  static String get sosEmergency =>
-      _isAr ? 'حالة طوارئ' : 'Emergency';
-  static String get sosSubtitle =>
-      _isAr
-          ? 'اضغط الزر لإرسال إشارة طوارئ\nلجهات الاتصال والإدارة'
-          : 'Press the button to send an emergency signal\nto your contacts and management';
-  static String get sosActivated =>
-      _isAr ? 'تم تفعيل الطوارئ' : 'Emergency activated';
-  static String get sosActivatedSubtitle =>
-      _isAr
-          ? 'تم إبلاغ جهات الطوارئ والإدارة\nابقى في مكانك'
-          : 'Emergency contacts and management have been notified\nStay where you are';
-  static String get sosResolve =>
-      _isAr ? 'تم حل المشكلة' : 'Issue resolved';
-  static String get sosDismiss =>
-      _isAr ? 'كان بالغلط' : 'False alarm';
-  static String get sosSelectProblem =>
-      _isAr ? 'إيه المشكلة؟' : 'What\'s the problem?';
-  static String get sosAddNotes =>
-      _isAr ? 'تفاصيل أكتر (اختياري)' : 'More details (optional)';
-  static String get sosNotesHint =>
-      _isAr ? 'اكتب أي تفاصيل ممكن تساعد...' : 'Write any details that might help...';
-  static String get sosSendSignal =>
-      _isAr ? 'ابعت إشارة طوارئ' : 'Send emergency signal';
-  static String get sosResolutionNote =>
-      _isAr ? 'إيه اللي حصل؟' : 'What happened?';
-  static String get sosResolutionHint =>
-      _isAr ? 'اكتب ملخص للحل...' : 'Write a resolution summary...';
-  static String get sosConfirmResolve =>
-      _isAr ? 'تأكيد الحل' : 'Confirm resolution';
-  static String get sosDismissConfirm =>
-      _isAr ? 'متأكد إن دي كانت بالغلط؟' : 'Are you sure this was a false alarm?';
-  static String get sosHistory =>
-      _isAr ? 'سجل الطوارئ' : 'Emergency history';
-  static String get sosNoHistory =>
-      _isAr ? 'مفيش حالات طوارئ سابقة' : 'No previous emergencies';
-  static String get sosNoHistoryDesc =>
-      _isAr ? 'لو حصل أي طوارئ هيظهر هنا' : 'Any emergencies will appear here';
-  static String get sosWasFalseAlarm =>
-      _isAr ? 'كان إنذار كاذب' : 'Was a false alarm';
-  static String get sosStatusActive => _isAr ? 'نشط' : 'Active';
-  static String get sosStatusResolved =>
-      _isAr ? 'تم الحل' : 'Resolved';
-  static String get sosStatusDismissed => _isAr ? 'ملغي' : 'Dismissed';
-  static String get sosStatusExpired => _isAr ? 'منتهي' : 'Expired';
-  static String get sosProblemAccident =>
-      _isAr ? 'حادث سير' : 'Traffic accident';
-  static String get sosProblemVehicle =>
-      _isAr ? 'عطل في المركبة' : 'Vehicle breakdown';
-  static String get sosProblemTheft => _isAr ? 'سرقة' : 'Theft';
-  static String get sosProblemAssault => _isAr ? 'اعتداء' : 'Assault';
-  static String get sosProblemHealth =>
-      _isAr ? 'حالة صحية طارئة' : 'Medical emergency';
-  static String get sosProblemRoadBlock =>
-      _isAr ? 'طريق مغلق' : 'Road blocked';
-  static String get sosProblemOther => _isAr ? 'أخرى' : 'Other';
-
   // General
   static String get retry => _isAr ? 'حاول تاني' : 'Retry';
   static String get save => _isAr ? 'حفظ' : 'Save';
@@ -1704,6 +1657,20 @@ abstract final class AppStrings {
       _isAr ? 'متوسط مدة الوردية' : 'Avg Shift Duration';
   static String get shiftEndConfirm =>
       _isAr ? 'متأكد إنك عايز تنهي الوردية؟' : 'Are you sure you want to end the shift?';
+  static String get shiftEarnings =>
+      _isAr ? 'كسبت الورديه' : 'Shift Earnings';
+  static String get shiftOrders =>
+      _isAr ? 'طلبات الورديه' : 'Shift Orders';
+  static String get cashWithYouNow =>
+      _isAr ? 'الكاش معاك دلوقتي' : 'Cash With You Now';
+  static String get addNewOrder =>
+      _isAr ? 'ضيف أوردر جديد' : 'Add New Order';
+  static String get quickAddOrder =>
+      _isAr ? 'أوردر' : 'Order';
+  static String get quickSettleCash =>
+      _isAr ? 'سلّم كاش' : 'Settle Cash';
+  static String get hour => _isAr ? 'س' : 'h';
+  static String get minute => _isAr ? 'د' : 'm';
 
   // Analytics
   static String get analyticsTitle =>

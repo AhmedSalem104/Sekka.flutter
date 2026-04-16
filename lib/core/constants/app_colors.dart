@@ -68,12 +68,6 @@ abstract final class AppColors {
   static const Color statusReturned = Color(0xFF805AD5);
   static const Color statusPostponed = Color(0xFFA0AEC0);
 
-  // SOS Status
-  static const Color sosActive = Color(0xFFE53E3E);
-  static const Color sosResolved = Color(0xFF38A169);
-  static const Color sosDismissed = Color(0xFF718096);
-  static const Color sosExpired = Color(0xFFA0AEC0);
-
   // Settlement Type
   static const Color settlementCash = Color(0xFF38A169);   // green — cash
   static const Color settlementBank = Color(0xFF3182CE);   // blue — bank

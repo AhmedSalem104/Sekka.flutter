@@ -13,15 +13,20 @@ final class OrdersLoadRequested extends OrdersEvent {
   const OrdersLoadRequested({
     this.statusFilter,
     this.searchTerm,
+    this.dateFrom,
+    this.dateTo,
     this.refresh = false,
   });
 
   final int? statusFilter;
   final String? searchTerm;
+  final String? dateFrom;
+  final String? dateTo;
   final bool refresh;
 
   @override
-  List<Object?> get props => [statusFilter, searchTerm, refresh];
+  List<Object?> get props =>
+      [statusFilter, searchTerm, dateFrom, dateTo, refresh];
 }
 
 final class OrdersLoadMore extends OrdersEvent {
@@ -29,12 +34,22 @@ final class OrdersLoadMore extends OrdersEvent {
 }
 
 final class OrdersFilterChanged extends OrdersEvent {
-  const OrdersFilterChanged({this.status});
+  const OrdersFilterChanged({
+    this.status,
+    this.dateFrom,
+    this.dateTo,
+    this.clearDate = false,
+  });
 
   final int? status;
+  final String? dateFrom;
+  final String? dateTo;
+
+  /// Explicitly clear the currently-selected date filter.
+  final bool clearDate;
 
   @override
-  List<Object?> get props => [status];
+  List<Object?> get props => [status, dateFrom, dateTo, clearDate];
 }
 
 final class OrdersSearchChanged extends OrdersEvent {

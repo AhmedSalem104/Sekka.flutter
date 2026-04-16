@@ -5,6 +5,7 @@ import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_response.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../models/daily_stats_model.dart';
+import '../models/heatmap_stats_model.dart';
 import '../models/monthly_stats_model.dart';
 import '../models/weekly_stats_model.dart';
 
@@ -14,6 +15,25 @@ class StatisticsRemoteDataSource {
   final DioClient _client;
 
   Dio get _dio => _client.dio;
+
+  Future<DailyStatsModel> getTodayStats() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiConstants.statisticsToday,
+      );
+      final apiResponse = ApiResponse<DailyStatsModel>.fromJson(
+        response.data!,
+        fromJsonT: (data) =>
+            DailyStatsModel.fromJson(data as Map<String, dynamic>),
+      );
+      if (!apiResponse.isSuccess || apiResponse.data == null) {
+        throw ApiException(message: apiResponse.message ?? '');
+      }
+      return apiResponse.data!;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
 
   Future<DailyStatsModel> getDailyStats({String? date}) async {
     try {
@@ -73,6 +93,26 @@ class StatisticsRemoteDataSource {
         throw ApiException(message: apiResponse.message ?? '');
       }
       return apiResponse.data!;
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    }
+  }
+
+  Future<List<HeatmapCellModel>> getHeatmap() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        ApiConstants.statisticsHeatmap,
+      );
+      final apiResponse = ApiResponse<List<HeatmapCellModel>>.fromJson(
+        response.data!,
+        fromJsonT: (data) => (data as List)
+            .map((e) => HeatmapCellModel.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+      if (!apiResponse.isSuccess) {
+        throw ApiException(message: apiResponse.message ?? '');
+      }
+      return apiResponse.data ?? const [];
     } on DioException catch (e) {
       throw ApiException.fromDioException(e);
     }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -8,6 +7,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
+import '../../../../core/widgets/sekka_star_rating.dart';
 import '../../data/models/create_rating_model.dart';
 
 class RateCustomerSheet extends StatefulWidget {
@@ -91,30 +91,11 @@ class _RateCustomerSheetState extends State<RateCustomerSheet> {
             SizedBox(height: Responsive.h(24)),
 
             // Star rating
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                final starIndex = index + 1;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _rating = starIndex;
-                    });
-                  },
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Responsive.w(6),
-                    ),
-                    child: Icon(
-                      starIndex <= _rating
-                          ? IconsaxPlusBold.star_1
-                          : IconsaxPlusLinear.star,
-                      size: Responsive.r(36),
-                      color: AppColors.warning,
-                    ),
-                  ),
-                );
-              }),
+            Center(
+              child: SekkaStarRating(
+                rating: _rating,
+                onChanged: (v) => setState(() => _rating = v),
+              ),
             ),
 
             SizedBox(height: Responsive.h(24)),
