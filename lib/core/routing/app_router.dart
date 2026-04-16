@@ -18,6 +18,7 @@ import '../../features/partners/data/models/partner_model.dart';
 import '../../features/settlements/presentation/screens/settlements_screen.dart';
 import '../../features/settlements/presentation/screens/create_settlement_screen.dart';
 import '../../features/settlements/presentation/screens/partner_settlement_detail_screen.dart';
+import '../../features/settlements/presentation/screens/settlement_history_screen.dart';
 import '../../features/statistics/data/datasources/statistics_remote_datasource.dart';
 import '../../features/statistics/data/repositories/statistics_repository_impl.dart';
 import '../../features/statistics/presentation/bloc/statistics_bloc.dart';
@@ -180,6 +181,10 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
           final partner = state.extra! as PartnerModel;
           return PartnerSettlementDetailScreen(partner: partner);
         },
+      ),
+      GoRoute(
+        path: RouteNames.settlementHistory,
+        builder: (_, __) => const SettlementHistoryScreen(),
       ),
       GoRoute(
         path: RouteNames.detailedStats,

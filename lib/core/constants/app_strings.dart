@@ -1598,6 +1598,115 @@ abstract final class AppStrings {
       _isAr ? 'نجاح' : 'Success';
   static String get welcomeBack =>
       _isAr ? 'أهلاً بيك' : 'Welcome back';
+  static String get homeReadyToStart =>
+      _isAr ? 'جاهز تبدأ يومك؟' : 'Ready to start your day?';
+  static String get homeShiftRunningFor =>
+      _isAr ? 'الوردية شغّالة لـ' : 'Shift running for';
+  static String get homeDeliveringNow =>
+      _isAr ? 'بتوصّل دلوقتي' : 'Delivering now';
+  static String get homeMarkDelivered =>
+      _isAr ? 'وصلت ✓' : 'Delivered ✓';
+  static String get homeOpenOrder =>
+      _isAr ? 'افتح الطلب' : 'Open order';
+  static String get homeAddOrderCta =>
+      _isAr ? 'ضيف أوردر جديد' : 'Add new order';
+  static String get homeQuickAddOrder =>
+      _isAr ? 'أوردر' : 'Order';
+  static String get homeQuickSettle =>
+      _isAr ? 'سلّم كاش' : 'Settle';
+  static String get homeQuickBreak =>
+      _isAr ? 'استراحة' : 'Break';
+  static String get homeQuickToday =>
+      _isAr ? 'اليوم' : 'Today';
+  static String get homePendingOrders =>
+      _isAr ? 'طلبات مستنياك' : 'Pending orders';
+  static String get homeSeeAllOrders =>
+      _isAr ? 'شوف كل الطلبات' : 'See all orders';
+  static String get homeActiveRoute =>
+      _isAr ? 'مسار النهارده' : 'Today\'s route';
+  static String get homeOpenRoute =>
+      _isAr ? 'افتح المسار' : 'Open route';
+  static String get homeCashTooMuch =>
+      _isAr ? 'الكاش معاك كتير — وقت تسليم' : 'Cash is high — time to settle';
+  static String get homeQuietDay =>
+      _isAr ? 'اليوم هادي 🌤️' : 'Quiet day 🌤️';
+  static String get homeQuietDaySubtitle =>
+      _isAr ? 'ضيف أوردر تبدأ' : 'Add an order to start';
+  static String get homeMinutes =>
+      _isAr ? 'دقيقة' : 'min';
+  static String get homeHour =>
+      _isAr ? 'ساعة' : 'hr';
+  static String get deliveryBusyTitle =>
+      _isAr ? 'في طلب لسه في السكة 🚦' : 'Already delivering';
+  static String get deliveryBusyBody =>
+      _isAr
+          ? 'خلّص اللي بتوصله الأول، وبعدين ابدأ التاني.'
+          : 'Finish the order on the road first.';
+  static String get homeShiftEarnings =>
+      _isAr ? 'كسبت في الوردية' : 'Earned this shift';
+  static String get homeShiftOrders =>
+      _isAr ? 'طلبات الوردية' : 'Shift orders';
+  static String get homeOrdersUnit =>
+      _isAr ? 'طلب' : 'orders';
+  static String get homeCashLabel =>
+      _isAr ? 'الكاش معاك دلوقتي' : 'Cash on hand now';
+  static String get homeCashHint =>
+      _isAr ? 'فلوس عملاء لسه ما اتسلّمتش' : 'Customer cash not yet settled';
+  static String get homeOthersInTransit =>
+      _isAr ? 'في السكة' : 'on the road';
+  static String get homeOpenForDelivery =>
+      _isAr ? 'افتح وسلّم' : 'Open & deliver';
+  static String get homeFollowOnMap =>
+      _isAr ? 'تابع على الخريطة' : 'Follow on map';
+  static String get homeNextOrder =>
+      _isAr ? 'الطلب الجاي' : 'Next order';
+  static String get homeOrderNoCustomer =>
+      _isAr ? 'طلب' : 'Order';
+  static String get homeRouteHintTitle =>
+      _isAr ? 'حسّن مسار التوصيل' : 'Optimize your route';
+  static String get homeRouteHintSubtitle =>
+      _isAr ? 'رتّب طلباتك وفّر وقت ووقود' : 'Reorder stops, save time & fuel';
+  static String get homeViewAll =>
+      _isAr ? 'عرض الكل' : 'View all';
+  static String get homeRouteActiveTitle =>
+      _isAr ? 'المسار شغّال' : 'Route active';
+  static String get homeRouteActiveSubtitle =>
+      _isAr ? 'افتح عشان ترتّب أو تعدّل' : 'Open to reorder or adjust';
+  // ── Settlements — compact stats + checklist UI ──
+  static String get settleTodayLabel =>
+      _isAr ? 'اليوم' : 'Today';
+  static String get settleCollectedShort =>
+      _isAr ? 'جمعت' : 'Collected';
+  static String get settleSettledShort =>
+      _isAr ? 'سلّمت' : 'Settled';
+  static String get settleRemainingShort =>
+      _isAr ? 'باقي' : 'Remaining';
+  static String get settleCollectedFromCustomers =>
+      _isAr ? 'جمعت من العملاء' : 'Collected from customers';
+  static String get settleSettledToPartners =>
+      _isAr ? 'سلّمت للشركاء' : 'Settled to partners';
+  static String get settleRemainingWithYou =>
+      _isAr ? 'باقي معاك' : 'Remaining with you';
+  static String get settleCountToday =>
+      _isAr ? 'عدد التسليمات' : 'Handover count';
+  static String get settleUnsettledTitle =>
+      _isAr ? 'لسه عليك شركاء' : 'Unsettled partners';
+  static String get settleAllDoneTitle =>
+      _isAr ? 'كله اتسلّم! 🎉' : 'All settled! 🎉';
+  static String get settleAllDoneSubtitle =>
+      _isAr ? 'مفيش شركاء عليك فلوس دلوقتي' : 'No pending balances right now';
+  static String get settleTodayCompletedTitle =>
+      _isAr ? 'سلّمت لهم النهاردا' : 'Settled today';
+  static String get settleFullHistoryLink =>
+      _isAr ? 'التسويات القديمة' : 'Old settlements';
+  static String get settleNow =>
+      _isAr ? 'سلّم' : 'Settle';
+  static String settleFromOrders(int count) =>
+      _isAr ? 'من $count طلب' : 'from $count orders';
+  static String get settleEmptyStateTitle =>
+      _isAr ? 'مفيش شركاء لسه' : 'No partners yet';
+  static String get settleEmptyStateSubtitle =>
+      _isAr ? 'ضيف أول شريك عشان تبدأ' : 'Add your first partner to start';
   static String get startDeliveringNow =>
       _isAr ? 'ابدأ وصّل طلباتك!' : 'Start delivering your orders!';
   static String get addOrdersToStart =>

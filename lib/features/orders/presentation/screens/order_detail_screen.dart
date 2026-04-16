@@ -1750,7 +1750,7 @@ class _ActionArea extends StatelessWidget {
       OrderStatus.pickedUp => SekkaButton(
           label: AppStrings.startDelivery,
           isLoading: isLoading,
-          onPressed: () => _dispatch(context, 3),
+          onPressed: () => _startDeliveryGuarded(context),
         ),
       OrderStatus.inTransit || OrderStatus.arrivedAtDestination => Column(
           mainAxisSize: MainAxisSize.min,
@@ -1807,6 +1807,72 @@ class _ActionArea extends StatelessWidget {
     context.read<OrdersBloc>().add(
           OrderStatusChangeRequested(orderId: orderId, newStatus: newStatus),
         );
+  }
+
+  /// Start delivery (status → inTransit) but only if no other order is
+  /// currently in delivery. Driver should finish what's on the road first.
+  void _startDeliveryGuarded(BuildContext context) {
+    final state = context.read<OrdersBloc>().state;
+    OrderModel? blocking;
+    if (state is OrdersLoaded) {
+      for (final o in state.orders) {
+        if (o.id == orderId) continue;
+        if (o.status == OrderStatus.inTransit ||
+            o.status == OrderStatus.arrivedAtDestination ||
+            o.status == OrderStatus.pickedUp) {
+          blocking = o;
+          break;
+        }
+      }
+    }
+
+    if (blocking != null) {
+      _showAlreadyDeliveringDialog(context, blocking);
+      return;
+    }
+    _dispatch(context, 3);
+  }
+
+  void _showAlreadyDeliveringDialog(BuildContext context, OrderModel busy) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+          ),
+          title: Text(
+            AppStrings.deliveryBusyTitle,
+            style: AppTypography.titleLarge.copyWith(
+              color: isDark
+                  ? AppColors.textHeadlineDark
+                  : AppColors.textHeadline,
+            ),
+          ),
+          content: Text(
+            '${AppStrings.deliveryBusyBody}\n\n'
+            '${busy.customerName ?? busy.deliveryAddress}',
+            style: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.textBodyDark : AppColors.textBody,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                AppStrings.ok,
+                style: AppTypography.button.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _showDeliverSheet(BuildContext context) {

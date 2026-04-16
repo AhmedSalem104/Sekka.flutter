@@ -44,6 +44,10 @@ import 'features/breaks/presentation/bloc/break_bloc.dart';
 import 'features/analytics/data/datasources/analytics_remote_datasource.dart';
 import 'features/analytics/data/repositories/analytics_repository_impl.dart';
 import 'features/analytics/presentation/bloc/analytics_bloc.dart';
+import 'features/routes/data/datasources/route_remote_datasource.dart';
+import 'features/routes/data/repositories/route_repository_impl.dart';
+import 'features/routes/presentation/bloc/route_bloc.dart';
+import 'features/routes/presentation/bloc/route_event.dart';
 import 'features/shifts/data/datasources/shift_remote_datasource.dart';
 import 'features/shifts/data/repositories/shift_repository_impl.dart';
 import 'features/shifts/presentation/bloc/shift_bloc.dart';
@@ -208,6 +212,11 @@ void main() async {
   final analyticsRepository =
       AnalyticsRepositoryImpl(remoteDataSource: analyticsDataSource);
 
+  // Routes
+  final routeDataSource = RouteRemoteDataSource(dioClient);
+  final routeRepository =
+      RouteRepositoryImpl(remoteDataSource: routeDataSource);
+
   // Chat & Notifications
   final chatRepository = ChatRepository(dioClient.dio);
   final notificationRepository = NotificationRepository(dioClient.dio);
@@ -349,6 +358,10 @@ void main() async {
           ),
           BlocProvider(
             create: (_) => AnalyticsBloc(repository: analyticsRepository),
+          ),
+          BlocProvider(
+            create: (_) => RouteBloc(repository: routeRepository)
+              ..add(const RouteActiveLoadRequested()),
           ),
         ],
         child: SekkaApp(

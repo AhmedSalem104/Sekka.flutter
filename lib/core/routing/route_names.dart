@@ -41,6 +41,7 @@ abstract final class RouteNames {
   static const String partners = '/partners';
   static const String partnerDetail = '/partner-detail';
   static const String partnerSettlementDetail = '/settlements/partner-detail';
+  static const String settlementHistory = '/settlements/history';
 
   // Communication
   static const String notifications = '/notifications';

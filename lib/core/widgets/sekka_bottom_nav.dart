@@ -63,7 +63,7 @@ class SekkaBottomNav extends StatelessWidget {
                       isActive ? item.activeIcon : item.icon,
                       color: isActive
                           ? Colors.white
-                          : Colors.white.withValues(alpha: 0.6),
+                          : Colors.white.withValues(alpha: 0.45),
                       size: Responsive.r(22),
                     ),
                     SizedBox(height: Responsive.h(4)),
@@ -72,9 +72,9 @@ class SekkaBottomNav extends StatelessWidget {
                       style: AppTypography.captionSmall.copyWith(
                         color: isActive
                             ? Colors.white
-                            : Colors.white.withValues(alpha: 0.6),
+                            : Colors.white.withValues(alpha: 0.5),
                         fontWeight:
-                            isActive ? FontWeight.w700 : FontWeight.w400,
+                            isActive ? FontWeight.w700 : FontWeight.w300,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
