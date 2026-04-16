@@ -15,6 +15,7 @@ import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
+import '../../../../core/widgets/sekka_segmented_tabs.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../search/data/repositories/search_repository.dart';
 import '../../../settlements/presentation/widgets/add_partner_sheet.dart';
@@ -182,7 +183,7 @@ class _ContactsScreenState extends State<ContactsScreen>
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
                 child: Text(
-                  'جهاتي',
+                  'عملائي',
                   style: AppTypography.headlineMedium.copyWith(
                     color: isDark
                         ? AppColors.textHeadlineDark
@@ -195,64 +196,12 @@ class _ContactsScreenState extends State<ContactsScreen>
             SizedBox(height: Responsive.h(16)),
 
             // Tab bar
-            Padding(
+            SekkaSegmentedTabs(
               padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
-              child: Container(
-                height: Responsive.h(44),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.surfaceDark
-                      : AppColors.border.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(Responsive.r(12)),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(Responsive.r(10)),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  dividerColor: Colors.transparent,
-                  labelColor: AppColors.textOnPrimary,
-                  unselectedLabelColor: isDark
-                      ? AppColors.textCaptionDark
-                      : AppColors.textCaption,
-                  labelStyle: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                  unselectedLabelStyle: AppTypography.titleMedium,
-                  labelPadding: EdgeInsets.zero,
-                  padding: EdgeInsets.all(Responsive.w(3)),
-                  tabs: [
-                    Tab(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            IconsaxPlusBold.profile_2user,
-                            size: Responsive.r(18),
-                          ),
-                          SizedBox(width: Responsive.w(6)),
-                          Text(AppStrings.customers),
-                        ],
-                      ),
-                    ),
-                    Tab(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            IconsaxPlusBold.building_4,
-                            size: Responsive.r(18),
-                          ),
-                          SizedBox(width: Responsive.w(6)),
-                          Text(AppStrings.partners),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              labels: [AppStrings.customers, AppStrings.partners],
+              selectedIndex: _tabController.index,
+              controller: _tabController,
+              onChanged: (i) => setState(() {}),
             ),
 
             SizedBox(height: Responsive.h(12)),
@@ -330,8 +279,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                   onRefresh: _onRefreshCustomers,
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Responsive.w(20),
+                    padding: EdgeInsets.fromLTRB(
+                      Responsive.w(20),
+                      0,
+                      Responsive.w(20),
+                      AppSizes.bottomNavHeight + Responsive.h(24),
                     ),
                     itemCount: customers.length,
                     itemBuilder: (_, index) =>
@@ -483,8 +435,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                   onRefresh: _onRefreshPartners,
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: Responsive.w(20),
+                    padding: EdgeInsets.fromLTRB(
+                      Responsive.w(20),
+                      0,
+                      Responsive.w(20),
+                      AppSizes.bottomNavHeight + Responsive.h(24),
                     ),
                     itemCount: partners.length,
                     itemBuilder: (_, index) =>

@@ -1445,69 +1445,70 @@ class _CreateRouteSheetBodyState extends State<_CreateRouteSheetBody> {
           ),
           SizedBox(height: AppSizes.sm),
           Row(
-            children: _optimizationTypes.map((type) {
-              final (value, label, icon) = type;
-              final isActive = _optimizationType == value;
-
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _optimizationType = value),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    margin: EdgeInsets.symmetric(horizontal: AppSizes.xs),
-                    padding: EdgeInsets.symmetric(
-                      vertical: AppSizes.md,
+            children: [
+              for (var i = 0; i < _optimizationTypes.length; i++) ...[
+                if (i > 0) SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(
+                      () => _optimizationType = _optimizationTypes[i].$1,
                     ),
-                    decoration: BoxDecoration(
-                      color: isActive
-                          ? AppColors.primary.withValues(alpha: 0.1)
-                          : isDark
-                              ? AppColors.backgroundDark
-                              : AppColors.background,
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusMd),
-                      border: Border.all(
-                        color: isActive
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding:
+                          EdgeInsets.symmetric(vertical: AppSizes.md),
+                      decoration: BoxDecoration(
+                        color: _optimizationType == _optimizationTypes[i].$1
                             ? AppColors.primary
-                            : isDark
-                                ? AppColors.borderDark
-                                : AppColors.border,
-                        width: isActive ? 2 : 1,
+                            : (isDark
+                                ? AppColors.surfaceDark
+                                : AppColors.surface),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusMd),
+                        border: Border.all(
+                          color:
+                              _optimizationType == _optimizationTypes[i].$1
+                                  ? AppColors.primary
+                                  : (isDark
+                                      ? AppColors.borderDark
+                                      : AppColors.border),
+                          width: 0.5,
+                        ),
+                        boxShadow:
+                            _optimizationType == _optimizationTypes[i].$1
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primary
+                                          .withValues(alpha: 0.25),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                       ),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          icon,
-                          size: AppSizes.iconMd,
-                          color: isActive
-                              ? AppColors.primary
-                              : isDark
-                                  ? AppColors.textCaptionDark
-                                  : AppColors.textCaption,
+                      alignment: Alignment.center,
+                      child: Text(
+                        _optimizationTypes[i].$2,
+                        style: AppTypography.titleMedium.copyWith(
+                          color:
+                              _optimizationType == _optimizationTypes[i].$1
+                                  ? AppColors.textOnPrimary
+                                  : (isDark
+                                      ? AppColors.textCaptionDark
+                                      : AppColors.textCaption),
+                          fontWeight:
+                              _optimizationType == _optimizationTypes[i].$1
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                         ),
-                        SizedBox(height: AppSizes.xs),
-                        Text(
-                          label,
-                          style: AppTypography.captionSmall.copyWith(
-                            color: isActive
-                                ? AppColors.primary
-                                : isDark
-                                    ? AppColors.textBodyDark
-                                    : AppColors.textBody,
-                            fontWeight:
-                                isActive ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                 ),
-              );
-            }).toList(),
+              ],
+            ],
           ),
         ],
       ),

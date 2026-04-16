@@ -65,16 +65,32 @@ class _SekkaSwipeActionState extends State<SekkaSwipeAction>
   void _onDragEnd(DragEndDetails details) {
     if (_completed) return;
 
-    if (_dragPosition >= _maxDrag * 0.85) {
-      // Complete!
-      setState(() {
-        _dragPosition = _maxDrag;
-        _completed = true;
-      });
-      HapticFeedback.heavyImpact();
-      widget.onCompleted();
+    // RTL swipe goes left → negative velocity. A fast flick should auto-complete.
+    final velocity = details.primaryVelocity ?? 0;
+    final flung = velocity < -800;
+    final pastThreshold = _dragPosition >= _maxDrag * 0.85;
+
+    if (pastThreshold || flung) {
+      // Animate thumb to the end, then fire the action.
+      _resetAnimation = Tween<double>(
+        begin: _dragPosition,
+        end: _maxDrag,
+      ).animate(CurvedAnimation(
+        parent: _resetController,
+        curve: Curves.easeOut,
+      ))
+        ..addListener(() {
+          setState(() => _dragPosition = _resetAnimation.value);
+        });
+      _resetController
+        ..reset()
+        ..forward().whenComplete(() {
+          if (!mounted || _completed) return;
+          setState(() => _completed = true);
+          HapticFeedback.heavyImpact();
+          widget.onCompleted();
+        });
     } else {
-      // Reset with animation
       _resetAnimation = Tween<double>(
         begin: _dragPosition,
         end: 0,

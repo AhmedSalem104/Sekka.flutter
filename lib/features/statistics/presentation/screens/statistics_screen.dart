@@ -17,6 +17,7 @@ import '../../domain/entities/daily_stats_entity.dart';
 import '../../domain/entities/monthly_stats_entity.dart';
 import '../../domain/entities/weekly_stats_entity.dart';
 import '../bloc/statistics_bloc.dart';
+import '../widgets/heatmap_grid.dart';
 import '../widgets/stat_detail_row.dart';
 import '../widgets/stat_summary_card.dart';
 import '../widgets/stats_bar_chart.dart';
@@ -98,51 +99,77 @@ class _TabBar extends StatelessWidget {
     return BlocBuilder<StatisticsBloc, StatisticsState>(
       buildWhen: (prev, curr) => prev.tab != curr.tab,
       builder: (context, state) {
-        return Container(
-          margin: EdgeInsets.symmetric(
+        return Padding(
+          padding: EdgeInsets.symmetric(
             horizontal: Responsive.w(20),
             vertical: Responsive.h(12),
           ),
-          padding: EdgeInsets.all(Responsive.w(4)),
-          decoration: BoxDecoration(
-            color: isDark ? AppColors.surfaceDark : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          ),
           child: Row(
-            children: StatisticsTab.values.map((tab) {
-              final isSelected = state.tab == tab;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => context
-                      .read<StatisticsBloc>()
-                      .add(StatisticsTabChanged(tab)),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(vertical: Responsive.h(10)),
-                    decoration: BoxDecoration(
-                      color: isSelected ? AppColors.primary : Colors.transparent,
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _tabLabel(tab),
-                      style: AppTypography.titleMedium.copyWith(
-                        color: isSelected
-                            ? AppColors.textOnPrimary
-                            : (isDark
-                                ? AppColors.textCaptionDark
-                                : AppColors.textCaption),
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                      ),
-                    ),
+            children: [
+              for (var i = 0; i < StatisticsTab.values.length; i++) ...[
+                if (i > 0) SizedBox(width: Responsive.w(8)),
+                Expanded(
+                  child: _buildTabButton(
+                    context,
+                    StatisticsTab.values[i],
+                    state.tab == StatisticsTab.values[i],
+                    isDark,
                   ),
                 ),
-              );
-            }).toList(),
+              ],
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTabButton(
+    BuildContext context,
+    StatisticsTab tab,
+    bool isSelected,
+    bool isDark,
+  ) {
+    return GestureDetector(
+      onTap: () =>
+          context.read<StatisticsBloc>().add(StatisticsTabChanged(tab)),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: EdgeInsets.symmetric(vertical: Responsive.h(12)),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary
+              : (isDark ? AppColors.surfaceDark : AppColors.surface),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? AppColors.borderDark : AppColors.border),
+            width: 0.5,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          _tabLabel(tab),
+          style: AppTypography.titleMedium.copyWith(
+            color: isSelected
+                ? AppColors.textOnPrimary
+                : (isDark
+                    ? AppColors.textCaptionDark
+                    : AppColors.textCaption),
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ),
     );
   }
 
@@ -173,6 +200,8 @@ class _LoadedBody extends StatelessWidget {
           SizedBox(height: Responsive.h(24)),
 
           // ── Expandable Sections ──
+          _HeatmapSection(isDark: isDark),
+          SizedBox(height: Responsive.h(12)),
           _ShiftSummarySection(isDark: isDark),
           SizedBox(height: Responsive.h(12)),
           _HealthScoreSection(isDark: isDark),
@@ -187,9 +216,9 @@ class _LoadedBody extends StatelessWidget {
 
   List<Widget> _buildContent(bool isDark) => switch (state.tab) {
         StatisticsTab.daily when state.daily != null =>
-          _buildDaily(state.daily!, isDark),
+          _buildDaily(state.daily!, state.selectedDate, isDark),
         StatisticsTab.weekly when state.weekly != null =>
-          _buildWeekly(state.weekly!, isDark),
+          _buildWeekly(state.weekly!, state.selectedWeekStart, isDark),
         StatisticsTab.monthly when state.monthly != null =>
           _buildMonthly(state.monthly!, isDark),
         _ => [const SekkaLoading()],
@@ -197,8 +226,21 @@ class _LoadedBody extends StatelessWidget {
 
   // ── Daily ──
 
-  List<Widget> _buildDaily(DailyStatsEntity s, bool isDark) {
+  List<Widget> _buildDaily(
+    DailyStatsEntity s,
+    DateTime? selectedDate,
+    bool isDark,
+  ) {
     return [
+      Builder(
+        builder: (ctx) => _DatePickerBar(
+          isDark: isDark,
+          selected: selectedDate ?? DateTime.now(),
+          onPick: (d) =>
+              ctx.read<StatisticsBloc>().add(StatisticsDateChanged(d)),
+        ),
+      ),
+      SizedBox(height: Responsive.h(12)),
       _summaryGrid(
         totalOrders: s.totalOrders,
         earnings: s.earnings,
@@ -235,14 +277,10 @@ class _LoadedBody extends StatelessWidget {
               iconColor: AppColors.statusCancelled,
             ),
             StatDetailRow(
-              icon: IconsaxPlusLinear.routing_2,
-              label: AppStrings.totalDistance,
-              value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
-            ),
-            StatDetailRow(
               icon: IconsaxPlusLinear.clock,
-              label: AppStrings.timeWorked,
-              value: _formatMinutes(s.timeWorkedMinutes),
+              label: AppStrings.statusPostponed,
+              value: '${s.postponedOrders}',
+              iconColor: AppColors.warning,
             ),
             StatDetailRow(
               icon: IconsaxPlusLinear.money_recive,
@@ -254,19 +292,45 @@ class _LoadedBody extends StatelessWidget {
               label: AppStrings.commissions,
               value: '${s.commissions.toInt()} ${AppStrings.currency}',
             ),
-            if (s.averageDeliveryTimeMinutes > 0)
-              StatDetailRow(
-                icon: IconsaxPlusLinear.timer_1,
-                label: AppStrings.avgDeliveryTime,
-                value: _formatMinutes(s.averageDeliveryTimeMinutes),
-              ),
-            if (s.peakHour > 0)
-              StatDetailRow(
-                icon: IconsaxPlusLinear.flash_1,
-                label: AppStrings.peakHour,
-                value: _formatHour(s.peakHour),
-                iconColor: AppColors.warning,
-              ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.money_send,
+              label: AppStrings.expensesLabel,
+              value: '${s.expenses.toInt()} ${AppStrings.currency}',
+              iconColor: AppColors.error,
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.routing_2,
+              label: AppStrings.totalDistance,
+              value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.clock,
+              label: AppStrings.timeWorked,
+              value: _formatMinutes(s.timeWorkedMinutes),
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.timer_1,
+              label: AppStrings.avgDeliveryTime,
+              value: s.averageDeliveryTimeMinutes > 0
+                  ? _formatMinutes(s.averageDeliveryTimeMinutes)
+                  : '—',
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.location,
+              label: AppStrings.bestRegion,
+              value: (s.bestRegion?.isNotEmpty ?? false)
+                  ? s.bestRegion!
+                  : '—',
+              iconColor: AppColors.primary,
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.clock,
+              label: AppStrings.bestTimeSlot,
+              value: (s.bestTimeSlot?.isNotEmpty ?? false)
+                  ? s.bestTimeSlot!
+                  : '—',
+              iconColor: AppColors.info,
+            ),
           ],
         ),
       ),
@@ -275,7 +339,14 @@ class _LoadedBody extends StatelessWidget {
 
   // ── Weekly ──
 
-  List<Widget> _buildWeekly(WeeklyStatsEntity s, bool isDark) {
+  List<Widget> _buildWeekly(
+    WeeklyStatsEntity s,
+    DateTime? selectedWeekStart,
+    bool isDark,
+  ) {
+    final weekStart = selectedWeekStart ??
+        (s.weekStart.isNotEmpty ? DateTime.tryParse(s.weekStart) : null) ??
+        DateTime.now();
     final dayLabels = s.dailyBreakdown
         .map((d) => _shortDayName(d.date))
         .toList();
@@ -284,6 +355,15 @@ class _LoadedBody extends StatelessWidget {
         .toList();
 
     return [
+      Builder(
+        builder: (ctx) => _WeekPickerBar(
+          isDark: isDark,
+          weekStart: weekStart,
+          onPick: (d) =>
+              ctx.read<StatisticsBloc>().add(StatisticsWeekChanged(d)),
+        ),
+      ),
+      SizedBox(height: Responsive.h(12)),
       _summaryGrid(
         totalOrders: s.totalOrders,
         earnings: s.earnings,
@@ -292,7 +372,7 @@ class _LoadedBody extends StatelessWidget {
       ),
       if (s.dailyBreakdown.isNotEmpty) ...[
         SizedBox(height: Responsive.h(20)),
-        _sectionTitle(AppStrings.totalEarningsLabel, isDark),
+        _sectionTitle(AppStrings.weeklyEarningsChartTitle, isDark),
         SizedBox(height: Responsive.h(8)),
         StatsBarChart(
           labels: dayLabels,
@@ -317,14 +397,31 @@ class _LoadedBody extends StatelessWidget {
               iconColor: AppColors.success,
             ),
             StatDetailRow(
-              icon: IconsaxPlusLinear.routing_2,
-              label: AppStrings.totalDistance,
-              value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
+              icon: IconsaxPlusLinear.close_circle,
+              label: AppStrings.failed,
+              value:
+                  '${s.dailyBreakdown.fold<int>(0, (a, d) => a + d.failedOrders)}',
+              iconColor: AppColors.error,
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.minus_cirlce,
+              label: AppStrings.cancelled,
+              value:
+                  '${s.dailyBreakdown.fold<int>(0, (a, d) => a + d.cancelledOrders)}',
+              iconColor: AppColors.statusCancelled,
             ),
             StatDetailRow(
               icon: IconsaxPlusLinear.clock,
-              label: AppStrings.timeWorked,
-              value: _formatMinutes(s.timeWorkedMinutes),
+              label: AppStrings.statusPostponed,
+              value:
+                  '${s.dailyBreakdown.fold<int>(0, (a, d) => a + d.postponedOrders)}',
+              iconColor: AppColors.warning,
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.money_recive,
+              label: AppStrings.cashCollected,
+              value:
+                  '${s.dailyBreakdown.fold<double>(0, (a, d) => a + d.cashCollected).toInt()} ${AppStrings.currency}',
             ),
             StatDetailRow(
               icon: IconsaxPlusLinear.percentage_circle,
@@ -337,13 +434,24 @@ class _LoadedBody extends StatelessWidget {
               value: '${s.expenses.toInt()} ${AppStrings.currency}',
               iconColor: AppColors.error,
             ),
-            if (s.bestDay != null)
-              StatDetailRow(
-                icon: IconsaxPlusLinear.star_1,
-                label: AppStrings.bestDay,
-                value: _shortDayName(s.bestDay!),
-                iconColor: AppColors.warning,
-              ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.routing_2,
+              label: AppStrings.totalDistance,
+              value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.clock,
+              label: AppStrings.timeWorked,
+              value: _formatMinutes(s.timeWorkedMinutes),
+            ),
+            StatDetailRow(
+              icon: IconsaxPlusLinear.star_1,
+              label: AppStrings.bestDay,
+              value: (s.bestDay?.isNotEmpty ?? false)
+                  ? _shortDayName(s.bestDay!)
+                  : '—',
+              iconColor: AppColors.warning,
+            ),
           ],
         ),
       ),
@@ -370,7 +478,7 @@ class _LoadedBody extends StatelessWidget {
       ),
       if (s.weeklyBreakdown.isNotEmpty) ...[
         SizedBox(height: Responsive.h(20)),
-        _sectionTitle(AppStrings.totalEarningsLabel, isDark),
+        _sectionTitle(AppStrings.monthlyEarningsChartTitle, isDark),
         SizedBox(height: Responsive.h(8)),
         StatsBarChart(
           labels: weekLabels,
@@ -394,37 +502,44 @@ class _LoadedBody extends StatelessWidget {
               value: '${s.successfulOrders}',
               iconColor: AppColors.success,
             ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.routing_2,
-              label: AppStrings.totalDistance,
-              value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
-            ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.clock,
-              label: AppStrings.timeWorked,
-              value: _formatMinutes(s.timeWorkedMinutes),
-            ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.chart_1,
-              label: AppStrings.avgDailyOrders,
-              value: s.averageDailyOrders.toStringAsFixed(1),
-            ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.money_recive,
-              label: AppStrings.avgDailyEarnings,
-              value: '${s.averageDailyEarnings.toInt()} ${AppStrings.currency}',
-            ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.percentage_circle,
-              label: AppStrings.commissions,
-              value: '${s.commissions.toInt()} ${AppStrings.currency}',
-            ),
-            StatDetailRow(
-              icon: IconsaxPlusLinear.money_send,
-              label: AppStrings.expensesLabel,
-              value: '${s.expenses.toInt()} ${AppStrings.currency}',
-              iconColor: AppColors.error,
-            ),
+            if (s.averageDailyOrders > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.chart_1,
+                label: AppStrings.avgDailyOrders,
+                value: s.averageDailyOrders.toStringAsFixed(1),
+              ),
+            if (s.averageDailyEarnings > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.money_recive,
+                label: AppStrings.avgDailyEarnings,
+                value:
+                    '${s.averageDailyEarnings.toInt()} ${AppStrings.currency}',
+              ),
+            if (s.commissions > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.percentage_circle,
+                label: AppStrings.commissions,
+                value: '${s.commissions.toInt()} ${AppStrings.currency}',
+              ),
+            if (s.expenses > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.money_send,
+                label: AppStrings.expensesLabel,
+                value: '${s.expenses.toInt()} ${AppStrings.currency}',
+                iconColor: AppColors.error,
+              ),
+            if (s.distanceKm > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.routing_2,
+                label: AppStrings.totalDistance,
+                value: '${s.distanceKm.toStringAsFixed(1)} ${AppStrings.km}',
+              ),
+            if (s.timeWorkedMinutes > 0)
+              StatDetailRow(
+                icon: IconsaxPlusLinear.clock,
+                label: AppStrings.timeWorked,
+                value: _formatMinutes(s.timeWorkedMinutes),
+              ),
           ],
         ),
       ),
@@ -443,31 +558,25 @@ class _LoadedBody extends StatelessWidget {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: Responsive.h(12),
-      crossAxisSpacing: Responsive.w(12),
-      childAspectRatio: 1.25,
+      mainAxisSpacing: Responsive.h(8),
+      crossAxisSpacing: Responsive.w(8),
+      childAspectRatio: 2.4,
       children: [
         StatSummaryCard(
           label: AppStrings.totalOrders,
           value: '$totalOrders',
-          icon: IconsaxPlusLinear.clipboard_text,
         ),
         StatSummaryCard(
           label: AppStrings.totalEarningsLabel,
           value: '${earnings.toInt()} ${AppStrings.currency}',
-          icon: IconsaxPlusLinear.money_recive,
-          iconColor: AppColors.success,
         ),
         StatSummaryCard(
           label: AppStrings.successRate,
           value: '${successRate.toInt()}%',
-          icon: IconsaxPlusLinear.chart_success,
-          iconColor: AppColors.info,
         ),
         StatSummaryCard(
           label: AppStrings.netProfit,
           value: '${netProfit.toInt()} ${AppStrings.currency}',
-          icon: IconsaxPlusLinear.wallet_2,
           valueColor: netProfit >= 0 ? AppColors.success : AppColors.error,
         ),
       ],
@@ -496,12 +605,6 @@ class _LoadedBody extends StatelessWidget {
     return '$minutes ${AppStrings.minutes}';
   }
 
-  String _formatHour(int hour) {
-    if (hour == 0) return '12 AM';
-    if (hour < 12) return '$hour AM';
-    if (hour == 12) return '12 PM';
-    return '${hour - 12} PM';
-  }
 
   String _shortDayName(String dateStr) {
     try {
@@ -525,6 +628,7 @@ class _ExpandableSection extends StatelessWidget {
     required this.iconColor,
     required this.isDark,
     required this.children,
+    this.onExpand,
   });
 
   final String title;
@@ -532,6 +636,7 @@ class _ExpandableSection extends StatelessWidget {
   final Color iconColor;
   final bool isDark;
   final List<Widget> children;
+  final VoidCallback? onExpand;
 
   @override
   Widget build(BuildContext context) {
@@ -552,6 +657,9 @@ class _ExpandableSection extends StatelessWidget {
             textDirection: TextDirection.rtl,
             child: ExpansionTile(
               initiallyExpanded: false,
+              onExpansionChanged: (expanded) {
+                if (expanded && onExpand != null) onExpand!();
+              },
               tilePadding: EdgeInsets.symmetric(
                 horizontal: Responsive.w(16),
                 vertical: Responsive.h(4),
@@ -588,6 +696,61 @@ class _ExpandableSection extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── 0. Heatmap Section ──
+
+class _HeatmapSection extends StatelessWidget {
+  const _HeatmapSection({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<StatisticsBloc, StatisticsState>(
+      buildWhen: (prev, curr) {
+        final p = prev is StatisticsLoaded ? prev.heatmap : null;
+        final c = curr is StatisticsLoaded ? curr.heatmap : null;
+        return p != c;
+      },
+      builder: (context, state) {
+        final cells = state is StatisticsLoaded ? state.heatmap : null;
+
+        return _ExpandableSection(
+          title: AppStrings.peakHoursTitle,
+          icon: IconsaxPlusLinear.chart_2,
+          iconColor: AppColors.warning,
+          isDark: isDark,
+          onExpand: () => context
+              .read<StatisticsBloc>()
+              .add(const StatisticsHeatmapRequested()),
+          children: [
+            if (cells == null)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: const SekkaLoading(),
+              )
+            else if (cells.isEmpty)
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: Responsive.h(16)),
+                child: Center(
+                  child: Text(
+                    AppStrings.noHeatmapData,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              )
+            else
+              HeatmapGrid(cells: cells),
+          ],
+        );
+      },
     );
   }
 }
@@ -904,4 +1067,149 @@ class _AnalyticsSection extends StatelessWidget {
       },
     );
   }
+}
+
+// ── Date Picker Bar (Daily) ──
+
+class _DatePickerBar extends StatelessWidget {
+  const _DatePickerBar({
+    required this.isDark,
+    required this.selected,
+    required this.onPick,
+  });
+
+  final bool isDark;
+  final DateTime selected;
+  final ValueChanged<DateTime> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final isToday = selected.year == now.year &&
+        selected.month == now.month &&
+        selected.day == now.day;
+
+    return SekkaCard(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.w(12),
+        vertical: Responsive.h(10),
+      ),
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: selected,
+          firstDate: DateTime(now.year - 1),
+          lastDate: now,
+          locale: const Locale('ar'),
+        );
+        if (picked != null) onPick(picked);
+      },
+      child: Row(
+        children: [
+          Icon(
+            IconsaxPlusLinear.calendar_1,
+            size: Responsive.r(20),
+            color: AppColors.primary,
+          ),
+          SizedBox(width: Responsive.w(10)),
+          Expanded(
+            child: Text(
+              isToday
+                  ? AppStrings.statsToday
+                  : _formatArabicDate(selected),
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Icon(
+            IconsaxPlusLinear.arrow_down_1,
+            size: Responsive.r(18),
+            color:
+                isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Week Picker Bar (Weekly) ──
+
+class _WeekPickerBar extends StatelessWidget {
+  const _WeekPickerBar({
+    required this.isDark,
+    required this.weekStart,
+    required this.onPick,
+  });
+
+  final bool isDark;
+  final DateTime weekStart;
+  final ValueChanged<DateTime> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final weekEnd = weekStart.add(const Duration(days: 6));
+    final now = DateTime.now();
+
+    return SekkaCard(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      padding: EdgeInsets.symmetric(
+        horizontal: Responsive.w(12),
+        vertical: Responsive.h(10),
+      ),
+      onTap: () async {
+        final picked = await showDatePicker(
+          context: context,
+          initialDate: weekStart,
+          firstDate: DateTime(now.year - 1),
+          lastDate: now,
+          locale: const Locale('ar'),
+          helpText: AppStrings.selectWeek,
+        );
+        if (picked != null) onPick(picked);
+      },
+      child: Row(
+        children: [
+          Icon(
+            IconsaxPlusLinear.calendar_2,
+            size: Responsive.r(20),
+            color: AppColors.primary,
+          ),
+          SizedBox(width: Responsive.w(10)),
+          Expanded(
+            child: Text(
+              '${_formatArabicDate(weekStart)} - ${_formatArabicDate(weekEnd)}',
+              style: AppTypography.titleMedium.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Icon(
+            IconsaxPlusLinear.arrow_down_1,
+            size: Responsive.r(18),
+            color:
+                isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatArabicDate(DateTime d) {
+  const arMonths = [
+    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+  ];
+  final isAr = AppStrings.currentLang == 'ar';
+  if (isAr) return '${d.day} ${arMonths[d.month - 1]}';
+  return '${d.day}/${d.month}/${d.year}';
 }

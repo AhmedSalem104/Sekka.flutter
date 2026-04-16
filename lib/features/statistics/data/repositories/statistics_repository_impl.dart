@@ -1,4 +1,5 @@
 import '../../domain/entities/daily_stats_entity.dart';
+import '../../domain/entities/heatmap_stats_entity.dart';
 import '../../domain/entities/monthly_stats_entity.dart';
 import '../../domain/entities/weekly_stats_entity.dart';
 import '../../domain/repositories/statistics_repository.dart';
@@ -12,6 +13,9 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   final StatisticsRemoteDataSource _remote;
 
   @override
+  Future<DailyStatsEntity> getTodayStats() => _remote.getTodayStats();
+
+  @override
   Future<DailyStatsEntity> getDailyStats({String? date}) =>
       _remote.getDailyStats(date: date);
 
@@ -22,4 +26,7 @@ class StatisticsRepositoryImpl implements StatisticsRepository {
   @override
   Future<MonthlyStatsEntity> getMonthlyStats({int? month, int? year}) =>
       _remote.getMonthlyStats(month: month, year: year);
+
+  @override
+  Future<List<HeatmapCellEntity>> getHeatmap() => _remote.getHeatmap();
 }

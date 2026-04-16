@@ -55,6 +55,7 @@ abstract final class ApiConstants {
   static const String statisticsWeekly = '$_statistics/weekly';
   static const String statisticsMonthly = '$_statistics/monthly';
   static const String statisticsHeatmap = '$_statistics/heatmap';
+  static const String statisticsToday = '$_statistics/today';
   static const String statisticsExport = '$_statistics/export';
 
   // Payment Request endpoints

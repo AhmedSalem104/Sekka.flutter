@@ -6,19 +6,37 @@ import '../constants/app_sizes.dart';
 import '../theme/app_typography.dart';
 import '../utils/responsive.dart';
 
-class SekkaExpandableSection extends StatelessWidget {
+class SekkaExpandableSection extends StatefulWidget {
   const SekkaExpandableSection({
     super.key,
     required this.title,
     required this.children,
     this.leadingIcon,
     this.initiallyExpanded = false,
+    this.controller,
+    this.onExpansionChanged,
   });
 
   final String title;
   final List<Widget> children;
   final IconData? leadingIcon;
   final bool initiallyExpanded;
+  final ExpansionTileController? controller;
+  final ValueChanged<bool>? onExpansionChanged;
+
+  @override
+  State<SekkaExpandableSection> createState() =>
+      _SekkaExpandableSectionState();
+}
+
+class _SekkaExpandableSectionState extends State<SekkaExpandableSection> {
+  late bool _isExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.initiallyExpanded;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +55,12 @@ class SekkaExpandableSection extends StatelessWidget {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
+          controller: widget.controller,
+          onExpansionChanged: (val) {
+            setState(() => _isExpanded = val);
+            widget.onExpansionChanged?.call(val);
+          },
+          initiallyExpanded: widget.initiallyExpanded,
           tilePadding: EdgeInsets.symmetric(
             horizontal: AppSizes.lg,
             vertical: AppSizes.xs,
@@ -48,7 +71,7 @@ class SekkaExpandableSection extends StatelessWidget {
             AppSizes.lg,
             AppSizes.lg,
           ),
-          leading: leadingIcon != null
+          leading: widget.leadingIcon != null
               ? Container(
                   width: Responsive.r(36),
                   height: Responsive.r(36),
@@ -58,26 +81,34 @@ class SekkaExpandableSection extends StatelessWidget {
                         BorderRadius.circular(AppSizes.radiusSm),
                   ),
                   child: Icon(
-                    leadingIcon,
+                    widget.leadingIcon,
                     size: AppSizes.iconMd,
                     color: AppColors.primary,
                   ),
                 )
               : null,
-          trailing: Icon(
-            IconsaxPlusLinear.arrow_down_1,
-            size: AppSizes.iconMd,
-            color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
+          trailing: AnimatedRotation(
+            turns: _isExpanded ? 0.5 : 0,
+            duration: const Duration(milliseconds: 200),
+            child: Icon(
+              IconsaxPlusLinear.arrow_down_1,
+              size: AppSizes.iconMd,
+              color: _isExpanded
+                  ? AppColors.primary
+                  : (isDark
+                      ? AppColors.textCaptionDark
+                      : AppColors.textCaption),
+            ),
           ),
           title: Text(
-            title,
+            widget.title,
             style: AppTypography.titleLarge.copyWith(
               color: isDark
                   ? AppColors.textHeadlineDark
                   : AppColors.textHeadline,
             ),
           ),
-          children: children,
+          children: widget.children,
         ),
       ),
     );

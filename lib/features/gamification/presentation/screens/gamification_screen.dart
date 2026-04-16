@@ -13,6 +13,7 @@ import '../../../../core/widgets/sekka_button.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
+import '../../../../core/widgets/sekka_segmented_tabs.dart';
 import '../../data/models/achievement_model.dart';
 import '../../data/models/challenge_model.dart';
 import '../../data/models/leaderboard_model.dart';
@@ -60,36 +61,17 @@ class _GamificationScreenState extends State<GamificationScreen>
               horizontal: AppSizes.pagePadding,
               vertical: AppSizes.sm,
             ),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.surfaceDark
-                    : AppColors.border.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-              ),
-              child: TabBar(
-                controller: _tabController,
-                indicator: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-                ),
-                indicatorSize: TabBarIndicatorSize.tab,
-                dividerColor: Colors.transparent,
-                labelColor: AppColors.textOnPrimary,
-                unselectedLabelColor:
-                    isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                labelStyle: AppTypography.titleMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-                unselectedLabelStyle: AppTypography.titleMedium,
-                labelPadding: EdgeInsets.zero,
-                padding: EdgeInsets.zero,
-                tabs: [
-                  Tab(text: AppStrings.gamificationChallenges),
-                  Tab(text: AppStrings.gamificationAchievements),
-                  Tab(text: AppStrings.gamificationLeaderboard),
+            child: AnimatedBuilder(
+              animation: _tabController,
+              builder: (_, __) => SekkaSegmentedTabs(
+                labels: [
+                  AppStrings.gamificationChallenges,
+                  AppStrings.gamificationAchievements,
+                  AppStrings.gamificationLeaderboard,
                 ],
+                selectedIndex: _tabController.index,
+                controller: _tabController,
+                onChanged: (_) {},
               ),
             ),
           ),

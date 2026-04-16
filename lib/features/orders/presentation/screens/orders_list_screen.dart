@@ -151,12 +151,22 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
               padding: EdgeInsets.symmetric(
                 horizontal: AppSizes.pagePadding,
               ),
-              child: SekkaSearchBar(
-                controller: _searchController,
-                onChanged: _onSearchChanged,
-                hint: 'بحث برقم الطلب أو اسم العميل...',
+              child: Row(
+                textDirection: TextDirection.rtl,
+                children: [
+                  Expanded(
+                    child: SekkaSearchBar(
+                      controller: _searchController,
+                      onChanged: _onSearchChanged,
+                      hint: 'بحث برقم الطلب أو اسم العميل...',
+                    ),
+                  ),
+                  SizedBox(width: AppSizes.sm),
+                  _buildFilterButton(isDark),
+                ],
               ),
             ),
+            _buildActiveDateChip(isDark),
             SizedBox(height: AppSizes.md),
 
             _buildFilterChips(isDark),
@@ -228,6 +238,340 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   }
 
 
+  // ── Date filter helpers ───────────────────────────────────────────────
+
+  String _fmtDate(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  String _displayDate(String iso) {
+    final parts = iso.split('-');
+    if (parts.length != 3) return iso;
+    final d = DateTime.tryParse(iso);
+    if (d == null) return iso;
+    final today = DateTime.now();
+    final isToday = d.year == today.year &&
+        d.month == today.month &&
+        d.day == today.day;
+    final yest = today.subtract(const Duration(days: 1));
+    final isYesterday =
+        d.year == yest.year && d.month == yest.month && d.day == yest.day;
+    if (isToday) return AppStrings.today;
+    if (isYesterday) return AppStrings.yesterday;
+    return '${parts[2]}/${parts[1]}/${parts[0]}';
+  }
+
+  Widget _buildFilterButton(bool isDark) {
+    final state = context.watch<OrdersBloc>().state;
+    final hasDate =
+        state is OrdersLoaded && (state.dateFrom != null || state.dateTo != null);
+    return InkWell(
+      onTap: _openDateFilterSheet,
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: Container(
+        width: Responsive.w(48),
+        height: Responsive.w(48),
+        decoration: BoxDecoration(
+          color: hasDate
+              ? AppColors.primary
+              : (isDark ? AppColors.surfaceDark : AppColors.surface),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(
+            color: hasDate
+                ? AppColors.primary
+                : (isDark ? AppColors.borderDark : AppColors.border),
+          ),
+        ),
+        child: Icon(
+          IconsaxPlusLinear.filter,
+          size: Responsive.r(22),
+          color: hasDate
+              ? AppColors.textOnPrimary
+              : (isDark ? AppColors.textBodyDark : AppColors.textBody),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveDateChip(bool isDark) {
+    final state = context.watch<OrdersBloc>().state;
+    if (state is! OrdersLoaded) return const SizedBox.shrink();
+    final dateFrom = state.dateFrom;
+    if (dateFrom == null) return const SizedBox.shrink();
+    final label = '${AppStrings.filterByDate}: ${_displayDate(dateFrom)}';
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSizes.pagePadding,
+        AppSizes.sm,
+        AppSizes.pagePadding,
+        0,
+      ),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.md,
+            vertical: Responsive.h(6),
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            textDirection: TextDirection.rtl,
+            children: [
+              Icon(
+                IconsaxPlusLinear.calendar_1,
+                size: Responsive.r(14),
+                color: AppColors.primary,
+              ),
+              SizedBox(width: Responsive.w(6)),
+              Text(
+                label,
+                style: AppTypography.captionSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(width: Responsive.w(6)),
+              InkWell(
+                onTap: () => context
+                    .read<OrdersBloc>()
+                    .add(const OrdersFilterChanged(clearDate: true)),
+                child: Icon(
+                  IconsaxPlusLinear.close_circle,
+                  size: Responsive.r(16),
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openDateFilterSheet() async {
+    final state = context.read<OrdersBloc>().state;
+    final currentFrom = state is OrdersLoaded ? state.dateFrom : null;
+    DateTime? selected =
+        currentFrom != null ? DateTime.tryParse(currentFrom) : null;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? AppColors.surfaceDark
+          : AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppSizes.radiusXl)),
+      ),
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (innerCtx, setSheetState) {
+            final isDark =
+                Theme.of(innerCtx).brightness == Brightness.dark;
+
+            Future<void> openCalendar() async {
+              final picked = await showDatePicker(
+                context: innerCtx,
+                initialDate: selected ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime.now(),
+              );
+              if (picked != null) {
+                setSheetState(() => selected = picked);
+              }
+            }
+
+            return SafeArea(
+              child: Directionality(
+                textDirection: TextDirection.rtl,
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    AppSizes.pagePadding,
+                    AppSizes.sm,
+                    AppSizes.pagePadding,
+                    AppSizes.lg,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: Responsive.w(40),
+                          height: Responsive.h(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.border,
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusPill),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.lg),
+                      Text(
+                        AppStrings.filterByDate,
+                        style: AppTypography.headlineSmall,
+                      ),
+                      SizedBox(height: AppSizes.lg),
+                      Text(
+                        AppStrings.pickDay,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.textCaptionDark
+                              : AppColors.textCaption,
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.xs),
+                      InkWell(
+                        onTap: openCalendar,
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusMd),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: AppSizes.md,
+                            vertical: Responsive.h(14),
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.backgroundDark
+                                : AppColors.background,
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusMd),
+                            border: Border.all(
+                              color: isDark
+                                  ? AppColors.borderDark
+                                  : AppColors.border,
+                            ),
+                          ),
+                          child: Row(
+                            textDirection: TextDirection.rtl,
+                            children: [
+                              Icon(
+                                IconsaxPlusLinear.calendar_1,
+                                size: Responsive.r(20),
+                                color: AppColors.primary,
+                              ),
+                              SizedBox(width: AppSizes.sm),
+                              Expanded(
+                                child: Text(
+                                  selected != null
+                                      ? _displayDate(_fmtDate(selected!))
+                                      : AppStrings.pickDay,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: selected != null
+                                        ? (isDark
+                                            ? AppColors.textHeadlineDark
+                                            : AppColors.textHeadline)
+                                        : (isDark
+                                            ? AppColors.textCaptionDark
+                                            : AppColors.textCaption),
+                                    fontWeight: selected != null
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                IconsaxPlusLinear.arrow_down_1,
+                                size: Responsive.r(18),
+                                color: isDark
+                                    ? AppColors.textCaptionDark
+                                    : AppColors.textCaption,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: AppSizes.xl),
+                      Row(
+                        textDirection: TextDirection.rtl,
+                        children: [
+                          if (currentFrom != null || selected != null) ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  context.read<OrdersBloc>().add(
+                                        const OrdersFilterChanged(
+                                            clearDate: true),
+                                      );
+                                  Navigator.pop(sheetCtx);
+                                },
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: AppColors.error,
+                                  side: BorderSide(
+                                    color: AppColors.error
+                                        .withValues(alpha: 0.4),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: Responsive.h(14),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppSizes.radiusMd),
+                                  ),
+                                ),
+                                child: Text(
+                                  AppStrings.clearFilter,
+                                  style: AppTypography.titleMedium.copyWith(
+                                    color: AppColors.error,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(width: AppSizes.sm),
+                          ],
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: selected == null
+                                  ? null
+                                  : () {
+                                      final iso = _fmtDate(selected!);
+                                      context.read<OrdersBloc>().add(
+                                            OrdersFilterChanged(
+                                              dateFrom: iso,
+                                              dateTo: iso,
+                                            ),
+                                          );
+                                      Navigator.pop(sheetCtx);
+                                    },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: AppColors.textOnPrimary,
+                                disabledBackgroundColor: AppColors.border,
+                                padding: EdgeInsets.symmetric(
+                                  vertical: Responsive.h(14),
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusMd),
+                                ),
+                              ),
+                              child: Text(
+                                AppStrings.apply,
+                                style: AppTypography.titleMedium.copyWith(
+                                  color: AppColors.textOnPrimary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildFilterChips(bool isDark) {
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -242,37 +586,48 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
             final (label, statusValue) = _statusFilters[index];
             final isSelected = _selectedStatusFilter == statusValue;
 
-            return ChoiceChip(
-              label: Text(
-                label,
-                style: AppTypography.bodySmall.copyWith(
+            return GestureDetector(
+              onTap: () => _onFilterSelected(statusValue),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSizes.lg,
+                  vertical: AppSizes.sm,
+                ),
+                decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.textOnPrimary
-                      : isDark
-                          ? AppColors.textBodyDark
-                          : AppColors.textBody,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      ? AppColors.primary
+                      : (isDark ? AppColors.surfaceDark : AppColors.surface),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isDark ? AppColors.borderDark : AppColors.border),
+                    width: 0.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  label,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: isSelected
+                        ? AppColors.textOnPrimary
+                        : (isDark
+                            ? AppColors.textCaptionDark
+                            : AppColors.textCaption),
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
               ),
-              selected: isSelected,
-              onSelected: (_) => _onFilterSelected(statusValue),
-              selectedColor: AppColors.primary,
-              backgroundColor:
-                  isDark ? AppColors.surfaceDark : AppColors.surface,
-              side: BorderSide(
-                color: isSelected
-                    ? AppColors.primary
-                    : isDark
-                        ? AppColors.borderDark
-                        : AppColors.border,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-              ),
-              showCheckmark: false,
-              padding: EdgeInsets.symmetric(horizontal: AppSizes.sm),
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: VisualDensity.compact,
             );
           },
         ),
@@ -384,3 +739,4 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     );
   }
 }
+

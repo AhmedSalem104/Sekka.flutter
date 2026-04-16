@@ -19,6 +19,9 @@ class DailyStatsEntity extends Equatable {
     required this.tips,
     required this.peakHour,
     required this.peakHourOrders,
+    this.bestRegion,
+    this.bestTimeSlot,
+    this.postponedOrders = 0,
   });
 
   final String date;
@@ -38,6 +41,9 @@ class DailyStatsEntity extends Equatable {
   final double tips;
   final int peakHour;
   final int peakHourOrders;
+  final String? bestRegion;
+  final String? bestTimeSlot;
+  final int postponedOrders;
 
   @override
   List<Object?> get props => [date, totalOrders, earnings, netProfit];

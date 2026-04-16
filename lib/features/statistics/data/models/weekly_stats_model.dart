@@ -48,25 +48,44 @@ class WeeklyStatsModel extends WeeklyStatsEntity {
       };
 
   factory WeeklyStatsModel.fromJson(Map<String, dynamic> json) {
+    final breakdown = (json['dailyBreakdown'] as List?)
+            ?.map((e) =>
+                DailyBreakdownModel.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+    double sum(double Function(DailyBreakdownModel) f) =>
+        breakdown.fold(0.0, (a, d) => a + f(d));
+    int sumI(int Function(DailyBreakdownModel) f) =>
+        breakdown.fold(0, (a, d) => a + f(d));
+
+    final serverCommissions =
+        (json['totalCommissions'] as num?)?.toDouble();
+    final serverExpenses = (json['totalExpenses'] as num?)?.toDouble();
+    final serverDistance = (json['totalDistanceKm'] as num?)?.toDouble();
+    final serverTime = json['timeWorkedMinutes'] as int?;
+
+    String? bestDay = json['bestDay'] as String?;
+    if (bestDay == null && breakdown.isNotEmpty) {
+      final best =
+          breakdown.reduce((a, b) => a.earnings >= b.earnings ? a : b);
+      if (best.earnings > 0) bestDay = best.date;
+    }
+
     return WeeklyStatsModel(
       weekStart: json['weekStart'] as String? ?? '',
       weekEnd: json['weekEnd'] as String? ?? '',
       totalOrders: json['totalOrders'] as int? ?? 0,
       successfulOrders: json['successfulOrders'] as int? ?? 0,
       earnings: (json['totalEarnings'] as num?)?.toDouble() ?? 0,
-      commissions: (json['totalCommissions'] as num?)?.toDouble() ?? 0,
-      expenses: (json['totalExpenses'] as num?)?.toDouble() ?? 0,
+      commissions: serverCommissions ?? sum((d) => d.commissions),
+      expenses: serverExpenses ?? sum((d) => d.expenses),
       netProfit: (json['netProfit'] as num?)?.toDouble() ?? 0,
-      distanceKm: (json['totalDistanceKm'] as num?)?.toDouble() ?? 0,
-      timeWorkedMinutes: json['timeWorkedMinutes'] as int? ?? 0,
+      distanceKm: serverDistance ?? sum((d) => d.distanceKm),
+      timeWorkedMinutes: serverTime ?? sumI((d) => d.timeWorkedMinutes),
       successRate: (json['successRate'] as num?)?.toDouble() ?? 0,
       averageOrderValue: (json['averageOrderValue'] as num?)?.toDouble() ?? 0,
-      dailyBreakdown: (json['dailyBreakdown'] as List?)
-              ?.map((e) => DailyBreakdownModel.fromJson(
-                  e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      bestDay: json['bestDay'] as String?,
+      dailyBreakdown: breakdown,
+      bestDay: bestDay,
       worstDay: json['worstDay'] as String?,
       comparisonWithLastWeek: json['comparisonWithLastWeek'] != null
           ? StatsComparisonModel.fromJson(
@@ -81,13 +100,35 @@ class DailyBreakdownModel extends DailyBreakdown {
     required super.date,
     required super.orders,
     required super.earnings,
+    super.successfulOrders,
+    super.failedOrders,
+    super.cancelledOrders,
+    super.postponedOrders,
+    super.commissions,
+    super.expenses,
+    super.netProfit,
+    super.distanceKm,
+    super.timeWorkedMinutes,
+    super.cashCollected,
   });
 
   factory DailyBreakdownModel.fromJson(Map<String, dynamic> json) {
     return DailyBreakdownModel(
       date: json['date'] as String? ?? '',
-      orders: json['orders'] as int? ?? 0,
-      earnings: (json['earnings'] as num?)?.toDouble() ?? 0,
+      orders: json['orders'] as int? ?? json['totalOrders'] as int? ?? 0,
+      earnings: (json['earnings'] as num?)?.toDouble() ??
+          (json['totalEarnings'] as num?)?.toDouble() ??
+          0,
+      successfulOrders: json['successfulOrders'] as int? ?? 0,
+      failedOrders: json['failedOrders'] as int? ?? 0,
+      cancelledOrders: json['cancelledOrders'] as int? ?? 0,
+      postponedOrders: json['postponedOrders'] as int? ?? 0,
+      commissions: (json['totalCommissions'] as num?)?.toDouble() ?? 0,
+      expenses: (json['totalExpenses'] as num?)?.toDouble() ?? 0,
+      netProfit: (json['netProfit'] as num?)?.toDouble() ?? 0,
+      distanceKm: (json['totalDistanceKm'] as num?)?.toDouble() ?? 0,
+      timeWorkedMinutes: json['timeWorkedMinutes'] as int? ?? 0,
+      cashCollected: (json['cashCollected'] as num?)?.toDouble() ?? 0,
     );
   }
 }

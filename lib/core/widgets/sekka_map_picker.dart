@@ -303,18 +303,14 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
               options: MapOptions(
                 initialCenter: _center,
                 initialZoom: _defaultZoom,
-                onPositionChanged: (pos, hasGesture) {
-                  _center = pos.center;
-                  if (hasGesture && !_isMoving) {
-                    setState(() => _isMoving = true);
-                    _pinAnimController.forward();
-                  }
+                onTap: (tapPosition, point) {
+                  _mapController.move(point, _mapController.camera.zoom);
+                  FocusScope.of(context).unfocus();
                 },
-                onMapEvent: (event) {
-                  if (event is MapEventMoveEnd) {
-                    setState(() => _isMoving = false);
-                    _pinAnimController.reverse();
-                    _reverseGeocode(_center);
+                onPositionChanged: (camera, hasGesture) {
+                  _center = camera.center;
+                  if (hasGesture) {
+                    _reverseGeocode(camera.center);
                   }
                 },
               ),
@@ -327,20 +323,14 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
               ],
             ),
 
-            // ── Pin ──
-            Center(
-              child: AnimatedBuilder(
-                animation: _pinBounce,
-                builder: (_, child) => Transform.translate(
-                  offset: Offset(0, _pinBounce.value),
-                  child: child,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: Responsive.h(48)),
+            // ── دبوس ثابت في المنتصف (tip points at geographic center) ──
+            IgnorePointer(
+              child: Center(
+                child: Transform.translate(
+                  offset: Offset(0, -Responsive.r(34)),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Pin icon
                       Container(
                         width: Responsive.r(52),
                         height: Responsive.r(52),
@@ -349,7 +339,8 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withValues(alpha: 0.3),
+                              color:
+                                  AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
@@ -361,27 +352,14 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                           size: Responsive.r(28),
                         ),
                       ),
-                      // Pin needle
                       CustomPaint(
                         size: Size(Responsive.r(3), Responsive.r(16)),
-                        painter: const _PinNeedlePainter(color: AppColors.primary),
+                        painter: const _PinNeedlePainter(
+                          color: AppColors.primary,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ),
-
-            // ── Pin shadow (on ground) ──
-            Center(
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                width: _isMoving ? Responsive.r(6) : Responsive.r(10),
-                height: _isMoving ? Responsive.r(3) : Responsive.r(5),
-                margin: EdgeInsets.only(top: Responsive.h(16)),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: _isMoving ? 0.15 : 0.25),
-                  borderRadius: BorderRadius.circular(Responsive.r(10)),
                 ),
               ),
             ),

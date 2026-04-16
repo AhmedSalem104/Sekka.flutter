@@ -14,6 +14,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
+import '../../../../core/widgets/sekka_dropdown_field.dart';
+import '../../../../core/widgets/sekka_segmented_tabs.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
@@ -721,45 +723,18 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                 : Column(
                     children: [
                       // Tab bar: manual / bulk
-                      Padding(
+                      SekkaSegmentedTabs(
                         padding: EdgeInsets.symmetric(
                           horizontal: AppSizes.pagePadding,
                         ),
-                        child: Container(
-                          height: Responsive.h(44),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.surfaceDark
-                                : AppColors.border.withValues(alpha: 0.3),
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMd),
-                          ),
-                          child: TabBar(
-                            controller: _tabController,
-                            indicator: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusSm),
-                            ),
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            dividerColor: Colors.transparent,
-                            labelColor: AppColors.textOnPrimary,
-                            unselectedLabelColor: isDark
-                                ? AppColors.textCaptionDark
-                                : AppColors.textCaption,
-                            labelStyle: AppTypography.titleMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                            unselectedLabelStyle: AppTypography.titleMedium,
-                            labelPadding: EdgeInsets.zero,
-                            padding: EdgeInsets.all(Responsive.w(3)),
-                            tabs: const [
-                              Tab(text: AppStrings.manualEntry),
-                              Tab(text: AppStrings.bulkImport),
-                              Tab(text: AppStrings.ocrEntry),
-                            ],
-                          ),
-                        ),
+                        labels: const [
+                          AppStrings.manualEntry,
+                          AppStrings.bulkImport,
+                          AppStrings.ocrEntry,
+                        ],
+                        selectedIndex: _tabController!.index,
+                        controller: _tabController!,
+                        onChanged: (i) => setState(() {}),
                       ),
                       SizedBox(height: AppSizes.md),
 
@@ -971,8 +946,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   Widget _buildPartnerSelector(bool isDark) {
     final borderColor = isDark ? AppColors.borderDark : AppColors.border;
     final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
-    final captionColor =
-        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
 
     if (_isLoadingPartners) {
       return Container(
@@ -992,80 +965,45 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
       );
     }
 
-    return Container(
-      height: AppSizes.inputHeight,
-      padding: EdgeInsets.symmetric(horizontal: AppSizes.lg),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(AppSizes.inputRadius),
-        border: Border.all(color: borderColor, width: 1.5),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String?>(
-          value: _selectedPartnerId,
-          isExpanded: true,
-          icon: Icon(
-            IconsaxPlusLinear.arrow_down_1,
-            size: AppSizes.iconMd,
-            color: captionColor,
-          ),
-          style: AppTypography.bodyLarge.copyWith(
-            color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-          ),
-          hint: Text(
-            AppStrings.noPartner,
-            style: AppTypography.bodyLarge.copyWith(color: captionColor),
-          ),
-          items: [
-            const DropdownMenuItem<String?>(
-              value: null,
-              child: Text(AppStrings.noPartner),
-            ),
-            ..._partners.map((p) {
-              return DropdownMenuItem<String?>(
-                value: p.id,
-                child: Row(
-                  children: [
-                    // لون الشريك
-                    Container(
-                      width: Responsive.r(12),
-                      height: Responsive.r(12),
-                      decoration: BoxDecoration(
-                        color: _parseColor(p.color),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    SizedBox(width: AppSizes.sm),
-                    Expanded(
-                      child: Text(
-                        p.name,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-          onChanged: (value) {
-            setState(() {
-              _selectedPartnerId = value;
-              _pickupPoints = [];
-              _selectedPickupPoint = null;
-            });
-            if (value != null) {
-              _loadPickupPoints(value);
-            } else {
-              // مسح بيانات الاستلام لو شال الشريك
-              setState(() {
-                _pickupAddressController.clear();
-                _pickupLat = null;
-                _pickupLng = null;
-              });
-            }
-          },
+    return SekkaDropdownField<String?>(
+      value: _selectedPartnerId,
+      hint: AppStrings.noPartner,
+      onChanged: (value) {
+        setState(() {
+          _selectedPartnerId = value;
+          _pickupPoints = [];
+          _selectedPickupPoint = null;
+        });
+        if (value != null) {
+          _loadPickupPoints(value);
+        } else {
+          setState(() {
+            _pickupAddressController.clear();
+            _pickupLat = null;
+            _pickupLng = null;
+          });
+        }
+      },
+      items: [
+        const SekkaDropdownItem<String?>(
+          value: null,
+          label: AppStrings.noPartner,
         ),
-      ),
+        ..._partners.map(
+          (p) => SekkaDropdownItem<String?>(
+            value: p.id,
+            label: p.name,
+            leading: Container(
+              width: Responsive.r(12),
+              height: Responsive.r(12),
+              decoration: BoxDecoration(
+                color: _parseColor(p.color),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1465,16 +1403,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
         controller: _amountController,
         hint: AppStrings.amount,
         prefixIcon: IconsaxPlusLinear.money_recive,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        textInputAction: TextInputAction.next,
-      ),
-      SizedBox(height: AppSizes.lg),
-
-      // Expected Change
-      SekkaInputField(
-        controller: _expectedChangeController,
-        hint: AppStrings.expectedChange,
-        prefixIcon: IconsaxPlusLinear.money_send,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         textInputAction: TextInputAction.next,
       ),
@@ -2129,8 +2057,6 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
 
   Widget _buildOcrTab(OrdersState state, bool isLoading, bool isDark) {
     final isScanning = state is OrdersLoaded && state.isOcrScanning;
-    final captionColor =
-        isDark ? AppColors.textCaptionDark : AppColors.textCaption;
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(AppSizes.pagePadding),
@@ -2145,45 +2071,14 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
           SizedBox(height: AppSizes.md),
 
           // ── Dropdown اختيار الوضع ──
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.xs,
-            ),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.surfaceDark : AppColors.surface,
-              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-              border: Border.all(
-                color: isDark
-                    ? AppColors.borderDark
-                    : AppColors.border,
-              ),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<int>(
-                value: _ocrMode,
-                isExpanded: true,
-                icon: Icon(
-                  IconsaxPlusLinear.arrow_down_1,
-                  color: captionColor,
-                ),
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline,
-                ),
-                dropdownColor:
-                    isDark ? AppColors.surfaceDark : AppColors.surface,
-                items: List.generate(
-                  _ocrModeLabels.length,
-                  (i) => DropdownMenuItem(
-                    value: i,
-                    child: Text(_ocrModeLabels[i]),
-                  ),
-                ),
-                onChanged: (v) {
-                  if (v != null) setState(() => _ocrMode = v);
-                },
+          SekkaDropdownField<int>(
+            value: _ocrMode,
+            onChanged: (v) => setState(() => _ocrMode = v),
+            items: List.generate(
+              _ocrModeLabels.length,
+              (i) => SekkaDropdownItem<int>(
+                value: i,
+                label: _ocrModeLabels[i],
               ),
             ),
           ),

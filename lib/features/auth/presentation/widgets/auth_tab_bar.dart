@@ -21,16 +21,11 @@ class AuthTabBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.border.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(AppSizes.chipRadius),
-      ),
-      child: Row(
-        children: List.generate(tabs.length, (index) {
-          final isSelected = index == selectedIndex;
-          return Expanded(
+    return Row(
+      children: [
+        for (var index = 0; index < tabs.length; index++) ...[
+          if (index > 0) SizedBox(width: AppSizes.sm),
+          Expanded(
             child: GestureDetector(
               onTap: () => onTabChanged(index),
               child: AnimatedContainer(
@@ -38,27 +33,45 @@ class AuthTabBar extends StatelessWidget {
                 curve: Curves.easeOutCubic,
                 padding: EdgeInsets.symmetric(vertical: AppSizes.md),
                 decoration: BoxDecoration(
-                  color: isSelected
+                  color: index == selectedIndex
                       ? AppColors.primary
-                      : Colors.transparent,
+                      : (isDark ? AppColors.surfaceDark : AppColors.surface),
                   borderRadius: BorderRadius.circular(AppSizes.chipRadius),
+                  border: Border.all(
+                    color: index == selectedIndex
+                        ? AppColors.primary
+                        : (isDark ? AppColors.borderDark : AppColors.border),
+                    width: 0.5,
+                  ),
+                  boxShadow: index == selectedIndex
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.25),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ]
+                      : null,
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   tabs[index],
                   style: AppTypography.titleMedium.copyWith(
-                    color: isSelected
+                    color: index == selectedIndex
                         ? AppColors.textOnPrimary
-                        : isDark
+                        : (isDark
                             ? AppColors.textBodyDark
-                            : AppColors.textBody,
+                            : AppColors.textBody),
+                    fontWeight: index == selectedIndex
+                        ? FontWeight.w700
+                        : FontWeight.w500,
                   ),
                 ),
               ),
             ),
-          );
-        }),
-      ),
+          ),
+        ],
+      ],
     );
   }
 }
