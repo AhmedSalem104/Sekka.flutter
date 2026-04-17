@@ -24,23 +24,31 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final s = widget.summary;
 
     return Material(
-      color: isDark ? AppColors.surfaceDark : AppColors.surface,
-      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(Responsive.r(20)),
       child: InkWell(
         onTap: () => setState(() => _expanded = !_expanded),
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        child: AnimatedSize(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-          child: Padding(
-            padding: EdgeInsets.symmetric(
-              horizontal: AppSizes.md,
-              vertical: AppSizes.sm,
+        borderRadius: BorderRadius.circular(Responsive.r(20)),
+        child: Ink(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topRight,
+              end: Alignment.bottomLeft,
+              colors: [AppColors.gradientStart, AppColors.gradientEnd],
             ),
+            borderRadius: BorderRadius.circular(Responsive.r(20)),
+          ),
+          child: AnimatedSize(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSizes.lg,
+                vertical: AppSizes.md,
+              ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -50,7 +58,7 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
                     Text(
                       AppStrings.settleTodayLabel,
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textCaption,
+                        color: _whiteSoft,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -61,7 +69,7 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
                       child: Icon(
                         IconsaxPlusLinear.arrow_down_1,
                         size: Responsive.r(14),
-                        color: AppColors.textCaption,
+                        color: _whiteSoft,
                       ),
                     ),
                   ],
@@ -72,71 +80,77 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
                   TextSpan(
                     children: [
                       _inlineMetric(
-                        isDark: isDark,
                         label: AppStrings.settleCollectedShort,
                         value: s.totalCollected,
                       ),
-                      const TextSpan(text: '  •  '),
+                      TextSpan(
+                        text: '  •  ',
+                        style: AppTypography.bodySmall
+                            .copyWith(color: _whiteSoft),
+                      ),
                       _inlineMetric(
-                        isDark: isDark,
                         label: AppStrings.settleSettledShort,
                         value: s.totalSettled,
                       ),
-                      const TextSpan(text: '  •  '),
+                      TextSpan(
+                        text: '  •  ',
+                        style: AppTypography.bodySmall
+                            .copyWith(color: _whiteSoft),
+                      ),
                       _inlineMetric(
-                        isDark: isDark,
                         label: AppStrings.settleRemainingShort,
                         value: s.remainingBalance,
                         highlight: s.remainingBalance > 0,
                       ),
                     ],
                   ),
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.textBodyDark
-                        : AppColors.textBody,
-                  ),
+                  style: AppTypography.bodyMedium
+                      .copyWith(color: _whiteSoft),
                   maxLines: 2,
                 ),
                 // Expanded details
                 if (_expanded) ...[
                   SizedBox(height: AppSizes.md),
-                  _DetailRow(
+                  Divider(
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                    height: 1,
+                  ),
+                  SizedBox(height: AppSizes.md),
+                  _OrangeDetailRow(
                     icon: IconsaxPlusLinear.money_recive,
                     label: AppStrings.settleCollectedFromCustomers,
                     value: '${s.totalCollected.toStringAsFixed(0)} ${AppStrings.currency}',
-                    isDark: isDark,
                   ),
-                  _DetailRow(
+                  _OrangeDetailRow(
                     icon: IconsaxPlusLinear.money_send,
                     label: AppStrings.settleSettledToPartners,
                     value: '${s.totalSettled.toStringAsFixed(0)} ${AppStrings.currency}',
-                    isDark: isDark,
                   ),
-                  _DetailRow(
+                  _OrangeDetailRow(
                     icon: IconsaxPlusLinear.wallet_3,
                     label: AppStrings.settleRemainingWithYou,
                     value: '${s.remainingBalance.toStringAsFixed(0)} ${AppStrings.currency}',
-                    isDark: isDark,
                     highlight: s.remainingBalance > 0,
                   ),
-                  _DetailRow(
+                  _OrangeDetailRow(
                     icon: IconsaxPlusLinear.tick_circle,
                     label: AppStrings.settleCountToday,
                     value: '${s.settlementCount}',
-                    isDark: isDark,
                   ),
                 ],
               ],
             ),
           ),
         ),
+        ),
       ),
     );
   }
 
+  static const _whiteSoft = Color(0xDAFFFFFF); // 85% white
+  static const _white = AppColors.textOnPrimary;
+
   TextSpan _inlineMetric({
-    required bool isDark,
     required String label,
     required double value,
     bool highlight = false,
@@ -145,18 +159,12 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
       children: [
         TextSpan(
           text: '$label ',
-          style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textCaption,
-          ),
+          style: AppTypography.bodySmall.copyWith(color: _whiteSoft),
         ),
         TextSpan(
           text: value.toStringAsFixed(0),
           style: AppTypography.bodyMedium.copyWith(
-            color: highlight
-                ? AppColors.primary
-                : (isDark
-                    ? AppColors.textHeadlineDark
-                    : AppColors.textHeadline),
+            color: highlight ? _white : _whiteSoft,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -165,20 +173,21 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
   }
 }
 
-class _DetailRow extends StatelessWidget {
-  const _DetailRow({
+class _OrangeDetailRow extends StatelessWidget {
+  const _OrangeDetailRow({
     required this.icon,
     required this.label,
     required this.value,
-    required this.isDark,
     this.highlight = false,
   });
 
   final IconData icon;
   final String label;
   final String value;
-  final bool isDark;
   final bool highlight;
+
+  static const _whiteSoft = Color(0xDAFFFFFF);
+  static const _white = AppColors.textOnPrimary;
 
   @override
   Widget build(BuildContext context) {
@@ -189,25 +198,19 @@ class _DetailRow extends StatelessWidget {
           Icon(
             icon,
             size: Responsive.r(16),
-            color: highlight ? AppColors.primary : AppColors.textCaption,
+            color: highlight ? _white : _whiteSoft,
           ),
           SizedBox(width: AppSizes.sm),
           Expanded(
             child: Text(
               label,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark ? AppColors.textBodyDark : AppColors.textBody,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: _whiteSoft),
             ),
           ),
           Text(
             value,
             style: AppTypography.bodyMedium.copyWith(
-              color: highlight
-                  ? AppColors.primary
-                  : (isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline),
+              color: highlight ? _white : _whiteSoft,
               fontWeight: FontWeight.w700,
             ),
           ),
