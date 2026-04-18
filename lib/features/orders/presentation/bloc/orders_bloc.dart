@@ -113,6 +113,74 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
     }
   }
 
+  // ── Client-side filter safety net ───────────────────────────────────
+  //
+  // Some server responses don't fully honor the query params (date / payment),
+  // so we re-apply the same filters locally to guarantee correctness.
+
+  List<OrderModel> _applyClientFilters(
+    List<OrderModel> orders, {
+    int? status,
+    String? searchTerm,
+    String? dateFrom,
+    String? dateTo,
+    int? paymentMethod,
+  }) {
+    var result = orders;
+
+    if (status != null) {
+      result = result.where((o) => o.status.value == status).toList();
+    }
+
+    if (paymentMethod != null) {
+      result = result
+          .where((o) => o.paymentMethod.value == paymentMethod)
+          .toList();
+    }
+
+    final term = searchTerm?.trim().toLowerCase();
+    if (term != null && term.isNotEmpty) {
+      result = result.where((o) {
+        final number = o.orderNumber.toLowerCase();
+        final name = (o.customerName ?? '').toLowerCase();
+        final phone = (o.customerPhone ?? '').toLowerCase();
+        return number.contains(term) ||
+            name.contains(term) ||
+            phone.contains(term);
+      }).toList();
+    }
+
+    // Day-based comparison — avoids timezone mismatches.
+    // We compare only year-month-day, converting the order's createdAt to
+    // the device's local time first so the "day" boundary matches what the
+    // user sees in the UI.
+    ({int y, int m, int d})? dayFromIso(String? iso) {
+      if (iso == null) return null;
+      final d = DateTime.tryParse(iso);
+      if (d == null) return null;
+      return (y: d.year, m: d.month, d: d.day);
+    }
+
+    int? dayKey(({int y, int m, int d})? v) =>
+        v == null ? null : v.y * 10000 + v.m * 100 + v.d;
+
+    final fromKey = dayKey(dayFromIso(dateFrom));
+    final toKey = dayKey(dayFromIso(dateTo));
+
+    if (fromKey != null || toKey != null) {
+      result = result.where((o) {
+        final local = o.createdAt.toLocal();
+        final createdKey =
+            local.year * 10000 + local.month * 100 + local.day;
+        if (fromKey != null && createdKey < fromKey) return false;
+        if (toKey != null && createdKey > toKey) return false;
+        return true;
+      }).toList();
+    }
+
+    return result;
+  }
+
   // ── Recurring merge helper ──────────────────────────────────────────
 
   /// Cached recurring orders so they persist across filter/search changes.
@@ -198,6 +266,8 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         event.dateFrom ?? (current is OrdersLoaded ? current.dateFrom : null);
     final dateTo =
         event.dateTo ?? (current is OrdersLoaded ? current.dateTo : null);
+    final paymentMethod = event.paymentMethod ??
+        (current is OrdersLoaded ? current.paymentMethod : null);
 
     // Only show loading spinner if no cached data
     if (!event.refresh && current is! OrdersLoaded) {
@@ -211,16 +281,38 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         searchTerm: searchTerm,
         dateFrom: dateFrom,
         dateTo: dateTo,
+        paymentMethod: paymentMethod,
       );
 
       final fixed = _fixDeliveredStatuses(result.items);
-      final hasDateFilter = dateFrom != null || dateTo != null;
+      final hasAnyFilter = dateFrom != null ||
+          dateTo != null ||
+          paymentMethod != null ||
+          statusFilter != null ||
+          (searchTerm != null && searchTerm.isNotEmpty);
       List<OrderModel> allOrders;
-      if (hasDateFilter) {
-        allOrders = fixed;
+      if (hasAnyFilter) {
+        allOrders = _applyClientFilters(
+          fixed,
+          status: statusFilter,
+          searchTerm: searchTerm,
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+          paymentMethod: paymentMethod,
+        );
       } else {
         await _fetchAndCacheRecurring();
         allOrders = _mergeWithRecurring(fixed);
+      }
+
+      // Preserve offline-created orders (tempId) that haven't been synced
+      // yet — otherwise they vanish the moment the list refreshes.
+      if (current is OrdersLoaded) {
+        final pendingTempOrders =
+            current.orders.where((o) => o.id.startsWith('temp-')).toList();
+        if (pendingTempOrders.isNotEmpty) {
+          allOrders = [...pendingTempOrders, ...allOrders];
+        }
       }
 
       emit(OrdersLoaded(
@@ -229,6 +321,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         searchTerm: searchTerm ?? '',
         dateFrom: dateFrom,
         dateTo: dateTo,
+        paymentMethod: paymentMethod,
         hasMore: result.hasNextPage,
         currentPage: 1,
       ));
@@ -265,10 +358,17 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         searchTerm: current.searchTerm.isEmpty ? null : current.searchTerm,
         dateFrom: current.dateFrom,
         dateTo: current.dateTo,
+        paymentMethod: current.paymentMethod,
       );
 
+      final newItems = _applyClientFilters(
+        _fixDeliveredStatuses(result.items),
+        dateFrom: current.dateFrom,
+        dateTo: current.dateTo,
+        paymentMethod: current.paymentMethod,
+      );
       emit(current.copyWith(
-        orders: [...current.orders, ..._fixDeliveredStatuses(result.items)],
+        orders: [...current.orders, ...newItems],
         hasMore: result.hasNextPage,
         currentPage: nextPage,
         isLoadingMore: false,
@@ -290,6 +390,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         statusFilter: event.status,
         dateFrom: event.dateFrom,
         dateTo: event.dateTo,
+        paymentMethod: event.paymentMethod,
       ));
       return;
     }
@@ -299,11 +400,15 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         event.clearDate ? null : (event.dateFrom ?? current.dateFrom);
     final newDateTo =
         event.clearDate ? null : (event.dateTo ?? current.dateTo);
+    final newPaymentMethod = event.clearPaymentMethod
+        ? null
+        : (event.paymentMethod ?? current.paymentMethod);
 
     emit(current.copyWith(
       statusFilter: () => newStatus,
       dateFrom: () => newDateFrom,
       dateTo: () => newDateTo,
+      paymentMethod: () => newPaymentMethod,
       isLoadingMore: true,
     ));
 
@@ -314,17 +419,33 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         searchTerm: current.searchTerm.isEmpty ? null : current.searchTerm,
         dateFrom: newDateFrom,
         dateTo: newDateTo,
+        paymentMethod: newPaymentMethod,
       );
 
       final fixed = _fixDeliveredStatuses(result.items);
-      final hasDateFilter = newDateFrom != null || newDateTo != null;
-      final merged = hasDateFilter ? fixed : _mergeWithRecurring(fixed);
+      final hasAnyFilter = newDateFrom != null ||
+          newDateTo != null ||
+          newPaymentMethod != null ||
+          newStatus != null ||
+          current.searchTerm.isNotEmpty;
+      final merged = hasAnyFilter
+          ? _applyClientFilters(
+              fixed,
+              status: newStatus,
+              searchTerm:
+                  current.searchTerm.isEmpty ? null : current.searchTerm,
+              dateFrom: newDateFrom,
+              dateTo: newDateTo,
+              paymentMethod: newPaymentMethod,
+            )
+          : _mergeWithRecurring(fixed);
 
       emit(current.copyWith(
         orders: merged,
         statusFilter: () => newStatus,
         dateFrom: () => newDateFrom,
         dateTo: () => newDateTo,
+        paymentMethod: () => newPaymentMethod,
         hasMore: result.hasNextPage,
         currentPage: 1,
         isLoadingMore: false,
@@ -334,6 +455,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         statusFilter: () => newStatus,
         dateFrom: () => newDateFrom,
         dateTo: () => newDateTo,
+        paymentMethod: () => newPaymentMethod,
         isLoadingMore: false,
       ));
     }
@@ -363,52 +485,31 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
     }
 
     try {
-      if (_searchRepository != null) {
-        // Use unified search endpoint
-        final result = await _searchRepository.search(query: term);
-        switch (result) {
-          case ApiSuccess(:final data):
-            final orders = data.orders
-                .map((o) => OrderModel(
-                      id: o.id,
-                      orderNumber: o.orderNumber,
-                      customerName: o.customerName,
-                      customerPhone: o.customerPhone,
-                      amount: o.amount,
-                      status: OrderStatus.fromValue(o.status),
-                      priority: OrderPriority.fromValue(0),
-                      paymentMethod: PaymentMethod.fromValue(0),
-                      deliveryAddress: o.deliveryAddress ?? '',
-                      createdAt: o.createdAt ?? DateTime.now(),
-                    ))
-                .toList();
-            emit(OrdersLoaded(
-              orders: orders,
-              searchTerm: term,
-              hasMore: false,
-              currentPage: 1,
-            ));
-          case ApiFailure(:final error):
-            if (current is OrdersLoaded) {
-              emit(current.copyWith(searchTerm: term, isLoadingMore: false));
-            } else {
-              emit(OrdersError(error.arabicMessage));
-            }
-        }
-      } else {
-        // Fallback to regular endpoint
-        final result = await _repository.getOrders(
-          page: 1,
-          status: current is OrdersLoaded ? current.statusFilter : null,
-          searchTerm: term,
-        );
-        emit(OrdersLoaded(
-          orders: _fixDeliveredStatuses(result.items),
-          searchTerm: term,
-          hasMore: result.hasNextPage,
-          currentPage: 1,
-        ));
-      }
+      // Always use the regular /orders endpoint with searchTerm — it matches
+      // by order number, customer name, and customer phone on the backend
+      // (unlike the unified /search which only returns orders whose fields
+      // match directly, not orders belonging to a customer found by phone).
+      final result = await _repository.getOrders(
+        page: 1,
+        pageSize: 100,
+        status: current is OrdersLoaded ? current.statusFilter : null,
+        searchTerm: term,
+        dateFrom: current is OrdersLoaded ? current.dateFrom : null,
+        dateTo: current is OrdersLoaded ? current.dateTo : null,
+        paymentMethod:
+            current is OrdersLoaded ? current.paymentMethod : null,
+      );
+      emit(OrdersLoaded(
+        orders: _fixDeliveredStatuses(result.items),
+        statusFilter: current is OrdersLoaded ? current.statusFilter : null,
+        searchTerm: term,
+        dateFrom: current is OrdersLoaded ? current.dateFrom : null,
+        dateTo: current is OrdersLoaded ? current.dateTo : null,
+        paymentMethod:
+            current is OrdersLoaded ? current.paymentMethod : null,
+        hasMore: result.hasNextPage,
+        currentPage: 1,
+      ));
     } on ApiException {
       if (current is OrdersLoaded) {
         emit(current.copyWith(searchTerm: term, isLoadingMore: false));

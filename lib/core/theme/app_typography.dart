@@ -83,11 +83,11 @@ abstract final class AppTypography {
         height: _lineHeight,
       );
 
-  // Captions — Light (300) — #718096
+  // Captions — Medium (500) — #718096
   static TextStyle get caption => TextStyle(
         fontFamily: fontFamily,
         fontSize: Responsive.sp(14),
-        fontWeight: FontWeight.w300,
+        fontWeight: FontWeight.w500,
         color: AppColors.textCaption,
         height: _lineHeight,
       );
@@ -95,7 +95,7 @@ abstract final class AppTypography {
   static TextStyle get captionSmall => TextStyle(
         fontFamily: fontFamily,
         fontSize: Responsive.sp(12),
-        fontWeight: FontWeight.w300,
+        fontWeight: FontWeight.w500,
         color: AppColors.textCaption,
         height: _lineHeight,
       );
@@ -178,7 +178,7 @@ abstract final class AppTypography {
   static const TextStyle captionBase = TextStyle(
     fontFamily: fontFamily,
     fontSize: 14,
-    fontWeight: FontWeight.w300,
+    fontWeight: FontWeight.w500,
     color: AppColors.textCaption,
     height: _lineHeight,
   );
@@ -186,7 +186,7 @@ abstract final class AppTypography {
   static const TextStyle captionSmallBase = TextStyle(
     fontFamily: fontFamily,
     fontSize: 12,
-    fontWeight: FontWeight.w300,
+    fontWeight: FontWeight.w500,
     color: AppColors.textCaption,
     height: _lineHeight,
   );

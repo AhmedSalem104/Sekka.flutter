@@ -475,7 +475,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
               ),
               SizedBox(width: Responsive.w(8)),
               GestureDetector(
-                onTap: () => PhoneLauncher.whatsApp(customer.phone),
+                onTap: () => PhoneLauncher.messagingApps(customer.phone),
                 child: Container(
                   padding: EdgeInsets.all(Responsive.w(10)),
                   decoration: BoxDecoration(
@@ -514,11 +514,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: Responsive.h(2)),
+                    SizedBox(height: Responsive.h(4)),
                     Text(
                       AppStrings.totalDeliveries,
-                      style: AppTypography.captionSmall.copyWith(
-                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -542,11 +543,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    SizedBox(height: Responsive.h(2)),
+                    SizedBox(height: Responsive.h(4)),
                     Text(
                       AppStrings.successfulDeliveries,
-                      style: AppTypography.captionSmall.copyWith(
-                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -573,7 +575,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         ),
                         SizedBox(width: Responsive.w(4)),
                         Text(
-                          customer.averageRating.toStringAsFixed(1),
+                          customer.averageRating.round().toString(),
                           style: AppTypography.titleLarge.copyWith(
                             color: AppColors.textOnPrimary,
                             fontWeight: FontWeight.w700,
@@ -581,11 +583,12 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: Responsive.h(2)),
+                    SizedBox(height: Responsive.h(4)),
                     Text(
                       AppStrings.averageRating,
-                      style: AppTypography.captionSmall.copyWith(
-                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -624,7 +627,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
         SizedBox(width: Responsive.w(10)),
         _buildStatCard(
           icon: IconsaxPlusBold.star_1,
-          value: customer.averageRating.toStringAsFixed(1),
+          value: customer.averageRating.round().toString(),
           label: AppStrings.averageRating,
           color: AppColors.warning,
           isDark: isDark,
@@ -2349,11 +2352,26 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
           child: SekkaButton(
             label: AppStrings.rateCustomer,
             onPressed: () {
+              // Pre-fill with the latest rating the driver left for this
+              // customer so they can tweak stars/feedback instead of
+              // starting from zero every time. Falls back to the rolling
+              // averageRating when the backend omits the per-rating list.
+              final sortedRatings = [...customer.ratings]
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              final latest =
+                  sortedRatings.isNotEmpty ? sortedRatings.first : null;
+              final initialRating = latest?.ratingValue ??
+                  (customer.averageRating > 0
+                      ? customer.averageRating.round()
+                      : 0);
+
               showModalBottomSheet<void>(
                 context: context,
                 isScrollControlled: true,
                 backgroundColor: Colors.transparent,
                 builder: (_) => RateCustomerSheet(
+                  initialRating: initialRating,
+                  initialFeedback: latest?.feedbackText,
                   onSubmit: (rating) {
                     Navigator.of(context).pop();
                     _bloc.add(CustomerRateRequested(
@@ -2683,7 +2701,7 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
                   ),
                   SizedBox(width: AppSizes.xs),
                   Text(
-                    info.averageRating!.toStringAsFixed(1),
+                    info.averageRating!.round().toString(),
                     style: AppTypography.captionSmall.copyWith(
                       color: isDark
                           ? AppColors.textBodyDark

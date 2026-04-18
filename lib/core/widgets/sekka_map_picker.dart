@@ -67,10 +67,10 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
   late final MapController _mapController;
   late LatLng _center;
   bool _isLocating = false;
-  bool _isMoving = false;
   String? _currentAddress;
   bool _isLoadingAddress = false;
   Timer? _addressDebounce;
+  Timer? _bounceDebounce;
 
   // Search
   final _searchController = TextEditingController();
@@ -116,8 +116,17 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
     _pinAnimController.dispose();
     _searchController.dispose();
     _addressDebounce?.cancel();
+    _bounceDebounce?.cancel();
     _searchDebounce?.cancel();
     super.dispose();
+  }
+
+  // ── Pin bounce ──
+
+  void _triggerBounce() {
+    _pinAnimController.forward().then((_) {
+      if (mounted) _pinAnimController.reverse();
+    });
   }
 
   // ── GPS ──
@@ -145,6 +154,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
       final newCenter = LatLng(position.latitude, position.longitude);
       setState(() => _center = newCenter);
       _mapController.move(newCenter, _defaultZoom);
+      _triggerBounce();
       _reverseGeocode(newCenter);
     } catch (_) {
       // fallback to default
@@ -258,6 +268,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
       _currentAddress = _shortenAddress(result.name);
     });
     _mapController.move(newCenter, _defaultZoom);
+    _triggerBounce();
     FocusScope.of(context).unfocus();
   }
 
@@ -303,14 +314,27 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
               options: MapOptions(
                 initialCenter: _center,
                 initialZoom: _defaultZoom,
+                // Disable fling inertia — user wanted the map to stop at the
+                // exact release point instead of sliding past it
+                interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all & ~InteractiveFlag.flingAnimation,
+                ),
                 onTap: (tapPosition, point) {
                   _mapController.move(point, _mapController.camera.zoom);
+                  _triggerBounce();
                   FocusScope.of(context).unfocus();
                 },
                 onPositionChanged: (camera, hasGesture) {
                   _center = camera.center;
                   if (hasGesture) {
                     _reverseGeocode(camera.center);
+                    _bounceDebounce?.cancel();
+                    _bounceDebounce = Timer(
+                      const Duration(milliseconds: 180),
+                      () {
+                        if (mounted) _triggerBounce();
+                      },
+                    );
                   }
                 },
               ),
@@ -326,8 +350,15 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
             // ── دبوس ثابت في المنتصف (tip points at geographic center) ──
             IgnorePointer(
               child: Center(
-                child: Transform.translate(
-                  offset: Offset(0, -Responsive.r(34)),
+                child: AnimatedBuilder(
+                  animation: _pinBounce,
+                  builder: (_, child) => Transform.translate(
+                    offset: Offset(
+                      0,
+                      -Responsive.r(34) + _pinBounce.value,
+                    ),
+                    child: child,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -696,7 +727,18 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                             ),
                           ],
                         ),
-                        SizedBox(height: AppSizes.lg),
+                        SizedBox(height: AppSizes.md),
+
+                        // Current location button
+                        SekkaButton(
+                          label: AppStrings.useCurrentLocation,
+                          icon: IconsaxPlusBold.gps,
+                          type: SekkaButtonType.secondary,
+                          isLoading: _isLocating,
+                          onPressed:
+                              _isLocating ? null : _goToCurrentLocation,
+                        ),
+                        SizedBox(height: AppSizes.sm),
 
                         // Confirm button
                         SekkaButton(

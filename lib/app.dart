@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import 'core/theme/app_theme.dart';
 import 'core/utils/responsive.dart';
+import 'core/widgets/connectivity_banner.dart';
 
 class SekkaApp extends StatelessWidget {
   const SekkaApp({
@@ -57,7 +58,7 @@ class SekkaApp extends StatelessWidget {
                 return Directionality(
                   textDirection:
                       isRtl ? TextDirection.rtl : TextDirection.ltr,
-                  child: child!,
+                  child: ConnectivityBanner(child: child!),
                 );
               },
             );

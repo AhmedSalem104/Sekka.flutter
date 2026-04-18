@@ -44,6 +44,7 @@ class _SekkaExpandableSectionState extends State<SekkaExpandableSection> {
 
     return Container(
       margin: EdgeInsets.only(bottom: AppSizes.sm),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: isDark ? AppColors.surfaceDark : AppColors.surface,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
@@ -52,63 +53,71 @@ class _SekkaExpandableSectionState extends State<SekkaExpandableSection> {
           width: 0.5,
         ),
       ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          controller: widget.controller,
-          onExpansionChanged: (val) {
-            setState(() => _isExpanded = val);
-            widget.onExpansionChanged?.call(val);
-          },
-          initiallyExpanded: widget.initiallyExpanded,
-          tilePadding: EdgeInsets.symmetric(
-            horizontal: AppSizes.lg,
-            vertical: AppSizes.xs,
+      child: Material(
+        color: Colors.transparent,
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
           ),
-          childrenPadding: EdgeInsets.fromLTRB(
-            AppSizes.lg,
-            0,
-            AppSizes.lg,
-            AppSizes.lg,
-          ),
-          leading: widget.leadingIcon != null
-              ? Container(
-                  width: Responsive.r(36),
-                  height: Responsive.r(36),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusSm),
-                  ),
-                  child: Icon(
-                    widget.leadingIcon,
-                    size: AppSizes.iconMd,
-                    color: AppColors.primary,
-                  ),
-                )
-              : null,
-          trailing: AnimatedRotation(
-            turns: _isExpanded ? 0.5 : 0,
-            duration: const Duration(milliseconds: 200),
-            child: Icon(
-              IconsaxPlusLinear.arrow_down_1,
-              size: AppSizes.iconMd,
-              color: _isExpanded
-                  ? AppColors.primary
-                  : (isDark
-                      ? AppColors.textCaptionDark
-                      : AppColors.textCaption),
+          child: ExpansionTile(
+            controller: widget.controller,
+            onExpansionChanged: (val) {
+              setState(() => _isExpanded = val);
+              widget.onExpansionChanged?.call(val);
+            },
+            initiallyExpanded: widget.initiallyExpanded,
+            tilePadding: EdgeInsets.symmetric(
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.xs,
             ),
-          ),
-          title: Text(
-            widget.title,
-            style: AppTypography.titleLarge.copyWith(
-              color: isDark
-                  ? AppColors.textHeadlineDark
-                  : AppColors.textHeadline,
+            childrenPadding: EdgeInsets.fromLTRB(
+              AppSizes.lg,
+              0,
+              AppSizes.lg,
+              AppSizes.lg,
             ),
+            leading: widget.leadingIcon != null
+                ? Container(
+                    width: Responsive.r(36),
+                    height: Responsive.r(36),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusSm),
+                    ),
+                    child: Icon(
+                      widget.leadingIcon,
+                      size: AppSizes.iconMd,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : null,
+            trailing: AnimatedRotation(
+              turns: _isExpanded ? 0.5 : 0,
+              duration: const Duration(milliseconds: 200),
+              child: Icon(
+                IconsaxPlusLinear.arrow_down_1,
+                size: AppSizes.iconMd,
+                color: _isExpanded
+                    ? AppColors.primary
+                    : (isDark
+                        ? AppColors.textCaptionDark
+                        : AppColors.textCaption),
+              ),
+            ),
+            title: Text(
+              widget.title,
+              style: AppTypography.titleLarge.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
+            children: widget.children,
           ),
-          children: widget.children,
         ),
       ),
     );

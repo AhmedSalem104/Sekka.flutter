@@ -11,7 +11,6 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_button.dart';
-import '../../../../core/widgets/sekka_dropdown_field.dart';
 import '../../../../core/widgets/sekka_expandable_section.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_loading.dart';
@@ -28,7 +27,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  static const int _sectionsCount = 7;
+  static const int _sectionsCount = 6;
   late final List<ExpansionTileController> _sectionControllers;
   int? _openSectionIndex;
 
@@ -161,27 +160,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
 
-        // ── Language ────────────────────────────────
-        SekkaExpandableSection(
-          title: AppStrings.languageLabel,
-          leadingIcon: IconsaxPlusLinear.global,
-          controller: _sectionControllers[1],
-          onExpansionChanged: (val) => _handleSectionExpansion(1, val),
-          children: [
-            _LanguageSelector(
-              currentLang: s.language,
-              isDark: isDark,
-              onChanged: (val) => update({'language': val}),
-            ),
-          ],
+        // ── Language (flat toggle, no expandable) ───
+        _LanguageCard(
+          currentLang: s.language,
+          isDark: isDark,
+          onChanged: (val) => update({'language': val}),
         ),
 
         // ── Notifications ───────────────────────────
         SekkaExpandableSection(
           title: AppStrings.notifications,
           leadingIcon: IconsaxPlusLinear.notification,
-          controller: _sectionControllers[2],
-          onExpansionChanged: (val) => _handleSectionExpansion(2, val),
+          controller: _sectionControllers[1],
+          onExpansionChanged: (val) => _handleSectionExpansion(1, val),
           children: [
             SekkaToggleTile(
               label: AppStrings.notifyNewOrder,
@@ -246,8 +237,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SekkaExpandableSection(
           title: AppStrings.focusMode,
           leadingIcon: IconsaxPlusLinear.driver,
-          controller: _sectionControllers[3],
-          onExpansionChanged: (val) => _handleSectionExpansion(3, val),
+          controller: _sectionControllers[2],
+          onExpansionChanged: (val) => _handleSectionExpansion(2, val),
           children: [
             SekkaToggleTile(
               label: AppStrings.focusModeAuto,
@@ -273,8 +264,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SekkaExpandableSection(
           title: AppStrings.deliveryPreferences,
           leadingIcon: IconsaxPlusLinear.box_1,
-          controller: _sectionControllers[4],
-          onExpansionChanged: (val) => _handleSectionExpansion(4, val),
+          controller: _sectionControllers[3],
+          onExpansionChanged: (val) => _handleSectionExpansion(3, val),
           children: [
             SekkaToggleTile(
               label: AppStrings.autoReceipt,
@@ -306,8 +297,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SekkaExpandableSection(
           title: AppStrings.locationSettings,
           leadingIcon: IconsaxPlusLinear.location,
-          controller: _sectionControllers[5],
-          onExpansionChanged: (val) => _handleSectionExpansion(5, val),
+          controller: _sectionControllers[4],
+          onExpansionChanged: (val) => _handleSectionExpansion(4, val),
           children: [
             _HomeLocationRow(
               address: s.homeAddress,
@@ -342,8 +333,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SekkaExpandableSection(
           title: AppStrings.technicalSettings,
           leadingIcon: IconsaxPlusLinear.setting_3,
-          controller: _sectionControllers[6],
-          onExpansionChanged: (val) => _handleSectionExpansion(6, val),
+          controller: _sectionControllers[5],
+          onExpansionChanged: (val) => _handleSectionExpansion(5, val),
           children: [
             SekkaToggleTile(
               label: AppStrings.textToSpeech,
@@ -527,21 +518,39 @@ class _ThemeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SekkaDropdownField<int>(
-      value: currentTheme,
-      onChanged: onChanged,
-      prefixIcon: IconsaxPlusLinear.brush_1,
-      items: [
-        SekkaDropdownItem(value: 0, label: AppStrings.themeSystem),
-        SekkaDropdownItem(value: 1, label: AppStrings.themeLight),
-        SekkaDropdownItem(value: 2, label: AppStrings.themeDark),
-      ],
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final items = <(int, String)>[
+      (0, AppStrings.themeSystem),
+      (1, AppStrings.themeLight),
+      (2, AppStrings.themeDark),
+    ];
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
+      child: Row(
+        children: List.generate(items.length, (i) {
+          final (value, label) = items[i];
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsetsDirectional.only(
+                start: i > 0 ? AppSizes.sm : 0,
+              ),
+              child: _ChipButton(
+                label: label,
+                isActive: currentTheme == value,
+                isDark: isDark,
+                onTap: () => onChanged(value),
+              ),
+            ),
+          );
+        }),
+      ),
     );
   }
 }
 
-class _LanguageSelector extends StatelessWidget {
-  const _LanguageSelector({
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard({
     required this.currentLang,
     required this.isDark,
     required this.onChanged,
@@ -553,27 +562,61 @@ class _LanguageSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
+    final isArabic = currentLang == 'ar';
+    return Container(
+      margin: EdgeInsets.only(bottom: AppSizes.sm),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.lg,
+        vertical: AppSizes.sm,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.surfaceDark : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        border: Border.all(
+          color: isDark ? AppColors.borderDark : AppColors.border,
+          width: 0.5,
+        ),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Container(
+            width: Responsive.r(36),
+            height: Responsive.r(36),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            ),
+            child: Icon(
+              IconsaxPlusLinear.global,
+              size: AppSizes.iconMd,
+              color: AppColors.primary,
+            ),
+          ),
+          SizedBox(width: AppSizes.md),
           Expanded(
-            child: _ChipButton(
-              label: AppStrings.arabic,
-              isActive: currentLang == 'ar',
-              isDark: isDark,
-              onTap: () => onChanged('ar'),
+            child: Text(
+              AppStrings.languageLabel,
+              style: AppTypography.titleLarge.copyWith(
+                color: isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+              ),
+            ),
+          ),
+          Text(
+            isArabic ? AppStrings.arabic : AppStrings.english,
+            style: AppTypography.bodySmall.copyWith(
+              color: isDark
+                  ? AppColors.textCaptionDark
+                  : AppColors.textCaption,
             ),
           ),
           SizedBox(width: AppSizes.sm),
-          Expanded(
-            child: _ChipButton(
-              label: AppStrings.english,
-              isActive: currentLang == 'en',
-              isDark: isDark,
-              onTap: () => onChanged('en'),
-            ),
+          Switch.adaptive(
+            value: isArabic,
+            onChanged: (val) => onChanged(val ? 'ar' : 'en'),
+            activeTrackColor: AppColors.primary,
           ),
         ],
       ),

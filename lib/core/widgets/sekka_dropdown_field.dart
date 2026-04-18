@@ -26,6 +26,7 @@ class SekkaDropdownField<T> extends StatefulWidget {
     this.label,
     this.hint,
     this.prefixIcon,
+    this.sheetTitle,
     this.enabled = true,
   });
 
@@ -35,6 +36,7 @@ class SekkaDropdownField<T> extends StatefulWidget {
   final String? label;
   final String? hint;
   final IconData? prefixIcon;
+  final String? sheetTitle;
   final bool enabled;
 
   @override
@@ -44,71 +46,75 @@ class SekkaDropdownField<T> extends StatefulWidget {
 class _SekkaDropdownFieldState<T> extends State<SekkaDropdownField<T>> {
   bool _isOpen = false;
 
-  Future<void> _openMenu() async {
-    final box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
-
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final target = box.localToGlobal(Offset.zero);
-    final size = box.size;
-    final screen = MediaQuery.of(context).size;
-
+  Future<void> _openSheet() async {
     setState(() => _isOpen = true);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final selected = await showMenu<T>(
+    final selected = await showModalBottomSheet<T>(
       context: context,
-      position: RelativeRect.fromLTRB(
-        target.dx,
-        target.dy + size.height + AppSizes.xs,
-        screen.width - target.dx - size.width,
-        screen.height - target.dy - size.height,
+      backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      constraints: BoxConstraints(
-        minWidth: size.width,
-        maxWidth: size.width,
-      ),
-      color: isDark ? AppColors.surfaceDark : AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        side: BorderSide(
-          color: isDark ? AppColors.borderDark : AppColors.border,
-        ),
-      ),
-      elevation: 4,
-      items: widget.items.map((item) {
-        final isSelected = item.value == widget.value;
-        return PopupMenuItem<T>(
-          value: item.value,
-          child: Row(
-            children: [
-              if (item.leading != null) ...[
-                item.leading!,
-                SizedBox(width: AppSizes.sm),
-              ],
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.textBodyDark
-                            : AppColors.textBody),
-                    fontWeight:
-                        isSelected ? FontWeight.w700 : FontWeight.w500,
+      builder: (ctx) {
+        final sheetDark = Theme.of(ctx).brightness == Brightness.dark;
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSizes.pagePadding,
+              AppSizes.lg,
+              AppSizes.pagePadding,
+              AppSizes.xl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: sheetDark
+                          ? AppColors.borderDark
+                          : AppColors.border,
+                      borderRadius: BorderRadius.circular(
+                        AppSizes.radiusPill,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              if (isSelected)
-                Icon(
-                  Icons.check,
-                  size: AppSizes.iconSm,
-                  color: AppColors.primary,
-                ),
-            ],
+                if (widget.sheetTitle != null) ...[
+                  SizedBox(height: AppSizes.lg),
+                  Text(
+                    widget.sheetTitle!,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.headlineSmall.copyWith(
+                      color: sheetDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline,
+                    ),
+                  ),
+                ],
+                SizedBox(height: AppSizes.lg),
+                ...widget.items.map((item) {
+                  final isSelected = item.value == widget.value;
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: AppSizes.sm),
+                    child: _DropdownOptionTile(
+                      item: item,
+                      isSelected: isSelected,
+                      isDark: sheetDark,
+                      onTap: () => Navigator.pop(ctx, item.value),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         );
-      }).toList(),
+      },
     );
 
     if (mounted) setState(() => _isOpen = false);
@@ -137,9 +143,9 @@ class _SekkaDropdownFieldState<T> extends State<SekkaDropdownField<T>> {
     final displayText =
         selected?.label ?? widget.hint ?? widget.label ?? '';
 
-    return InkWell(
-      onTap: widget.enabled ? _openMenu : null,
-      borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.enabled ? _openSheet : null,
       child: Container(
         height: AppSizes.inputHeight,
         padding: EdgeInsets.symmetric(horizontal: AppSizes.lg),
@@ -183,6 +189,74 @@ class _SekkaDropdownFieldState<T> extends State<SekkaDropdownField<T>> {
                 color: _isOpen ? AppColors.primary : iconColor,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DropdownOptionTile<T> extends StatelessWidget {
+  const _DropdownOptionTile({
+    required this.item,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final SekkaDropdownItem<T> item;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bgColor = isSelected
+        ? AppColors.primary.withValues(alpha: 0.08)
+        : (isDark ? AppColors.backgroundDark : AppColors.background);
+    final borderColor = isSelected
+        ? AppColors.primary
+        : (isDark ? AppColors.borderDark : AppColors.border);
+    final textColor = isSelected
+        ? AppColors.primary
+        : (isDark ? AppColors.textBodyDark : AppColors.textBody);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: AppSizes.inputHeight,
+        padding: EdgeInsets.symmetric(horizontal: AppSizes.lg),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(AppSizes.inputRadius),
+          border: Border.all(
+            color: borderColor,
+            width: isSelected ? 2 : 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            if (item.leading != null) ...[
+              item.leading!,
+              SizedBox(width: AppSizes.sm),
+            ],
+            Expanded(
+              child: Text(
+                item.label,
+                style: AppTypography.bodyLarge.copyWith(
+                  color: textColor,
+                  fontWeight:
+                      isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(
+                IconsaxPlusLinear.tick_circle,
+                size: AppSizes.iconMd,
+                color: AppColors.primary,
+              ),
           ],
         ),
       ),

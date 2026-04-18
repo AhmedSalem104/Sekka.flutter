@@ -15,6 +15,7 @@ final class OrdersLoadRequested extends OrdersEvent {
     this.searchTerm,
     this.dateFrom,
     this.dateTo,
+    this.paymentMethod,
     this.refresh = false,
   });
 
@@ -22,11 +23,12 @@ final class OrdersLoadRequested extends OrdersEvent {
   final String? searchTerm;
   final String? dateFrom;
   final String? dateTo;
+  final int? paymentMethod;
   final bool refresh;
 
   @override
   List<Object?> get props =>
-      [statusFilter, searchTerm, dateFrom, dateTo, refresh];
+      [statusFilter, searchTerm, dateFrom, dateTo, paymentMethod, refresh];
 }
 
 final class OrdersLoadMore extends OrdersEvent {
@@ -38,18 +40,31 @@ final class OrdersFilterChanged extends OrdersEvent {
     this.status,
     this.dateFrom,
     this.dateTo,
+    this.paymentMethod,
     this.clearDate = false,
+    this.clearPaymentMethod = false,
   });
 
   final int? status;
   final String? dateFrom;
   final String? dateTo;
+  final int? paymentMethod;
 
   /// Explicitly clear the currently-selected date filter.
   final bool clearDate;
 
+  /// Explicitly clear the currently-selected payment method filter.
+  final bool clearPaymentMethod;
+
   @override
-  List<Object?> get props => [status, dateFrom, dateTo, clearDate];
+  List<Object?> get props => [
+        status,
+        dateFrom,
+        dateTo,
+        paymentMethod,
+        clearDate,
+        clearPaymentMethod,
+      ];
 }
 
 final class OrdersSearchChanged extends OrdersEvent {

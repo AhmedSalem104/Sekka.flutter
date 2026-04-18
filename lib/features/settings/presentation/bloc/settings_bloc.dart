@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/network/api_exception.dart';
@@ -14,7 +15,9 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
     required SettingsRepository repository,
     required this.themeModeNotifier,
     required this.localeNotifier,
+    required SharedPreferences prefs,
   })  : _repository = repository,
+        _prefs = prefs,
         super(const SettingsInitial()) {
     on<SettingsLoadRequested>(_onLoad);
     on<SettingsRefreshRequested>(_onRefresh);
@@ -26,6 +29,7 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
   }
 
   final SettingsRepository _repository;
+  final SharedPreferences _prefs;
   final ValueNotifier<ThemeMode> themeModeNotifier;
   final ValueNotifier<Locale> localeNotifier;
 
@@ -255,6 +259,10 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
     };
     localeNotifier.value = Locale(language);
     AppStrings.setLocale(language);
+    // Persist so the next cold start reads the user's choice synchronously
+    // (main.dart reads these before runApp to avoid a default-theme flash)
+    _prefs.setInt('settings_theme', theme);
+    _prefs.setString('settings_language', language);
   }
 
   /// Apply a dynamic key-value pair to the entity.

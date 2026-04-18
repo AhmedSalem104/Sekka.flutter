@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
@@ -7,12 +5,19 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/string_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_empty_state.dart';
 import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
+import '../../../../core/widgets/sekka_segmented_tabs.dart';
+import '../../../../shared/enums/order_enums.dart';
+import '../../../../shared/network/api_result.dart';
+import '../../../../shared/network/dio_client.dart';
+import '../../../customers/data/models/customer_model.dart';
+import '../../../customers/data/repositories/customer_repository.dart';
 import '../../data/models/order_model.dart';
 import 'create_order_screen.dart';
 import 'order_detail_screen.dart';
@@ -31,8 +36,9 @@ class OrdersListScreen extends StatefulWidget {
 class _OrdersListScreenState extends State<OrdersListScreen> {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
-  Timer? _debounce;
   int? _selectedStatusFilter;
+  String _searchTerm = '';
+  List<CustomerModel> _customers = const [];
 
   static final _statusFilters = <(String, int?)>[
     (AppStrings.statusNew, 0),
@@ -53,6 +59,16 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       bloc.add(const OrdersLoadRequested());
     }
     _scrollController.addListener(_onScroll);
+    _loadCustomersForSearch();
+  }
+
+  Future<void> _loadCustomersForSearch() async {
+    final repo = CustomerRepository(context.read<DioClient>().dio);
+    final result = await repo.getCustomers(pageSize: 200);
+    if (!mounted) return;
+    if (result case ApiSuccess(:final data)) {
+      setState(() => _customers = data.items);
+    }
   }
 
   @override
@@ -61,8 +77,40 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       ..removeListener(_onScroll)
       ..dispose();
     _searchController.dispose();
-    _debounce?.cancel();
     super.dispose();
+  }
+
+  List<OrderModel> _filterOrders(List<OrderModel> all) {
+    if (_searchTerm.isEmpty) return all;
+    final rawQ = _searchTerm.toEnglishNumbers.toLowerCase();
+    final digitsQ = rawQ.replaceAll(RegExp(r'\D'), '');
+
+    // Cross-reference: find customer names matching the query (by name or phone)
+    // so we can filter orders that have matching customerName.
+    final matchedNames = <String>{};
+    for (final c in _customers) {
+      final cName = (c.name ?? '').toLowerCase();
+      final cPhoneDigits =
+          c.phone.toEnglishNumbers.replaceAll(RegExp(r'\D'), '');
+      final byPhone = digitsQ.isNotEmpty && cPhoneDigits.contains(digitsQ);
+      final byName = cName.isNotEmpty && cName.contains(rawQ);
+      if ((byPhone || byName) && cName.isNotEmpty) {
+        matchedNames.add(cName);
+      }
+    }
+
+    return all.where((o) {
+      final name = (o.customerName ?? '').toLowerCase();
+      if (name.contains(rawQ)) return true;
+      final orderPhoneDigits = (o.customerPhone ?? '')
+          .toEnglishNumbers
+          .replaceAll(RegExp(r'\D'), '');
+      if (digitsQ.isNotEmpty && orderPhoneDigits.contains(digitsQ)) return true;
+      for (final m in matchedNames) {
+        if (name.contains(m)) return true;
+      }
+      return false;
+    }).toList();
   }
 
   void _onScroll() {
@@ -80,12 +128,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
   }
 
   void _onSearchChanged(String value) {
-    _debounce?.cancel();
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      context.read<OrdersBloc>().add(
-            OrdersSearchChanged(searchTerm: value.trim()),
-          );
-    });
+    setState(() => _searchTerm = value.trim());
   }
 
   void _onFilterSelected(int? statusValue) {
@@ -158,7 +201,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                     child: SekkaSearchBar(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
-                      hint: 'بحث برقم الطلب أو اسم العميل...',
+                      hint: 'بحث باسم العميل أو رقمه...',
                     ),
                   ),
                   SizedBox(width: AppSizes.sm),
@@ -166,7 +209,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 ],
               ),
             ),
-            _buildActiveDateChip(isDark),
+            _buildActiveFiltersRow(isDark),
             SizedBox(height: AppSizes.md),
 
             _buildFilterChips(isDark),
@@ -180,25 +223,32 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                   if (state is OrdersLoaded && state.actionMessage != null) {
                     final msg = state.actionMessage!;
                     final isError = state.isActionError;
-                    ScaffoldMessenger.of(context)
-                      ..hideCurrentSnackBar()
-                      ..showSnackBar(
-                        SnackBar(
-                          content: Directionality(
-                            textDirection: TextDirection.rtl,
-                            child: Text(msg,
-                                style: AppTypography.bodyMedium.copyWith(
-                                    color: AppColors.textOnPrimary)),
+                    // Silently swallow offline-sync chatter — the user should
+                    // not feel offline mode; the top connectivity banner is
+                    // the only signal they see about the network state.
+                    final isSilent = msg == AppStrings.savedOffline ||
+                        msg == AppStrings.orderSyncedSuccess;
+                    if (!isSilent) {
+                      ScaffoldMessenger.of(context)
+                        ..hideCurrentSnackBar()
+                        ..showSnackBar(
+                          SnackBar(
+                            content: Directionality(
+                              textDirection: TextDirection.rtl,
+                              child: Text(msg,
+                                  style: AppTypography.bodyMedium.copyWith(
+                                      color: AppColors.textOnPrimary)),
+                            ),
+                            backgroundColor:
+                                isError ? AppColors.error : AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusMd),
+                            ),
                           ),
-                          backgroundColor:
-                              isError ? AppColors.error : AppColors.success,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMd),
-                          ),
-                        ),
-                      );
+                        );
+                    }
                     context
                         .read<OrdersBloc>()
                         .add(const OrdersClearMessage());
@@ -224,8 +274,17 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                           ? 'مفيش طلبات بالحالة دي'
                           : null,
                     ),
-                  OrdersLoaded(:final orders, :final isLoadingMore) =>
-                    _buildOrdersList(orders, isLoadingMore, isDark),
+                  OrdersLoaded(:final orders, :final isLoadingMore) => () {
+                      final filtered = _filterOrders(orders);
+                      if (filtered.isEmpty && _searchTerm.isNotEmpty) {
+                        return const SekkaEmptyState(
+                          icon: IconsaxPlusLinear.search_normal_1,
+                          title: 'مفيش نتايج',
+                          description: 'جرّب اسم عميل أو رقم تاني',
+                        );
+                      }
+                      return _buildOrdersList(filtered, isLoadingMore, isDark);
+                    }(),
                   OrdersError(:final message) =>
                     _buildErrorView(message, isDark),
                 },
@@ -262,21 +321,23 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
 
   Widget _buildFilterButton(bool isDark) {
     final state = context.watch<OrdersBloc>().state;
-    final hasDate =
-        state is OrdersLoaded && (state.dateFrom != null || state.dateTo != null);
+    final isActive = state is OrdersLoaded &&
+        (state.dateFrom != null ||
+            state.dateTo != null ||
+            state.paymentMethod != null);
     return InkWell(
-      onTap: _openDateFilterSheet,
+      onTap: _openFilterSheet,
       borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       child: Container(
         width: Responsive.w(48),
         height: Responsive.w(48),
         decoration: BoxDecoration(
-          color: hasDate
+          color: isActive
               ? AppColors.primary
               : (isDark ? AppColors.surfaceDark : AppColors.surface),
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           border: Border.all(
-            color: hasDate
+            color: isActive
                 ? AppColors.primary
                 : (isDark ? AppColors.borderDark : AppColors.border),
           ),
@@ -284,7 +345,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         child: Icon(
           IconsaxPlusLinear.filter,
           size: Responsive.r(22),
-          color: hasDate
+          color: isActive
               ? AppColors.textOnPrimary
               : (isDark ? AppColors.textBodyDark : AppColors.textBody),
         ),
@@ -292,12 +353,40 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
     );
   }
 
-  Widget _buildActiveDateChip(bool isDark) {
+  Widget _buildActiveFiltersRow(bool isDark) {
     final state = context.watch<OrdersBloc>().state;
     if (state is! OrdersLoaded) return const SizedBox.shrink();
-    final dateFrom = state.dateFrom;
-    if (dateFrom == null) return const SizedBox.shrink();
-    final label = '${AppStrings.filterByDate}: ${_displayDate(dateFrom)}';
+
+    final chips = <Widget>[];
+
+    if (state.dateFrom != null) {
+      final from = state.dateFrom!;
+      final to = state.dateTo;
+      final label = (to != null && to != from)
+          ? '${_displayDate(from)} ← ${_displayDate(to)}'
+          : _displayDate(from);
+      chips.add(_filterChip(
+        icon: IconsaxPlusLinear.calendar_1,
+        label: label,
+        onClear: () => context
+            .read<OrdersBloc>()
+            .add(const OrdersFilterChanged(clearDate: true)),
+      ));
+    }
+
+    if (state.paymentMethod != null) {
+      final method = PaymentMethod.fromValue(state.paymentMethod!);
+      chips.add(_filterChip(
+        icon: IconsaxPlusLinear.card,
+        label: method.arabic,
+        onClear: () => context
+            .read<OrdersBloc>()
+            .add(const OrdersFilterChanged(clearPaymentMethod: true)),
+      ));
+    }
+
+    if (chips.isEmpty) return const SizedBox.shrink();
+
     return Padding(
       padding: EdgeInsets.fromLTRB(
         AppSizes.pagePadding,
@@ -307,55 +396,72 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       ),
       child: Align(
         alignment: AlignmentDirectional.centerStart,
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: AppSizes.md,
-            vertical: Responsive.h(6),
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(AppSizes.radiusPill),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            textDirection: TextDirection.rtl,
-            children: [
-              Icon(
-                IconsaxPlusLinear.calendar_1,
-                size: Responsive.r(14),
-                color: AppColors.primary,
-              ),
-              SizedBox(width: Responsive.w(6)),
-              Text(
-                label,
-                style: AppTypography.captionSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              SizedBox(width: Responsive.w(6)),
-              InkWell(
-                onTap: () => context
-                    .read<OrdersBloc>()
-                    .add(const OrdersFilterChanged(clearDate: true)),
-                child: Icon(
-                  IconsaxPlusLinear.close_circle,
-                  size: Responsive.r(16),
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
+        child: Wrap(
+          spacing: AppSizes.xs,
+          runSpacing: AppSizes.xs,
+          children: chips,
         ),
       ),
     );
   }
 
-  Future<void> _openDateFilterSheet() async {
+  Widget _filterChip({
+    required IconData icon,
+    required String label,
+    required VoidCallback onClear,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: Responsive.h(6),
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        textDirection: TextDirection.rtl,
+        children: [
+          Icon(icon, size: Responsive.r(14), color: AppColors.primary),
+          SizedBox(width: Responsive.w(6)),
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(width: Responsive.w(6)),
+          InkWell(
+            onTap: onClear,
+            child: Icon(
+              IconsaxPlusLinear.close_circle,
+              size: Responsive.r(16),
+              color: AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openFilterSheet() async {
     final state = context.read<OrdersBloc>().state;
     final currentFrom = state is OrdersLoaded ? state.dateFrom : null;
-    DateTime? selected =
+    final currentTo = state is OrdersLoaded ? state.dateTo : null;
+    final currentPaymentMethod =
+        state is OrdersLoaded ? state.paymentMethod : null;
+
+    // Date mode: single day if from == to, otherwise range.
+    bool isRangeMode =
+        currentFrom != null && currentTo != null && currentFrom != currentTo;
+    DateTime? singleDate =
         currentFrom != null ? DateTime.tryParse(currentFrom) : null;
+    DateTime? rangeFrom =
+        currentFrom != null ? DateTime.tryParse(currentFrom) : null;
+    DateTime? rangeTo = currentTo != null ? DateTime.tryParse(currentTo) : null;
+    int? paymentMethod = currentPaymentMethod;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -370,20 +476,24 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
       builder: (sheetCtx) {
         return StatefulBuilder(
           builder: (innerCtx, setSheetState) {
-            final isDark =
-                Theme.of(innerCtx).brightness == Brightness.dark;
+            final isDark = Theme.of(innerCtx).brightness == Brightness.dark;
 
-            Future<void> openCalendar() async {
-              final picked = await showDatePicker(
+            Future<DateTime?> pickDate(DateTime? initial) {
+              return showDatePicker(
                 context: innerCtx,
-                initialDate: selected ?? DateTime.now(),
+                initialDate: initial ?? DateTime.now(),
                 firstDate: DateTime(2020),
                 lastDate: DateTime.now(),
               );
-              if (picked != null) {
-                setSheetState(() => selected = picked);
-              }
             }
+
+            final hasAny = rangeFrom != null ||
+                rangeTo != null ||
+                singleDate != null ||
+                paymentMethod != null;
+            final canApply = isRangeMode
+                ? (rangeFrom != null && rangeTo != null) || paymentMethod != null
+                : singleDate != null || paymentMethod != null;
 
             return SafeArea(
               child: Directionality(
@@ -395,116 +505,196 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                     AppSizes.pagePadding,
                     AppSizes.lg,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: Responsive.w(40),
-                          height: Responsive.h(4),
-                          decoration: BoxDecoration(
-                            color: AppColors.border,
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusPill),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: AppSizes.lg),
-                      Text(
-                        AppStrings.filterByDate,
-                        style: AppTypography.headlineSmall,
-                      ),
-                      SizedBox(height: AppSizes.lg),
-                      Text(
-                        AppStrings.pickDay,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: isDark
-                              ? AppColors.textCaptionDark
-                              : AppColors.textCaption,
-                        ),
-                      ),
-                      SizedBox(height: AppSizes.xs),
-                      InkWell(
-                        onTap: openCalendar,
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusMd),
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: AppSizes.md,
-                            vertical: Responsive.h(14),
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppColors.backgroundDark
-                                : AppColors.background,
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMd),
-                            border: Border.all(
-                              color: isDark
-                                  ? AppColors.borderDark
-                                  : AppColors.border,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: Responsive.w(40),
+                            height: Responsive.h(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.border,
+                              borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusPill),
                             ),
                           ),
-                          child: Row(
+                        ),
+                        SizedBox(height: AppSizes.lg),
+                        Text(
+                          AppStrings.filterByDate,
+                          style: AppTypography.headlineSmall,
+                        ),
+                        SizedBox(height: AppSizes.md),
+
+                        // Date mode toggle: single day / range
+                        SekkaSegmentedTabs(
+                          labels: [
+                            AppStrings.singleDay,
+                            AppStrings.pickPeriod,
+                          ],
+                          selectedIndex: isRangeMode ? 1 : 0,
+                          onChanged: (i) {
+                            setSheetState(() => isRangeMode = i == 1);
+                          },
+                        ),
+                        SizedBox(height: AppSizes.md),
+
+                        if (!isRangeMode)
+                          _datePickerField(
+                            label: AppStrings.pickDay,
+                            value: singleDate,
+                            isDark: isDark,
+                            onTap: () async {
+                              final picked = await pickDate(singleDate);
+                              if (picked != null) {
+                                setSheetState(() => singleDate = picked);
+                              }
+                            },
+                          )
+                        else
+                          Row(
                             textDirection: TextDirection.rtl,
                             children: [
-                              Icon(
-                                IconsaxPlusLinear.calendar_1,
-                                size: Responsive.r(20),
-                                color: AppColors.primary,
+                              Expanded(
+                                child: _datePickerField(
+                                  label: AppStrings.dateFromLabel,
+                                  value: rangeFrom,
+                                  isDark: isDark,
+                                  onTap: () async {
+                                    final picked = await pickDate(rangeFrom);
+                                    if (picked != null) {
+                                      setSheetState(() => rangeFrom = picked);
+                                    }
+                                  },
+                                ),
                               ),
                               SizedBox(width: AppSizes.sm),
                               Expanded(
-                                child: Text(
-                                  selected != null
-                                      ? _displayDate(_fmtDate(selected!))
-                                      : AppStrings.pickDay,
-                                  style: AppTypography.bodyMedium.copyWith(
-                                    color: selected != null
-                                        ? (isDark
-                                            ? AppColors.textHeadlineDark
-                                            : AppColors.textHeadline)
-                                        : (isDark
-                                            ? AppColors.textCaptionDark
-                                            : AppColors.textCaption),
-                                    fontWeight: selected != null
-                                        ? FontWeight.w700
-                                        : FontWeight.w400,
-                                  ),
+                                child: _datePickerField(
+                                  label: AppStrings.dateToLabel,
+                                  value: rangeTo,
+                                  isDark: isDark,
+                                  onTap: () async {
+                                    final picked = await pickDate(rangeTo);
+                                    if (picked != null) {
+                                      setSheetState(() => rangeTo = picked);
+                                    }
+                                  },
                                 ),
-                              ),
-                              Icon(
-                                IconsaxPlusLinear.arrow_down_1,
-                                size: Responsive.r(18),
-                                color: isDark
-                                    ? AppColors.textCaptionDark
-                                    : AppColors.textCaption,
                               ),
                             ],
                           ),
+
+                        SizedBox(height: AppSizes.xl),
+
+                        // Payment method section
+                        Text(
+                          AppStrings.filterByPaymentMethod,
+                          style: AppTypography.headlineSmall,
                         ),
-                      ),
-                      SizedBox(height: AppSizes.xl),
-                      Row(
-                        textDirection: TextDirection.rtl,
-                        children: [
-                          if (currentFrom != null || selected != null) ...[
-                            Expanded(
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  context.read<OrdersBloc>().add(
-                                        const OrdersFilterChanged(
-                                            clearDate: true),
-                                      );
-                                  Navigator.pop(sheetCtx);
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppColors.error,
-                                  side: BorderSide(
-                                    color: AppColors.error
-                                        .withValues(alpha: 0.4),
+                        SizedBox(height: AppSizes.md),
+                        Wrap(
+                          spacing: AppSizes.xs,
+                          runSpacing: AppSizes.xs,
+                          children: [
+                            _paymentChip(
+                              label: AppStrings.allPaymentMethods,
+                              selected: paymentMethod == null,
+                              isDark: isDark,
+                              onTap: () =>
+                                  setSheetState(() => paymentMethod = null),
+                            ),
+                            ...PaymentMethod.values.map(
+                              (m) => _paymentChip(
+                                label: m.arabic,
+                                selected: paymentMethod == m.value,
+                                isDark: isDark,
+                                onTap: () => setSheetState(
+                                    () => paymentMethod = m.value),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        SizedBox(height: AppSizes.xl),
+
+                        Row(
+                          textDirection: TextDirection.rtl,
+                          children: [
+                            if (hasAny) ...[
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    context.read<OrdersBloc>().add(
+                                          const OrdersFilterChanged(
+                                            clearDate: true,
+                                            clearPaymentMethod: true,
+                                          ),
+                                        );
+                                    Navigator.pop(sheetCtx);
+                                  },
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.error,
+                                    side: BorderSide(
+                                      color: AppColors.error
+                                          .withValues(alpha: 0.4),
+                                    ),
+                                    padding: EdgeInsets.symmetric(
+                                      vertical: Responsive.h(14),
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSizes.radiusMd),
+                                    ),
                                   ),
+                                  child: Text(
+                                    AppStrings.clearFilter,
+                                    style:
+                                        AppTypography.titleMedium.copyWith(
+                                      color: AppColors.error,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(width: AppSizes.sm),
+                            ],
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: !canApply
+                                    ? null
+                                    : () {
+                                        String? dateFromIso;
+                                        String? dateToIso;
+                                        if (isRangeMode) {
+                                          if (rangeFrom != null) {
+                                            dateFromIso = _fmtDate(rangeFrom!);
+                                          }
+                                          if (rangeTo != null) {
+                                            dateToIso = _fmtDate(rangeTo!);
+                                          }
+                                        } else if (singleDate != null) {
+                                          dateFromIso = _fmtDate(singleDate!);
+                                          dateToIso = dateFromIso;
+                                        }
+                                        context.read<OrdersBloc>().add(
+                                              OrdersFilterChanged(
+                                                dateFrom: dateFromIso,
+                                                dateTo: dateToIso,
+                                                paymentMethod: paymentMethod,
+                                                clearDate: dateFromIso == null,
+                                                clearPaymentMethod:
+                                                    paymentMethod == null,
+                                              ),
+                                            );
+                                        Navigator.pop(sheetCtx);
+                                      },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: AppColors.textOnPrimary,
+                                  disabledBackgroundColor: AppColors.border,
                                   padding: EdgeInsets.symmetric(
                                     vertical: Responsive.h(14),
                                   ),
@@ -514,54 +704,18 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  AppStrings.clearFilter,
+                                  AppStrings.apply,
                                   style: AppTypography.titleMedium.copyWith(
-                                    color: AppColors.error,
+                                    color: AppColors.textOnPrimary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
                               ),
                             ),
-                            SizedBox(width: AppSizes.sm),
                           ],
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: selected == null
-                                  ? null
-                                  : () {
-                                      final iso = _fmtDate(selected!);
-                                      context.read<OrdersBloc>().add(
-                                            OrdersFilterChanged(
-                                              dateFrom: iso,
-                                              dateTo: iso,
-                                            ),
-                                          );
-                                      Navigator.pop(sheetCtx);
-                                    },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: AppColors.textOnPrimary,
-                                disabledBackgroundColor: AppColors.border,
-                                padding: EdgeInsets.symmetric(
-                                  vertical: Responsive.h(14),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(
-                                      AppSizes.radiusMd),
-                                ),
-                              ),
-                              child: Text(
-                                AppStrings.apply,
-                                style: AppTypography.titleMedium.copyWith(
-                                  color: AppColors.textOnPrimary,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -569,6 +723,102 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
           },
         );
       },
+    );
+  }
+
+  Widget _datePickerField({
+    required String label,
+    required DateTime? value,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: Responsive.h(14),
+        ),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.backgroundDark : AppColors.background,
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(
+            color: isDark ? AppColors.borderDark : AppColors.border,
+          ),
+        ),
+        child: Row(
+          textDirection: TextDirection.rtl,
+          children: [
+            Icon(
+              IconsaxPlusLinear.calendar_1,
+              size: Responsive.r(20),
+              color: AppColors.primary,
+            ),
+            SizedBox(width: AppSizes.sm),
+            Expanded(
+              child: Text(
+                value != null ? _displayDate(_fmtDate(value)) : label,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: value != null
+                      ? (isDark
+                          ? AppColors.textHeadlineDark
+                          : AppColors.textHeadline)
+                      : (isDark
+                          ? AppColors.textCaptionDark
+                          : AppColors.textCaption),
+                  fontWeight:
+                      value != null ? FontWeight.w700 : FontWeight.w400,
+                ),
+              ),
+            ),
+            Icon(
+              IconsaxPlusLinear.arrow_down_1,
+              size: Responsive.r(18),
+              color: isDark
+                  ? AppColors.textCaptionDark
+                  : AppColors.textCaption,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentChip({
+    required String label,
+    required bool selected,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSizes.md,
+          vertical: Responsive.h(8),
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary
+              : (isDark ? AppColors.backgroundDark : AppColors.background),
+          borderRadius: BorderRadius.circular(AppSizes.radiusPill),
+          border: Border.all(
+            color: selected
+                ? AppColors.primary
+                : (isDark ? AppColors.borderDark : AppColors.border),
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: selected
+                ? AppColors.textOnPrimary
+                : (isDark ? AppColors.textBodyDark : AppColors.textBody),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
     );
   }
 
@@ -646,9 +896,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
         context.read<OrdersBloc>().add(
               OrdersLoadRequested(
                 statusFilter: _selectedStatusFilter,
-                searchTerm: _searchController.text.trim().isNotEmpty
-                    ? _searchController.text.trim()
-                    : null,
                 refresh: true,
               ),
             );
@@ -715,9 +962,6 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                 context.read<OrdersBloc>().add(
                       OrdersLoadRequested(
                         statusFilter: _selectedStatusFilter,
-                        searchTerm: _searchController.text.trim().isNotEmpty
-                            ? _searchController.text.trim()
-                            : null,
                       ),
                     );
               },

@@ -31,7 +31,7 @@ class CustomersBloc extends HydratedBloc<CustomersEvent, CustomersState> {
 
     final result = await _repository.getCustomers(
       pageNumber: event.page,
-      pageSize: 10,
+      pageSize: 100,
       searchTerm: event.searchTerm,
       isBlocked: event.isBlocked,
       minRating: event.minRating,

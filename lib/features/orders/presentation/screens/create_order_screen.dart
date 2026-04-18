@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -581,6 +582,50 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
     context.read<OrdersBloc>().add(OrderCreateRequested(data: data));
   }
 
+  /// Fire-and-forget: persist the delivery address into the customer's
+  /// saved-addresses list after a successful create, so it shows up in
+  /// Customer Details next time. Silent on any failure — the order is
+  /// already saved and the driver shouldn't be blocked by a bookkeeping
+  /// side-effect.
+  Future<void> _autoSaveDeliveryAddress() async {
+    if (_isEditMode) return;
+
+    final addressText = _deliveryAddressController.text.trim();
+    final phone = _customerPhoneController.text.trim().toEnglishNumbers;
+    if (addressText.isEmpty || phone.isEmpty) return;
+
+    try {
+      // Resolve customerId — prefer the one we looked up during entry;
+      // otherwise fetch by phone (backend auto-creates from order payload).
+      var customerId = _customerId;
+      if (customerId == null) {
+        final result = await _customerRepo.findByPhone(phone);
+        if (result case ApiSuccess(:final data)) {
+          customerId = data.id;
+        } else {
+          return;
+        }
+      }
+
+      // Skip if the same address is already saved for this customer.
+      final normalized = addressText.toLowerCase();
+      final alreadyExists = _customerAddresses.any(
+        (a) => a.addressText.trim().toLowerCase() == normalized,
+      );
+      if (alreadyExists) return;
+
+      await _addressRepo.saveAddress(
+        customerId: customerId,
+        addressText: addressText,
+        latitude: _deliveryLat,
+        longitude: _deliveryLng,
+        addressType: 0,
+      );
+    } catch (_) {
+      // Silent — bookkeeping side-effect must not disturb the main flow.
+    }
+  }
+
   Future<bool> _showDuplicateWarning(Map<String, dynamic> dupData) async {
     final matchScore = dupData['matchScore'] as num? ?? 0;
     final matchedOrder = dupData['matchedOrder'] as Map<String, dynamic>?;
@@ -680,32 +725,42 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
             final msg = state.actionMessage!;
             final isError = state.isActionError;
 
-            ScaffoldMessenger.of(context)
-              ..hideCurrentSnackBar()
-              ..showSnackBar(
-                SnackBar(
-                  content: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text(
-                      msg,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textOnPrimary,
+            // Offline save + net-back sync run silently — the only network
+            // signal the user sees is the top connectivity banner.
+            final isSilent = msg == AppStrings.savedOffline ||
+                msg == AppStrings.orderSyncedSuccess;
+
+            if (!isSilent) {
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Directionality(
+                      textDirection: TextDirection.rtl,
+                      child: Text(
+                        msg,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textOnPrimary,
+                        ),
                       ),
                     ),
+                    backgroundColor:
+                        isError ? AppColors.error : AppColors.success,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                    ),
                   ),
-                  backgroundColor:
-                      isError ? AppColors.error : AppColors.success,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                  ),
-                ),
-              );
+                );
+            }
 
             // امسح الرسالة عشان متتعرضش تاني
             context.read<OrdersBloc>().add(const OrdersClearMessage());
 
-            if (!isError) Navigator.of(context).pop();
+            if (!isError) {
+              unawaited(_autoSaveDeliveryAddress());
+              Navigator.of(context).pop();
+            }
           }
         },
         builder: (context, state) {

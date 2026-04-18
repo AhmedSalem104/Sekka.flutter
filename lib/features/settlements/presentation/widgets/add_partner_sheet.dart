@@ -12,6 +12,8 @@ import '../../../../core/widgets/sekka_map_picker.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/network/dio_client.dart';
+import '../../../../shared/offline/sync_queue_service.dart';
+import '../../../../shared/services/connectivity_service.dart';
 import '../../../partners/data/models/create_partner_model.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../../../partners/data/repositories/partner_repository.dart';
@@ -151,6 +153,25 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
           ? null
           : _receiptHeaderController.text.trim(),
     );
+
+    // Offline-first: if no connectivity, enqueue to sync queue and treat as
+    // success. The user experience matches the online case — the partner is
+    // created via /sync/push as soon as connectivity returns.
+    if (!ConnectivityService.instance.isOnline) {
+      await SyncQueueService.instance.enqueueCreate(
+        entityType: 'partner',
+        payload: data.toJson(),
+      );
+      if (!mounted) return;
+      widget.onPartnerCreated?.call();
+      Navigator.of(context).pop();
+      SekkaMessageDialog.show(
+        context,
+        message: AppStrings.partnerAddedSuccess,
+        type: SekkaMessageType.success,
+      );
+      return;
+    }
 
     final result = await widget.repository.createPartner(data: data);
 

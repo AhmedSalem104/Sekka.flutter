@@ -25,6 +25,7 @@ final class OrdersLoaded extends OrdersState {
     this.searchTerm = '',
     this.dateFrom,
     this.dateTo,
+    this.paymentMethod,
     this.hasMore = true,
     this.currentPage = 1,
     this.isLoadingMore = false,
@@ -51,6 +52,7 @@ final class OrdersLoaded extends OrdersState {
   final String searchTerm;
   final String? dateFrom;
   final String? dateTo;
+  final int? paymentMethod;
   final bool hasMore;
   final int currentPage;
   final bool isLoadingMore;
@@ -77,6 +79,7 @@ final class OrdersLoaded extends OrdersState {
     String? searchTerm,
     String? Function()? dateFrom,
     String? Function()? dateTo,
+    int? Function()? paymentMethod,
     bool? hasMore,
     int? currentPage,
     bool? isLoadingMore,
@@ -104,6 +107,8 @@ final class OrdersLoaded extends OrdersState {
       searchTerm: searchTerm ?? this.searchTerm,
       dateFrom: dateFrom != null ? dateFrom() : this.dateFrom,
       dateTo: dateTo != null ? dateTo() : this.dateTo,
+      paymentMethod:
+          paymentMethod != null ? paymentMethod() : this.paymentMethod,
       hasMore: hasMore ?? this.hasMore,
       currentPage: currentPage ?? this.currentPage,
       isLoadingMore: isLoadingMore ?? this.isLoadingMore,
@@ -141,6 +146,7 @@ final class OrdersLoaded extends OrdersState {
         searchTerm,
         dateFrom,
         dateTo,
+        paymentMethod,
         hasMore,
         currentPage,
         isLoadingMore,

@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/constants/app_strings.dart';
 import 'core/routing/app_router.dart';
 import 'shared/offline/offline_queue_service.dart';
 import 'shared/offline/queue_operation.dart';
@@ -100,9 +101,19 @@ void main() async {
   // Auth status notifier for GoRouter
   final authStatusNotifier = ValueNotifier<bool>(false);
 
-  // Theme & locale notifiers for Settings
-  final themeModeNotifier = ValueNotifier<ThemeMode>(ThemeMode.light);
-  final localeNotifier = ValueNotifier<Locale>(const Locale('ar'));
+  // Theme & locale notifiers for Settings — restore from prefs so the user's
+  // last choice survives app restarts (and doesn't flash default on cold start)
+  final savedThemeIndex = prefs.getInt('settings_theme') ?? 0;
+  final savedLanguage = prefs.getString('settings_language') ?? 'ar';
+  final themeModeNotifier = ValueNotifier<ThemeMode>(
+    switch (savedThemeIndex) {
+      1 => ThemeMode.light,
+      2 => ThemeMode.dark,
+      _ => ThemeMode.system,
+    },
+  );
+  final localeNotifier = ValueNotifier<Locale>(Locale(savedLanguage));
+  AppStrings.setLocale(savedLanguage);
 
   // Late-init AuthBloc reference for the interceptor callback
   late final AuthBloc authBloc;
@@ -342,6 +353,7 @@ void main() async {
               repository: settingsRepository,
               themeModeNotifier: themeModeNotifier,
               localeNotifier: localeNotifier,
+              prefs: prefs,
             ),
           ),
           BlocProvider(

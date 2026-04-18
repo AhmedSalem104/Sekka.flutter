@@ -52,8 +52,8 @@ class _MainShellState extends State<MainShell> {
       label: 'عملائي',
     ),
     SekkaBottomNavItem(
-      icon: IconsaxPlusLinear.wallet_2,
-      activeIcon: IconsaxPlusBold.wallet_2,
+      icon: IconsaxPlusLinear.moneys,
+      activeIcon: IconsaxPlusBold.moneys,
       label: 'جيبي',
     ),
     SekkaBottomNavItem(

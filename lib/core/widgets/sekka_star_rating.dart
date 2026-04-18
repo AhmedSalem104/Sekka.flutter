@@ -34,12 +34,12 @@ class SekkaStarRating extends StatelessWidget {
 
     void updateFromDx(double dx) {
       final clamped = dx.clamp(0.0, totalWidth);
-      final value = (clamped / slot).ceil().clamp(0, count);
+      final value = ((totalWidth - clamped) / slot).ceil().clamp(0, count);
       if (value != rating) onChanged(value);
     }
 
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTapDown: (d) => updateFromDx(d.localPosition.dx),

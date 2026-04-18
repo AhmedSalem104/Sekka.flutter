@@ -7,6 +7,7 @@ import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/extensions/string_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_card.dart';
@@ -15,6 +16,7 @@ import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../shared/network/dio_client.dart';
 import '../../../search/data/repositories/search_repository.dart';
+import '../../data/models/customer_model.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../bloc/customers_bloc.dart';
 import '../bloc/customers_event.dart';
@@ -30,8 +32,8 @@ class CustomersListScreen extends StatefulWidget {
 class _CustomersListScreenState extends State<CustomersListScreen> {
   late final TextEditingController _searchController;
   late final CustomersBloc _bloc;
-  Timer? _debounce;
   Timer? _autoRefresh;
+  String _searchTerm = '';
 
   static const _refreshInterval = Duration(seconds: 30);
 
@@ -53,10 +55,23 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   void _startAutoRefresh() {
     _autoRefresh?.cancel();
     _autoRefresh = Timer.periodic(_refreshInterval, (_) {
-      if (_searchController.text.isEmpty) {
+      if (_searchTerm.isEmpty) {
         _bloc.add(const CustomersLoadRequested());
       }
     });
+  }
+
+  List<CustomerModel> _filterCustomers(List<CustomerModel> all) {
+    if (_searchTerm.isEmpty) return all;
+    final rawQ = _searchTerm.toEnglishNumbers.toLowerCase();
+    final digitsQ = rawQ.replaceAll(RegExp(r'\D'), '');
+    return all.where((c) {
+      final name = (c.name ?? '').toLowerCase();
+      final phoneDigits =
+          c.phone.toEnglishNumbers.replaceAll(RegExp(r'\D'), '');
+      if (digitsQ.isNotEmpty && phoneDigits.contains(digitsQ)) return true;
+      return name.contains(rawQ);
+    }).toList();
   }
 
   Future<void> _onRefresh() async {
@@ -70,7 +85,6 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
   @override
   void dispose() {
     _autoRefresh?.cancel();
-    _debounce?.cancel();
     _searchController.dispose();
     _bloc.close();
     super.dispose();
@@ -108,12 +122,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
               padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
               child: SekkaSearchBar(
                 controller: _searchController,
-                hint: AppStrings.searchCustomer,
+                hint: 'بحث باسم العميل أو رقمه...',
                 onChanged: (value) {
-                  _debounce?.cancel();
-                  _debounce = Timer(const Duration(milliseconds: 300), () {
-                    _bloc.add(CustomersSearchChanged(value));
-                  });
+                  setState(() => _searchTerm = value.trim());
                 },
               ),
             ),
@@ -137,23 +148,29 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                           _bloc.add(const CustomersLoadRequested());
                         },
                       ),
-                    CustomersLoaded(:final customers) => customers.isEmpty
-                        ? RefreshIndicator(
-                            color: AppColors.primary,
-                            onRefresh: _onRefresh,
-                            child: ListView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: const [
-                                SekkaEmptyState(
-                                  icon: IconsaxPlusLinear.profile_2user,
-                                  title: 'مفيش عملاء',
-                                  description:
-                                      'العملاء هيظهروا هنا لما تبدأ توصيل',
-                                ),
-                              ],
-                            ),
-                          )
-                        : RefreshIndicator(
+                    CustomersLoaded(:final customers) => () {
+                      final filtered = _filterCustomers(customers);
+                      if (filtered.isEmpty) {
+                        return RefreshIndicator(
+                          color: AppColors.primary,
+                          onRefresh: _onRefresh,
+                          child: ListView(
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            children: [
+                              SekkaEmptyState(
+                                icon: IconsaxPlusLinear.profile_2user,
+                                title: _searchTerm.isNotEmpty
+                                    ? 'مفيش نتايج'
+                                    : 'مفيش عملاء',
+                                description: _searchTerm.isNotEmpty
+                                    ? 'جرّب اسم أو رقم تاني'
+                                    : 'العملاء هيظهروا هنا لما تبدأ توصيل',
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return RefreshIndicator(
                             color: AppColors.primary,
                             onRefresh: _onRefresh,
                             child: ListView.builder(
@@ -161,9 +178,9 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                               padding: EdgeInsets.symmetric(
                                 horizontal: Responsive.w(20),
                               ),
-                              itemCount: customers.length,
+                              itemCount: filtered.length,
                               itemBuilder: (context, index) {
-                              final customer = customers[index];
+                              final customer = filtered[index];
                               final displayName =
                                   customer.name ?? customer.phone;
                               final initial = displayName.characters.first;
@@ -250,7 +267,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                                             children: [
                                               Text(
                                                 customer.averageRating
-                                                    .toStringAsFixed(1),
+                                                    .round()
+                                                    .toString(),
                                                 style: AppTypography.bodySmall
                                                     .copyWith(
                                                   color: isDark
@@ -306,7 +324,8 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                               );
                             },
                             ),
-                          ),
+                          );
+                    }(),
                   };
                 },
               ),

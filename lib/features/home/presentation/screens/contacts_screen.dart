@@ -376,7 +376,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                 ),
                 SizedBox(width: Responsive.w(8)),
                 GestureDetector(
-                  onTap: () => PhoneLauncher.whatsApp(customer.phone),
+                  onTap: () => PhoneLauncher.messagingApps(customer.phone),
                   child: Container(
                     padding: EdgeInsets.all(Responsive.w(8)),
                     decoration: BoxDecoration(

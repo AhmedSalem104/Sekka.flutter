@@ -1862,11 +1862,30 @@ class _ActionArea extends StatelessWidget {
           ),
           actions: [
             TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => OrderDetailScreen(orderId: busy.id),
+                  ),
+                );
+              },
+              child: Text(
+                AppStrings.deliveryBusyGoToCurrent,
+                style: AppTypography.button.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
                 AppStrings.ok,
                 style: AppTypography.button.copyWith(
-                  color: AppColors.primary,
+                  color: isDark
+                      ? AppColors.textCaptionDark
+                      : AppColors.textCaption,
                 ),
               ),
             ),

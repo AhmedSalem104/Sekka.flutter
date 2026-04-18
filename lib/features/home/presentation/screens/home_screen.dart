@@ -46,7 +46,6 @@ import '../../../breaks/presentation/widgets/break_suggestion_card.dart';
 import '../../../shifts/presentation/bloc/shift_bloc.dart';
 import '../../../shifts/presentation/bloc/shift_event.dart';
 import '../../../shifts/presentation/bloc/shift_state.dart';
-import '../../../sync/presentation/widgets/sync_status_indicator.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, this.onAvatarTap});
@@ -206,8 +205,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         _buildSmallShiftToggle(context, isDark),
-        SizedBox(width: Responsive.w(8)),
-        const SyncStatusChip(),
         SizedBox(width: Responsive.w(8)),
         _NotificationBadge(
           isDark: isDark,
@@ -408,6 +405,7 @@ class _HomeScreenState extends State<HomeScreen> {
         shiftState is ShiftLoaded ? shiftState.currentShift : null;
 
     OrderModel? inTransitOrder;
+    OrderModel? firstOrderToday;
     bool hasActiveOrder = false;
     if (ordersState is OrdersLoaded) {
       final activeOrders = ordersState.orders.where((o) =>
@@ -421,6 +419,18 @@ class _HomeScreenState extends State<HomeScreen> {
           .where((o) => o.status == OrderStatus.inTransit)
           .toList();
       if (transit.isNotEmpty) inTransitOrder = transit.first;
+
+      final now = DateTime.now();
+      final todayPending = activeOrders
+          .where((o) =>
+              (o.status == OrderStatus.pending ||
+                  o.status == OrderStatus.accepted) &&
+              o.createdAt.year == now.year &&
+              o.createdAt.month == now.month &&
+              o.createdAt.day == now.day)
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      if (todayPending.isNotEmpty) firstOrderToday = todayPending.first;
     }
 
     final Widget content;
@@ -428,6 +438,8 @@ class _HomeScreenState extends State<HomeScreen> {
       content = _buildInTransitOrder(context, inTransitOrder);
     } else if (isShiftActive) {
       content = _buildIdleHero(context);
+    } else if (firstOrderToday != null) {
+      content = _buildStartShiftWithOrderHero(context, firstOrderToday);
     } else {
       content = _buildAddOrderCta(context);
     }
@@ -746,6 +758,113 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // ── Start-Shift Hero (shift not started + has orders today) ──
+
+  Widget _buildStartShiftWithOrderHero(BuildContext context, OrderModel order) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(
+          builder: (_) => OrderDetailScreen(orderId: order.id),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.startShiftWithOrder,
+            style: AppTypography.titleMedium.copyWith(
+              color: AppColors.textOnPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          SizedBox(height: Responsive.h(6)),
+          Text(
+            AppStrings.deliverFirstOrder,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textOnPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: Responsive.h(12)),
+          Container(
+            padding: EdgeInsets.all(Responsive.w(12)),
+            decoration: BoxDecoration(
+              color: AppColors.textOnPrimary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(Responsive.r(12)),
+              border: Border.all(
+                color: AppColors.textOnPrimary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: Responsive.r(36),
+                  height: Responsive.r(36),
+                  decoration: BoxDecoration(
+                    color: AppColors.textOnPrimary.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(Responsive.r(8)),
+                  ),
+                  child: Icon(
+                    IconsaxPlusBold.box_1,
+                    color: AppColors.textOnPrimary,
+                    size: Responsive.r(20),
+                  ),
+                ),
+                SizedBox(width: Responsive.w(10)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        order.customerName ?? order.orderNumber,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textOnPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      SizedBox(height: Responsive.h(2)),
+                      Text(
+                        order.deliveryAddress,
+                        style: AppTypography.captionSmall.copyWith(
+                          color:
+                              AppColors.textOnPrimary.withValues(alpha: 0.75),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: Responsive.w(8)),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      '${order.amount.toStringAsFixed(0)} ${AppStrings.currency}',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textOnPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: Responsive.h(2)),
+                    Icon(
+                      IconsaxPlusLinear.arrow_left_2,
+                      size: Responsive.r(14),
+                      color: AppColors.textOnPrimary.withValues(alpha: 0.7),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

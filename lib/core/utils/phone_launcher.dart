@@ -19,6 +19,20 @@ abstract final class PhoneLauncher {
     }
   }
 
+  /// Opens the device's messaging app chooser (SMS / WhatsApp / etc).
+  static Future<void> messagingApps(String phoneNumber) async {
+    var normalized = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+    if (normalized.startsWith('0')) {
+      normalized = '+2$normalized';
+    } else if (!normalized.startsWith('+')) {
+      normalized = '+$normalized';
+    }
+    final uri = Uri(scheme: 'sms', path: normalized);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
+  }
+
   /// Opens WhatsApp chat with the given number.
   static Future<void> whatsApp(String phoneNumber, {String? message}) async {
     final cleaned = phoneNumber.replaceAll(RegExp(r'[^\d+]'), '');

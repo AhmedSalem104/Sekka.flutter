@@ -241,7 +241,7 @@ abstract final class AppStrings {
   static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static String get walletTitle => _isAr ? 'محفظتك' : 'Wallet';
+  static String get walletTitle => _isAr ? 'جيبي' : 'Wallet';
   static String get currentBalance =>
       _isAr ? 'رصيدك عند الشركة' : 'Your balance';
   static String get cashOnHand => _isAr ? 'كاش معاك (فلوس شغل)' : 'Cash with you (work money)';
@@ -364,6 +364,13 @@ abstract final class AppStrings {
   static String get today => _isAr ? 'النهارده' : 'Today';
   static String get yesterday => _isAr ? 'امبارح' : 'Yesterday';
   static String get pickDay => _isAr ? 'اختار يوم' : 'Pick a day';
+  static String get pickPeriod => _isAr ? 'من / إلى' : 'Date range';
+  static String get singleDay => _isAr ? 'يوم واحد' : 'Single day';
+  static String get dateFromLabel => _isAr ? 'من تاريخ' : 'From';
+  static String get dateToLabel => _isAr ? 'إلى تاريخ' : 'To';
+  static String get filterByPaymentMethod =>
+      _isAr ? 'فلتر بطريقة الدفع' : 'Filter by payment';
+  static String get allPaymentMethods => _isAr ? 'الكل' : 'All';
   static String get clearFilter => _isAr ? 'مسح الفلتر' : 'Clear filter';
   static String get apply => _isAr ? 'تطبيق' : 'Apply';
   static String get allPartners => _isAr ? 'كل الشركاء' : 'All partners';
@@ -551,7 +558,7 @@ abstract final class AppStrings {
   static String get address => _isAr ? 'العنوان' : 'Address';
   static String get amount => _isAr ? 'المبلغ' : 'Amount';
   static String get note => _isAr ? 'ملاحظة' : 'Note';
-  static String get confirmAdd => _isAr ? 'تمام، أضيف!' : 'Add';
+  static String get confirmAdd => _isAr ? 'ضيف' : 'Add';
   static String get pickupAddress =>
       _isAr ? 'هتستلم منين؟' : 'Pickup address';
   static String get deliveryAddress =>
@@ -1445,6 +1452,7 @@ abstract final class AppStrings {
   static const String connectionStrong = 'النت كويس';
   static const String connectionWeak = 'النت ضعيف';
   static const String connectionOffline = 'مفيش نت';
+  static const String connectionRestored = 'تمام! النت رجع';
   static const String connectionOfflineHint = 'شغلك محفوظ — هيترفع أول ما النت يرجع';
   static const String pendingUploads = 'حاجات مستنية ترتفع';
 
@@ -1658,11 +1666,13 @@ abstract final class AppStrings {
   static String get homeHour =>
       _isAr ? 'ساعة' : 'hr';
   static String get deliveryBusyTitle =>
-      _isAr ? 'في طلب لسه في السكة 🚦' : 'Already delivering';
+      _isAr ? 'في طلب لسه في السكة' : 'Already delivering';
   static String get deliveryBusyBody =>
       _isAr
           ? 'خلّص اللي بتوصله الأول، وبعدين ابدأ التاني.'
           : 'Finish the order on the road first.';
+  static String get deliveryBusyGoToCurrent =>
+      _isAr ? 'ارجع للطلب اللي شغال' : 'Go to current order';
   static String get homeShiftEarnings =>
       _isAr ? 'كسبت في الوردية' : 'Earned this shift';
   static String get homeShiftOrders =>
@@ -1732,12 +1742,16 @@ abstract final class AppStrings {
       _isAr ? 'ابدأ وصّل طلباتك!' : 'Start delivering your orders!';
   static String get addOrdersToStart =>
       _isAr ? 'ضيف طلباتك وابدأ التوصيل' : 'Add your orders and start delivering';
+  static String get startShiftWithOrder =>
+      _isAr ? 'يلا ابدأ ورديتك' : 'Start your shift';
+  static String get deliverFirstOrder =>
+      _isAr ? 'ابدأ بتوصيل أول طلب' : 'Start by delivering the first order';
   static String get detailedStatistics =>
       _isAr ? 'إحصائياتك بالتفصيل' : 'Detailed Statistics';
   static String get viewDetailedStatsHint =>
       _isAr ? 'تابع أداءك وأرباحك بالتفصيل' : 'Track your performance and earnings in detail';
   static String get optimizeYourRoute =>
-      _isAr ? 'حسّن مسارك' : 'Optimize Your Route';
+      _isAr ? 'إنشاء مسار' : 'Create Route';
   static String get optimizeRouteHint =>
       _isAr ? 'رتّب طلباتك ووفّر وقت ومسافة' : 'Sort your orders and save time & distance';
   static String get enterYourRouteBtn =>

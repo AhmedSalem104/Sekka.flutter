@@ -14,17 +14,22 @@ class RateCustomerSheet extends StatefulWidget {
   const RateCustomerSheet({
     super.key,
     required this.onSubmit,
+    this.initialRating = 0,
+    this.initialFeedback,
   });
 
   final ValueChanged<CreateRatingModel> onSubmit;
+  final int initialRating;
+  final String? initialFeedback;
 
   @override
   State<RateCustomerSheet> createState() => _RateCustomerSheetState();
 }
 
 class _RateCustomerSheetState extends State<RateCustomerSheet> {
-  int _rating = 0;
-  final _feedbackController = TextEditingController();
+  late int _rating = widget.initialRating;
+  late final _feedbackController =
+      TextEditingController(text: widget.initialFeedback ?? '');
 
   // Positive tags
   bool _quickResponse = false;

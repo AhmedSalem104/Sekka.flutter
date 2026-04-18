@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_animations.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_sizes.dart';
 import '../theme/app_typography.dart';
 import '../utils/responsive.dart';
 
@@ -50,61 +49,95 @@ class SekkaBottomNav extends StatelessWidget {
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(Responsive.r(20)),
         ),
-        child: Row(
-          children: List.generate(items.length, (index) {
-            final isActive = index == currentIndex;
-            final item = items[index];
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final itemWidth = constraints.maxWidth / items.length;
+            final indicatorInset = Responsive.w(4);
 
-            return Expanded(
-              flex: isActive ? 5 : 2,
-              child: GestureDetector(
-                onTap: () => onTap(index),
-                behavior: HitTestBehavior.opaque,
-                child: AnimatedContainer(
-                  duration: AppAnimations.fast,
+            return Stack(
+              children: [
+                // Sliding white indicator — slides across instead of
+                // fading per-tab, gives a continuous transition feel
+                AnimatedPositionedDirectional(
+                  duration: AppAnimations.normal,
                   curve: AppAnimations.defaultCurve,
-                  margin: EdgeInsets.symmetric(horizontal: Responsive.w(2)),
-                  padding: EdgeInsets.symmetric(
-                    horizontal:
-                        isActive ? Responsive.w(12) : Responsive.w(4),
-                    vertical: Responsive.h(8),
-                  ),
-                  decoration: BoxDecoration(
-                    color:
-                        isActive ? AppColors.surface : Colors.transparent,
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusPill),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        isActive ? item.activeIcon : item.icon,
-                        color:
-                            isActive ? AppColors.primary : _inactiveColor,
-                        size: Responsive.r(22),
-                      ),
-                      if (isActive) ...[
-                        SizedBox(width: Responsive.w(8)),
-                        Flexible(
-                          child: Text(
-                            item.label,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ],
+                  start: currentIndex * itemWidth + indicatorInset,
+                  top: 0,
+                  bottom: 0,
+                  width: itemWidth - indicatorInset * 2,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(Responsive.r(14)),
+                    ),
                   ),
                 ),
-              ),
+                // Tappable items on top of the indicator
+                Positioned.fill(
+                  child: Row(
+                    children: List.generate(items.length, (index) {
+                      final isActive = index == currentIndex;
+                      final item = items[index];
+
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () => onTap(index),
+                          behavior: HitTestBehavior.opaque,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                TweenAnimationBuilder<double>(
+                                  duration: AppAnimations.normal,
+                                  curve: AppAnimations.defaultCurve,
+                                  tween: Tween(end: isActive ? 1.0 : 0.0),
+                                  builder: (context, t, _) {
+                                    return Icon(
+                                      isActive
+                                          ? item.activeIcon
+                                          : item.icon,
+                                      color: Color.lerp(
+                                        _inactiveColor,
+                                        AppColors.primary,
+                                        t,
+                                      ),
+                                      size: Responsive.r(22) + t * 1.5,
+                                    );
+                                  },
+                                ),
+                                SizedBox(height: Responsive.h(3)),
+                                AnimatedDefaultTextStyle(
+                                  duration: AppAnimations.normal,
+                                  curve: AppAnimations.defaultCurve,
+                                  style:
+                                      AppTypography.captionSmall.copyWith(
+                                    fontSize: Responsive.sp(13),
+                                    color: isActive
+                                        ? AppColors.primary
+                                        : _inactiveColor,
+                                    fontWeight: isActive
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                                  child: Text(
+                                    item.label,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ],
             );
-          }),
+          },
         ),
       ),
     );
