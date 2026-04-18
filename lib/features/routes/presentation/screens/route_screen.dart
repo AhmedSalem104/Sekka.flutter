@@ -2026,6 +2026,7 @@ class ParkingSpotTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SekkaCard(
+      onTap: () => _openDirections(context),
       child: Row(
         children: [
           // Location icon
@@ -2134,6 +2135,25 @@ class ParkingSpotTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _openDirections(BuildContext context) async {
+    final lat = spot.latitude;
+    final lng = spot.longitude;
+    final String query;
+    if (lat != 0 && lng != 0) {
+      query = '$lat,$lng';
+    } else if (spot.address != null && spot.address!.isNotEmpty) {
+      query = Uri.encodeComponent(spot.address!);
+    } else {
+      return;
+    }
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$query',
+    );
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _confirmDelete(BuildContext context, String id, bool isDark) {
@@ -2326,20 +2346,19 @@ class _CreateParkingSheetBodyState extends State<_CreateParkingSheetBody> {
                 // Location
                 SekkaCard(
                   onTap: () async {
-                    final result = await showModalBottomSheet<MapPickerResult>(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => SizedBox(
-                        height: Responsive.screenHeight * 0.85,
-                        child: SekkaMapPicker(
-                          initialLatitude: _location?.latitude,
-                          initialLongitude: _location?.longitude,
-                        ),
-                      ),
+                    final result = await SekkaMapPicker.show(
+                      context,
+                      initialLatitude: _location?.latitude,
+                      initialLongitude: _location?.longitude,
                     );
                     if (result != null && mounted) {
-                      setState(() => _location = result);
+                      setState(() {
+                        _location = result;
+                        if (result.address != null &&
+                            result.address!.isNotEmpty) {
+                          _addressController.text = result.address!;
+                        }
+                      });
                     }
                   },
                   child: Row(
@@ -2362,7 +2381,9 @@ class _CreateParkingSheetBodyState extends State<_CreateParkingSheetBody> {
                               )
                             : Text(
                                 _location != null
-                                    ? '${_location!.latitude.toStringAsFixed(4)}, ${_location!.longitude.toStringAsFixed(4)}'
+                                    ? (_location!.address?.isNotEmpty ?? false
+                                        ? _location!.address!
+                                        : '${_location!.latitude.toStringAsFixed(4)}, ${_location!.longitude.toStringAsFixed(4)}')
                                     : AppStrings.pickLocationOnMap,
                                 style: AppTypography.bodyMedium.copyWith(
                                   color: _location != null
@@ -2373,6 +2394,8 @@ class _CreateParkingSheetBodyState extends State<_CreateParkingSheetBody> {
                                           ? AppColors.textCaptionDark
                                           : AppColors.textCaption),
                                 ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                               ),
                       ),
                       Icon(
