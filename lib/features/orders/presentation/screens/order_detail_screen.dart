@@ -269,7 +269,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         if (canEdit)
           const PopupMenuItem(value: 'delete', child: Text('امسح الطلب')),
         if (isActive)
-          const PopupMenuItem(value: 'transfer', child: Text('حوّل لسائق تاني')),
         if (isActive)
           const PopupMenuItem(value: 'swap_address', child: Text('غيّر العنوان')),
         if (order.trackingCode != null && order.trackingCode!.isNotEmpty)
@@ -298,7 +297,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       case 'delete':
         _confirmDelete();
       case 'transfer':
-        _showSheet(_TransferBottomSheet(orderId: widget.orderId));
+        TransferOrderSheet.show(context, orderId: widget.orderId);
       case 'swap_address':
         _showSheet(_SwapAddressBottomSheet(orderId: widget.orderId));
       case 'share_tracking':
@@ -2320,91 +2319,6 @@ class _PartialDeliveryBottomSheetState
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-//  BOTTOM SHEET 5: TRANSFER
-// ═══════════════════════════════════════════════════════════════════════════
-class _TransferBottomSheet extends StatefulWidget {
-  const _TransferBottomSheet({required this.orderId});
-  final String orderId;
-
-  @override
-  State<_TransferBottomSheet> createState() => _TransferBottomSheetState();
-}
-
-class _TransferBottomSheetState extends State<_TransferBottomSheet> {
-  final _driverIdCtrl = TextEditingController();
-  final _reasonCtrl = TextEditingController();
-  bool _canSubmit = false;
-
-  @override
-  void dispose() {
-    _driverIdCtrl.dispose();
-    _reasonCtrl.dispose();
-    super.dispose();
-  }
-
-  void _onDriverIdChanged(String value) {
-    final canNow = value.trim().isNotEmpty;
-    if (canNow != _canSubmit) setState(() => _canSubmit = canNow);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSizes.pagePadding),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildHandle(),
-                SizedBox(height: AppSizes.lg),
-                Text('حوّل لسائق تاني', style: AppTypography.headlineSmall),
-                SizedBox(height: AppSizes.lg),
-                SekkaInputField(
-                  controller: _driverIdCtrl,
-                  hint: 'رقم السائق',
-                  prefixIcon: IconsaxPlusLinear.user,
-                  onChanged: _onDriverIdChanged,
-                ),
-                SizedBox(height: AppSizes.md),
-                SekkaInputField(
-                  controller: _reasonCtrl,
-                  hint: 'السبب (اختياري)',
-                  maxLines: 2,
-                ),
-                SizedBox(height: AppSizes.xl),
-                SekkaButton(
-                  label: AppStrings.confirm,
-                  onPressed: !_canSubmit
-                      ? null
-                      : () {
-                          context.read<OrdersBloc>().add(
-                                OrderTransferRequested(
-                                  orderId: widget.orderId,
-                                  targetDriverId: _driverIdCtrl.text.trim(),
-                                  reason: _reasonCtrl.text.isEmpty
-                                      ? null
-                                      : _reasonCtrl.text,
-                                ),
-                              );
-                          Navigator.pop(context);
-                        },
-                ),
-                SizedBox(height: AppSizes.md),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  BOTTOM SHEET 6: SWAP ADDRESS

@@ -7,6 +7,8 @@ class SettingsEntity extends Equatable {
     required this.numberFormat,
     required this.focusModeAutoTrigger,
     required this.focusModeSpeedThreshold,
+    required this.speedAlertEnabled,
+    required this.speedAlertLimit,
     required this.textToSpeechEnabled,
     required this.hapticFeedback,
     required this.highContrastMode,
@@ -37,6 +39,8 @@ class SettingsEntity extends Equatable {
   final int numberFormat;
   final bool focusModeAutoTrigger;
   final int focusModeSpeedThreshold;
+  final bool speedAlertEnabled;
+  final int speedAlertLimit;
   final bool textToSpeechEnabled;
   final bool hapticFeedback;
   final bool highContrastMode;
@@ -67,6 +71,8 @@ class SettingsEntity extends Equatable {
     int? numberFormat,
     bool? focusModeAutoTrigger,
     int? focusModeSpeedThreshold,
+    bool? speedAlertEnabled,
+    int? speedAlertLimit,
     bool? textToSpeechEnabled,
     bool? hapticFeedback,
     bool? highContrastMode,
@@ -98,6 +104,8 @@ class SettingsEntity extends Equatable {
       focusModeAutoTrigger: focusModeAutoTrigger ?? this.focusModeAutoTrigger,
       focusModeSpeedThreshold:
           focusModeSpeedThreshold ?? this.focusModeSpeedThreshold,
+      speedAlertEnabled: speedAlertEnabled ?? this.speedAlertEnabled,
+      speedAlertLimit: speedAlertLimit ?? this.speedAlertLimit,
       textToSpeechEnabled: textToSpeechEnabled ?? this.textToSpeechEnabled,
       hapticFeedback: hapticFeedback ?? this.hapticFeedback,
       highContrastMode: highContrastMode ?? this.highContrastMode,
@@ -130,6 +138,7 @@ class SettingsEntity extends Equatable {
   SettingsEntity applyToggle(String key, bool value) {
     return switch (key) {
       'focusModeAutoTrigger' => copyWith(focusModeAutoTrigger: value),
+      'speedAlertEnabled' => copyWith(speedAlertEnabled: value),
       'textToSpeechEnabled' => copyWith(textToSpeechEnabled: value),
       'hapticFeedback' => copyWith(hapticFeedback: value),
       'highContrastMode' => copyWith(highContrastMode: value),
@@ -154,6 +163,8 @@ class SettingsEntity extends Equatable {
         numberFormat,
         focusModeAutoTrigger,
         focusModeSpeedThreshold,
+        speedAlertEnabled,
+        speedAlertLimit,
         textToSpeechEnabled,
         hapticFeedback,
         highContrastMode,

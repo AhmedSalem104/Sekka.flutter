@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/responsive.dart';
 import 'core/widgets/connectivity_banner.dart';
+import 'shared/services/focus_mode_service.dart';
 
-class SekkaApp extends StatelessWidget {
+class SekkaApp extends StatefulWidget {
   const SekkaApp({
     super.key,
     required this.router,
@@ -19,12 +20,42 @@ class SekkaApp extends StatelessWidget {
   final ValueNotifier<Locale> localeNotifier;
 
   @override
+  State<SekkaApp> createState() => _SekkaAppState();
+}
+
+class _SekkaAppState extends State<SekkaApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final focusMode = FocusModeService.instance;
+    if (!focusMode.isEnabled) return;
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      focusMode.pauseDnd();
+    } else if (state == AppLifecycleState.resumed) {
+      focusMode.resumeDnd();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeModeNotifier,
+      valueListenable: widget.themeModeNotifier,
       builder: (context, themeMode, _) {
         return ValueListenableBuilder<Locale>(
-          valueListenable: localeNotifier,
+          valueListenable: widget.localeNotifier,
           builder: (context, locale, _) {
             final isRtl = locale.languageCode == 'ar';
 
@@ -50,7 +81,7 @@ class SekkaApp extends StatelessWidget {
               ],
 
               // Router
-              routerConfig: router,
+              routerConfig: widget.router,
 
               // Initialize Responsive + text direction
               builder: (context, child) {

@@ -94,6 +94,7 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
   int _commissionType = 0;
   int _paymentMethod = 0;
   bool _isLoading = false;
+  bool _showAdvanced = false;
   double? _addressLat;
   double? _addressLng;
 
@@ -254,16 +255,11 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
                 // Phone *
                 SekkaInputField(
                   controller: _phoneController,
-                  label: AppStrings.partnerPhone,
-                  hint: '01xxxxxxxxx',
+                  hint: AppStrings.partnerPhone,
                   prefixIcon: IconsaxPlusLinear.call,
                   keyboardType: TextInputType.phone,
                   onChanged: (_) => setState(() {}),
                 ),
-                SizedBox(height: AppSizes.lg),
-
-                // Address (map picker)
-                _buildAddressField(isDark),
                 SizedBox(height: AppSizes.lg),
 
                 // Partner type
@@ -274,46 +270,81 @@ class _AddPartnerSheetContentState extends State<_AddPartnerSheetContent> {
                   onSelected: (i) => setState(() => _partnerType = i),
                   isDark: isDark,
                 ),
-                SizedBox(height: AppSizes.lg),
+                SizedBox(height: AppSizes.xl),
 
-                // Commission type
-                _buildChipSelector(
-                  label: AppStrings.commissionTypeLabel,
-                  options: _commissionTypes,
-                  selected: _commissionType,
-                  onSelected: (i) => setState(() => _commissionType = i),
-                  isDark: isDark,
+                // ── Advanced section (hidden by default) ──
+                InkWell(
+                  onTap: () => setState(() => _showAdvanced = !_showAdvanced),
+                  borderRadius: BorderRadius.circular(AppSizes.chipRadius),
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: AppSizes.sm),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          _showAdvanced
+                              ? IconsaxPlusLinear.arrow_up_2
+                              : IconsaxPlusLinear.arrow_down_2,
+                          size: AppSizes.iconSm,
+                          color: AppColors.textCaption,
+                        ),
+                        SizedBox(width: AppSizes.xs),
+                        Text(
+                          AppStrings.advancedSettings,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textCaption,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                SizedBox(height: AppSizes.lg),
 
-                // Commission value
-                SekkaInputField(
-                  controller: _commissionValueController,
-                  label: AppStrings.commissionValue,
-                  hint: '0',
-                  prefixIcon: IconsaxPlusLinear.percentage_circle,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
-                SizedBox(height: AppSizes.lg),
+                if (_showAdvanced) ...[
+                  SizedBox(height: AppSizes.lg),
 
-                // Payment method
-                _buildChipSelector(
-                  label: AppStrings.defaultPaymentMethod,
-                  options: _paymentMethods,
-                  selected: _paymentMethod,
-                  onSelected: (i) => setState(() => _paymentMethod = i),
-                  isDark: isDark,
-                ),
-                SizedBox(height: AppSizes.lg),
+                  // Address (map picker)
+                  _buildAddressField(isDark),
+                  SizedBox(height: AppSizes.lg),
 
-                // Receipt header
-                SekkaInputField(
-                  controller: _receiptHeaderController,
-                  label: AppStrings.receiptHeader,
-                  hint: AppStrings.receiptHeader,
-                  prefixIcon: IconsaxPlusLinear.receipt,
-                ),
+                  // Commission type
+                  _buildChipSelector(
+                    label: AppStrings.commissionTypeLabel,
+                    options: _commissionTypes,
+                    selected: _commissionType,
+                    onSelected: (i) => setState(() => _commissionType = i),
+                    isDark: isDark,
+                  ),
+                  SizedBox(height: AppSizes.lg),
+
+                  // Commission value
+                  SekkaInputField(
+                    controller: _commissionValueController,
+                    hint: AppStrings.commissionValue,
+                    prefixIcon: IconsaxPlusLinear.percentage_circle,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                  SizedBox(height: AppSizes.lg),
+
+                  // Payment method
+                  _buildChipSelector(
+                    label: AppStrings.defaultPaymentMethod,
+                    options: _paymentMethods,
+                    selected: _paymentMethod,
+                    onSelected: (i) => setState(() => _paymentMethod = i),
+                    isDark: isDark,
+                  ),
+                  SizedBox(height: AppSizes.lg),
+
+                  // Receipt header
+                  SekkaInputField(
+                    controller: _receiptHeaderController,
+                    hint: AppStrings.receiptHeader,
+                    prefixIcon: IconsaxPlusLinear.receipt,
+                  ),
+                ],
                 SizedBox(height: AppSizes.xxl),
 
                 // Submit

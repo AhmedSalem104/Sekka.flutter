@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
 import '../../../../core/widgets/sekka_input_field.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
@@ -13,12 +14,12 @@ import '../../../../core/widgets/sekka_search_bar.dart';
 import '../../../../core/widgets/sekka_swipe_action.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../bloc/settlement_bloc.dart';
+import '../widgets/add_partner_sheet.dart';
 import '../widgets/settlement_type_selector.dart';
 
 class CreateSettlementScreen extends StatefulWidget {
   const CreateSettlementScreen({super.key, this.preselectedPartner});
 
-  /// If navigating from partner detail, pre-select the partner.
   final PartnerModel? preselectedPartner;
 
   @override
@@ -32,7 +33,6 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
 
   PartnerModel? _selectedPartner;
   int _selectedType = 0;
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -72,6 +72,45 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
         );
   }
 
+  void _openPartnerPicker() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showModalBottomSheet<Object>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(Responsive.r(24)),
+        ),
+      ),
+      builder: (_) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: _PartnerPickerSheet(
+          isDark: isDark,
+          onPartnerCreated: () {
+            context
+                .read<SettlementBloc>()
+                .add(const SettlementRefreshRequested());
+          },
+        ),
+      ),
+    ).then<void>((result) {
+      if (!mounted) return;
+      if (result is _PickerResult && result == _PickerResult.addNew) {
+        showAddPartnerSheet(
+          context,
+          onPartnerCreated: () {
+            context
+                .read<SettlementBloc>()
+                .add(const SettlementRefreshRequested());
+          },
+        );
+      } else if (result is PartnerModel) {
+        setState(() => _selectedPartner = result);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -89,7 +128,6 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
               type: SekkaMessageType.success,
             ).then((_) {
               if (context.mounted) {
-                // Refresh settlements list then go back
                 context
                     .read<SettlementBloc>()
                     .add(const SettlementRefreshRequested());
@@ -110,42 +148,54 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
                     horizontal: AppSizes.pagePadding,
                   ),
                   children: [
-                    SizedBox(height: AppSizes.lg),
+                    SizedBox(height: AppSizes.xl),
 
-                    // Partner selection
-                    _buildPartnerSection(isDark),
-                    SizedBox(height: AppSizes.xxl),
-
-                    // Amount
-                    SekkaInputField(
-                      controller: _amountController,
-                      label: AppStrings.settlementAmount,
-                      hint: '0.00',
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      prefixIcon: IconsaxPlusLinear.money_send,
-                      onChanged: (_) => setState(() {}),
+                    // 1. Partner selector (tap → bottom sheet)
+                    _PartnerSelector(
+                      partner: _selectedPartner,
+                      onTap: _openPartnerPicker,
+                      onClear: widget.preselectedPartner != null
+                          ? null
+                          : () => setState(() => _selectedPartner = null),
+                      isDark: isDark,
                     ),
-                    SizedBox(height: AppSizes.lg),
+                    SizedBox(height: AppSizes.xl),
 
-                    // Order count
-                    SekkaInputField(
-                      controller: _orderCountController,
-                      label: AppStrings.orderCount,
-                      hint: '0',
-                      keyboardType: TextInputType.number,
-                      prefixIcon: IconsaxPlusLinear.box,
+                    // 2. Amount + Order count (side by side)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: SekkaInputField(
+                            controller: _amountController,
+                            hint: AppStrings.settlementAmount,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            prefixIcon: IconsaxPlusLinear.money_send,
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: SekkaInputField(
+                            controller: _orderCountController,
+                            hint: AppStrings.orderCountShort,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: AppSizes.lg),
+                    SizedBox(height: AppSizes.xl),
 
-                    // Settlement type
+                    // 3. Settlement type
                     Text(
                       AppStrings.settlementType,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: isDark
-                            ? AppColors.textHeadlineDark
-                            : AppColors.textHeadline,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textCaption,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     SizedBox(height: AppSizes.sm),
@@ -154,14 +204,14 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
                       onTypeSelected: (type) =>
                           setState(() => _selectedType = type),
                     ),
-                    SizedBox(height: AppSizes.lg),
+                    SizedBox(height: AppSizes.xl),
 
-                    // Notes
+                    // 4. Notes (optional)
                     SekkaInputField(
                       controller: _notesController,
                       label: AppStrings.settlementNotes,
                       hint: AppStrings.settlementNotes,
-                      maxLines: 3,
+                      maxLines: 2,
                       prefixIcon: IconsaxPlusLinear.note,
                     ),
                     SizedBox(height: AppSizes.xxl),
@@ -201,76 +251,24 @@ class _CreateSettlementScreenState extends State<CreateSettlementScreen> {
       ),
     );
   }
-
-  Widget _buildPartnerSection(bool isDark) {
-    // If partner is already selected, show it
-    if (_selectedPartner != null) {
-      return _SelectedPartnerCard(
-        partner: _selectedPartner!,
-        onClear: widget.preselectedPartner != null
-            ? null
-            : () => setState(() => _selectedPartner = null),
-        isDark: isDark,
-      );
-    }
-
-    // Show partner picker
-    return BlocBuilder<SettlementBloc, SettlementState>(
-      builder: (context, state) {
-        final partners = state is SettlementLoaded ? state.partners : <PartnerModel>[];
-        final q = _searchQuery.trim().toLowerCase();
-        final filtered = q.isEmpty
-            ? partners
-            : partners.where((p) {
-                final name = p.name.toLowerCase();
-                final phone = (p.phone ?? '').toLowerCase();
-                return name.contains(q) || phone.contains(q);
-              }).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppStrings.selectPartner,
-              style: AppTypography.titleMedium.copyWith(
-                color: isDark
-                    ? AppColors.textHeadlineDark
-                    : AppColors.textHeadline,
-              ),
-            ),
-            SizedBox(height: AppSizes.sm),
-            SekkaSearchBar(
-              hint: AppStrings.searchPartner,
-              onChanged: (q) => setState(() => _searchQuery = q),
-            ),
-            SizedBox(height: AppSizes.md),
-            ...filtered.map(
-              (partner) => Padding(
-                padding: EdgeInsets.only(bottom: AppSizes.sm),
-                child: _PartnerPickerItem(
-                  partner: partner,
-                  isDark: isDark,
-                  onTap: () => setState(() => _selectedPartner = partner),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
 
-class _SelectedPartnerCard extends StatelessWidget {
-  const _SelectedPartnerCard({
+// ════════════════════════════════════════════════════════════════════════
+// ── Partner selector (tappable field → opens bottom sheet) ──
+// ════════════════════════════════════════════════════════════════════════
+
+class _PartnerSelector extends StatelessWidget {
+  const _PartnerSelector({
     required this.partner,
+    required this.onTap,
     required this.isDark,
     this.onClear,
   });
 
-  final PartnerModel partner;
-  final bool isDark;
+  final PartnerModel? partner;
+  final VoidCallback onTap;
   final VoidCallback? onClear;
+  final bool isDark;
 
   Color _parseColor(String? hex) {
     if (hex == null || hex.isEmpty) return AppColors.primary;
@@ -283,71 +281,257 @@ class _SelectedPartnerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _parseColor(partner.color);
-    return Container(
-      padding: EdgeInsets.all(AppSizes.cardPadding),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-        border: Border.all(color: AppColors.primary, width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: AppSizes.avatarMd,
-            height: AppSizes.avatarMd,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              partner.name.isNotEmpty ? partner.name[0] : '?',
-              style: AppTypography.titleLarge.copyWith(color: color),
+    if (partner == null) {
+      return _buildEmpty();
+    }
+    return _buildSelected();
+  }
+
+  Widget _buildEmpty() {
+    return Material(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        child: Container(
+          padding: EdgeInsets.all(AppSizes.lg),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            border: Border.all(
+              color: isDark ? AppColors.borderDark : AppColors.border,
+              width: 1.5,
             ),
           ),
-          SizedBox(width: AppSizes.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  partner.name,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: isDark
-                        ? AppColors.textHeadlineDark
-                        : AppColors.textHeadline,
+          child: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(AppSizes.sm),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  IconsaxPlusLinear.shop,
+                  color: AppColors.primary,
+                  size: AppSizes.iconMd,
+                ),
+              ),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: Text(
+                  AppStrings.selectPartner,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textCaption,
                   ),
                 ),
-                if (partner.phone != null)
-                  Text(
-                    partner.phone!,
-                    style: AppTypography.captionSmall.copyWith(
-                      color: isDark
-                          ? AppColors.textCaptionDark
-                          : AppColors.textCaption,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (onClear != null)
-            IconButton(
-              onPressed: onClear,
-              icon: Icon(
-                IconsaxPlusLinear.close_circle,
-                color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-                size: AppSizes.iconMd,
               ),
-            ),
-        ],
+              Icon(
+                IconsaxPlusLinear.arrow_down_1,
+                size: AppSizes.iconSm,
+                color: AppColors.textCaption,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelected() {
+    final color = _parseColor(partner!.color);
+    return Material(
+      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        child: Container(
+          padding: EdgeInsets.all(AppSizes.lg),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+            border: Border.all(color: AppColors.primary, width: 2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: Responsive.r(40),
+                height: Responsive.r(40),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  partner!.name.isNotEmpty ? partner!.name[0] : '?',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      partner!.name,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.textHeadlineDark
+                            : AppColors.textHeadline,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (partner!.phone != null)
+                      Text(
+                        partner!.phone!,
+                        style: AppTypography.captionSmall.copyWith(
+                          color: AppColors.textCaption,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (onClear != null)
+                IconButton(
+                  onPressed: onClear,
+                  icon: Icon(
+                    IconsaxPlusLinear.close_circle,
+                    color: AppColors.textCaption,
+                    size: AppSizes.iconMd,
+                  ),
+                )
+              else
+                Icon(
+                  IconsaxPlusLinear.arrow_swap_horizontal,
+                  size: AppSizes.iconSm,
+                  color: AppColors.textCaption,
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-class _PartnerPickerItem extends StatelessWidget {
-  const _PartnerPickerItem({
+// ════════════════════════════════════════════════════════════════════════
+// ── Partner picker bottom sheet ──
+// ════════════════════════════════════════════════════════════════════════
+
+class _PartnerPickerSheet extends StatefulWidget {
+  const _PartnerPickerSheet({
+    required this.isDark,
+    required this.onPartnerCreated,
+  });
+
+  final bool isDark;
+  final VoidCallback onPartnerCreated;
+
+  @override
+  State<_PartnerPickerSheet> createState() => _PartnerPickerSheetState();
+}
+
+class _PartnerPickerSheetState extends State<_PartnerPickerSheet> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.65,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      expand: false,
+      builder: (context, scrollController) => Padding(
+        padding: EdgeInsets.fromLTRB(
+          AppSizes.pagePadding,
+          AppSizes.lg,
+          AppSizes.pagePadding,
+          0,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: Responsive.w(40),
+                height: Responsive.h(4),
+                decoration: BoxDecoration(
+                  color: widget.isDark
+                      ? AppColors.borderDark
+                      : AppColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.lg),
+            Text(
+              AppStrings.selectPartner,
+              style: AppTypography.titleLarge.copyWith(
+                color: widget.isDark
+                    ? AppColors.textHeadlineDark
+                    : AppColors.textHeadline,
+                fontWeight: FontWeight.w700,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: AppSizes.md),
+            SekkaSearchBar(
+              hint: AppStrings.searchPartner,
+              onChanged: (q) => setState(() => _query = q),
+            ),
+            SizedBox(height: AppSizes.md),
+            Expanded(
+              child: BlocBuilder<SettlementBloc, SettlementState>(
+                builder: (context, state) {
+                  final partners = state is SettlementLoaded
+                      ? state.partners
+                      : <PartnerModel>[];
+                  final q = _query.trim().toLowerCase();
+                  final filtered = q.isEmpty
+                      ? partners
+                      : partners.where((p) {
+                          final name = p.name.toLowerCase();
+                          final phone = (p.phone ?? '').toLowerCase();
+                          return name.contains(q) || phone.contains(q);
+                        }).toList();
+
+                  return ListView.separated(
+                    controller: scrollController,
+                    itemCount: filtered.length + 1,
+                    separatorBuilder: (_, __) =>
+                        SizedBox(height: AppSizes.xs),
+                    itemBuilder: (context, index) {
+                      if (index == filtered.length) {
+                        return _AddPartnerTile(
+                          isDark: widget.isDark,
+                          onTap: () =>
+                              Navigator.pop(context, _PickerResult.addNew),
+                        );
+                      }
+                      final p = filtered[index];
+                      return _PartnerTile(
+                        partner: p,
+                        isDark: widget.isDark,
+                        onTap: () => Navigator.pop(context, p),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PartnerTile extends StatelessWidget {
+  const _PartnerTile({
     required this.partner,
     required this.isDark,
     required this.onTap,
@@ -369,52 +553,99 @@ class _PartnerPickerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _parseColor(partner.color);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: AppSizes.cardPadding,
-          vertical: AppSizes.md,
-        ),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.surfaceDark : AppColors.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          border: Border.all(
-            color: isDark ? AppColors.borderDark : AppColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: AppSizes.avatarSm,
-              height: AppSizes.avatarSm,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                partner.name.isNotEmpty ? partner.name[0] : '?',
-                style: AppTypography.titleMedium.copyWith(color: color),
-              ),
-            ),
-            SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Text(
-                partner.name,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline,
+    return Material(
+      color: isDark ? AppColors.backgroundDark : AppColors.background,
+      borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        splashColor: color.withValues(alpha: 0.12),
+        child: Padding(
+          padding: EdgeInsets.all(AppSizes.md),
+          child: Row(
+            children: [
+              Container(
+                width: Responsive.r(36),
+                height: Responsive.r(36),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  partner.name.isNotEmpty ? partner.name[0] : '?',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-            ),
-            Icon(
-              IconsaxPlusLinear.arrow_left_2,
-              size: AppSizes.iconSm,
-              color: isDark ? AppColors.textCaptionDark : AppColors.textCaption,
-            ),
-          ],
+              SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      partner.name,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.textHeadlineDark
+                            : AppColors.textHeadline,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (partner.phone != null)
+                      Text(
+                        partner.phone!,
+                        style: AppTypography.captionSmall.copyWith(
+                          color: AppColors.textCaption,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _PickerResult { addNew }
+
+class _AddPartnerTile extends StatelessWidget {
+  const _AddPartnerTile({required this.isDark, required this.onTap});
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        child: Padding(
+          padding: EdgeInsets.all(AppSizes.md),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                IconsaxPlusLinear.add_circle,
+                size: AppSizes.iconSm,
+                color: AppColors.primary,
+              ),
+              SizedBox(width: AppSizes.xs),
+              Text(
+                AppStrings.addPartner,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -64,11 +65,16 @@ import 'features/chat/data/repositories/chat_repository.dart';
 import 'features/customers/data/repositories/address_repository.dart';
 import 'features/notifications/data/repositories/notification_repository.dart';
 import 'shared/network/dio_client.dart';
+import 'shared/services/fcm_service.dart';
 import 'shared/storage/token_storage.dart';
 import 'shared/storage/user_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  await FcmService.instance.initialize();
 
   // Initialize offline-first infrastructure
   HydratedBloc.storage = await HydratedStorage.build(

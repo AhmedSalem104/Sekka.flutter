@@ -278,6 +278,7 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
       'numberFormat' => entity.copyWith(numberFormat: value as int),
       'focusModeSpeedThreshold' =>
         entity.copyWith(focusModeSpeedThreshold: value as int),
+      'speedAlertLimit' => entity.copyWith(speedAlertLimit: value as int),
       'preferredMapApp' => entity.copyWith(preferredMapApp: value as int),
       'maxOrdersPerShift' => entity.copyWith(maxOrdersPerShift: value as int),
       'locationTrackingInterval' =>
@@ -322,6 +323,8 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
           'numberFormat': s.numberFormat,
           'focusModeAutoTrigger': s.focusModeAutoTrigger,
           'focusModeSpeedThreshold': s.focusModeSpeedThreshold,
+          'speedAlertEnabled': s.speedAlertEnabled,
+          'speedAlertLimit': s.speedAlertLimit,
           'textToSpeechEnabled': s.textToSpeechEnabled,
           'hapticFeedback': s.hapticFeedback,
           'highContrastMode': s.highContrastMode,

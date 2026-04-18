@@ -60,7 +60,7 @@ class SekkaInputField extends StatelessWidget {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final bgColor = isDark ? AppColors.backgroundDark : AppColors.background;
+    final bgColor = isDark ? AppColors.surfaceDark : AppColors.surface;
     final borderColor = isDark ? AppColors.borderDark : AppColors.border;
     final iconColor = isDark ? AppColors.textCaptionDark : AppColors.textCaption;
 
@@ -88,7 +88,7 @@ class SekkaInputField extends StatelessWidget {
       style: AppTypography.bodyLarge,
       decoration: InputDecoration(
         labelText: floatingLabel,
-        labelStyle: AppTypography.bodyLarge.copyWith(color: iconColor),
+        labelStyle: AppTypography.bodyMedium.copyWith(color: iconColor),
         floatingLabelStyle: AppTypography.bodySmall.copyWith(
           color: AppColors.primary,
           fontWeight: FontWeight.w600,
@@ -123,7 +123,18 @@ class SekkaInputField extends StatelessWidget {
           borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, size: AppSizes.iconLg, color: iconColor)
+            ? Padding(
+                padding: const EdgeInsets.all(12),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(prefixIcon, size: 16, color: AppColors.primary),
+                ),
+              )
             : null,
         suffixIcon: suffixIcon != null
             ? IconButton(

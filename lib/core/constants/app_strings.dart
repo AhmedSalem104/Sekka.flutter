@@ -241,7 +241,16 @@ abstract final class AppStrings {
   static String get successTitle => _isAr ? 'تمام!' : 'Done!';
 
   // Wallet
-  static String get walletTitle => _isAr ? 'جيبي' : 'Wallet';
+  static String get walletTitle => _isAr ? 'محفظتك' : 'Wallet';
+  static String get walletNavLabel => _isAr ? 'جيبي' : 'My Wallet';
+  static String get walletMoneyWithYou =>
+      _isAr ? 'الفلوس اللي معاك' : 'Money with you';
+  static String get walletPendingNote =>
+      _isAr ? 'منهم للشركاء' : 'Owed to partners';
+  static String get walletToday => _isAr ? 'النهارده' : 'Today';
+  static String get walletYesterday => _isAr ? 'إمبارح' : 'Yesterday';
+  static String get walletSharePdf =>
+      _isAr ? 'شارك PDF' : 'Share PDF';
   static String get currentBalance =>
       _isAr ? 'رصيدك عند الشركة' : 'Your balance';
   static String get cashOnHand => _isAr ? 'كاش معاك (فلوس شغل)' : 'Cash with you (work money)';
@@ -970,10 +979,24 @@ abstract final class AppStrings {
   static String get quietHoursTo => _isAr ? 'إلى' : 'To';
   static String get focusMode =>
       _isAr ? 'وضع التركيز' : 'Focus mode';
-  static String get focusModeAuto =>
-      _isAr ? 'تفعيل تلقائي' : 'Auto-enable';
-  static String get focusModeSpeed =>
+  static String get focusModeEnabled =>
+      _isAr ? 'تفعيل وضع التركيز' : 'Enable focus mode';
+  static String get focusModeDescription =>
+      _isAr
+          ? 'يمنع كل الإشعارات عشان تركّز في الشغل'
+          : 'Blocks all notifications so you can focus';
+  static String get speedAlert =>
+      _isAr ? 'تحذير السرعة' : 'Speed alert';
+  static String get speedAlertEnabled =>
+      _isAr ? 'تفعيل تحذير السرعة' : 'Enable speed alert';
+  static String get speedAlertLimit =>
       _isAr ? 'حد السرعة (كم/س)' : 'Speed limit (km/h)';
+  static String get speedAlertDescription =>
+      _isAr
+          ? 'هيجيلك تحذير لو سرعتك عدّت الحد ده'
+          : 'You will be warned if you exceed this speed';
+  static String get speedAlertWarning =>
+      _isAr ? 'سرعتك عالية! هدّي شوية' : 'Slow down! You are speeding';
   static String get deliveryPreferences =>
       _isAr ? 'تفضيلات التوصيل' : 'Delivery preferences';
   static String get preferredMap =>
@@ -1658,7 +1681,7 @@ abstract final class AppStrings {
   static String get homeCashTooMuch =>
       _isAr ? 'الكاش معاك كتير — وقت تسليم' : 'Cash is high — time to settle';
   static String get homeQuietDay =>
-      _isAr ? 'اليوم هادي 🌤️' : 'Quiet day 🌤️';
+      _isAr ? 'اليوم هادي' : 'Quiet day';
   static String get homeQuietDaySubtitle =>
       _isAr ? 'ضيف أوردر تبدأ' : 'Add an order to start';
   static String get homeMinutes =>
@@ -1723,13 +1746,23 @@ abstract final class AppStrings {
   static String get settleUnsettledTitle =>
       _isAr ? 'لسه عليك شركاء' : 'Unsettled partners';
   static String get settleAllDoneTitle =>
-      _isAr ? 'كله اتسلّم! 🎉' : 'All settled! 🎉';
+      _isAr ? 'كله اتسلّم!' : 'All settled!';
   static String get settleAllDoneSubtitle =>
-      _isAr ? 'مفيش شركاء عليك فلوس دلوقتي' : 'No pending balances right now';
+      _isAr ? 'كل الشركاء واخدين حقهم' : 'All partners are settled';
   static String get settleTodayCompletedTitle =>
       _isAr ? 'سلّمت لهم النهاردا' : 'Settled today';
   static String get settleFullHistoryLink =>
-      _isAr ? 'التسويات القديمة' : 'Old settlements';
+      _isAr ? 'اللي فات' : 'Past settlements';
+  static String get settleShareSummary =>
+      _isAr ? 'شارك الملخص' : 'Share summary';
+  static String get settleDetailsHeader =>
+      _isAr ? 'تفاصيل التسليم' : 'Settlement details';
+  static String get orderCountShort =>
+      _isAr ? 'كام طلب؟' : 'Orders';
+  static String get advancedSettings =>
+      _isAr ? 'تفاصيل زيادة؟' : 'More details?';
+  static String get settleTapForDetails =>
+      _isAr ? 'اضغط عشان تشوف التفاصيل' : 'Tap for details';
   static String get settleNow =>
       _isAr ? 'سلّم' : 'Settle';
   static String settleFromOrders(int count) =>

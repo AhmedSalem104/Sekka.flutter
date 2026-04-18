@@ -6,9 +6,11 @@ import '../../../../shared/network/api_constants.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/offline/offline_queue_service.dart';
 import '../../../../shared/offline/sync_queue_service.dart';
+import '../../../../shared/services/fcm_service.dart';
 import '../../../../shared/storage/token_storage.dart';
 import '../../../../shared/storage/user_storage.dart';
 import '../../data/models/driver_model.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
@@ -67,6 +69,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final driver = DriverModel.fromJson(driverJson);
         authStatusNotifier.value = true;
         emit(AuthAuthenticated(driver));
+        _registerFcmToken();
         return;
       }
     }
@@ -86,6 +89,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       authStatusNotifier.value = true;
       emit(AuthAuthenticated(authTokens.driver));
+      _registerFcmToken();
     } on ApiException catch (e) {
       emit(AuthUnauthenticated(message: e.message));
     }
@@ -109,6 +113,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       authStatusNotifier.value = true;
       emit(AuthAuthenticated(authTokens.driver));
+      _registerFcmToken();
     } on ApiException catch (e) {
       emit(AuthUnauthenticated(message: e.message));
     }
@@ -222,6 +227,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(const AuthDeletionOtpSent());
       }
+    }
+  }
+
+  void _registerFcmToken() {
+    final repo = _repository;
+    if (repo is AuthRepositoryImpl) {
+      FcmService.instance.registerWithBackend(repo);
     }
   }
 }

@@ -62,16 +62,14 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const Spacer(),
-                    AnimatedRotation(
-                      duration: const Duration(milliseconds: 200),
-                      turns: _expanded ? 0.5 : 0,
-                      child: Icon(
-                        IconsaxPlusLinear.arrow_down_1,
-                        size: Responsive.r(14),
-                        color: _whiteSoft,
+                    if (_expanded) ...[
+                      const Spacer(),
+                      Icon(
+                        IconsaxPlusLinear.arrow_up_1,
+                        size: Responsive.r(18),
+                        color: AppColors.textOnPrimary,
                       ),
-                    ),
+                    ],
                   ],
                 ),
                 SizedBox(height: Responsive.h(4)),
@@ -108,6 +106,27 @@ class _CompactStatsBarState extends State<CompactStatsBar> {
                       .copyWith(color: _whiteSoft),
                   maxLines: 2,
                 ),
+                // Hint to tap (only when collapsed)
+                if (!_expanded) ...[
+                  SizedBox(height: AppSizes.sm),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        AppStrings.settleTapForDetails,
+                        style: AppTypography.captionSmall.copyWith(
+                          color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      SizedBox(width: Responsive.w(4)),
+                      Icon(
+                        IconsaxPlusLinear.arrow_down_1,
+                        size: Responsive.r(16),
+                        color: AppColors.textOnPrimary.withValues(alpha: 0.6),
+                      ),
+                    ],
+                  ),
+                ],
                 // Expanded details
                 if (_expanded) ...[
                   SizedBox(height: AppSizes.md),

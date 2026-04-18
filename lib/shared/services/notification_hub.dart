@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import '../../features/notifications/data/models/notification_model.dart';
 import '../storage/token_storage.dart';
+import 'focus_mode_service.dart';
 import 'signalr_service.dart';
 
 /// Real-time notification hub.
@@ -37,6 +38,10 @@ class NotificationHub {
               ? jsonDecode(args[0] as String) as Map<String, dynamic>
               : args[0] as Map<String, dynamic>;
           final notification = NotificationModel.fromJson(data);
+          if (FocusModeService.instance.shouldBlockNotification()) {
+            dev.log('Notification blocked (focus mode)', name: 'NotificationHub');
+            return;
+          }
           onNewNotification?.call(notification);
         } catch (e) {
           dev.log('Error parsing NewNotification: $e', name: 'NotificationHub');

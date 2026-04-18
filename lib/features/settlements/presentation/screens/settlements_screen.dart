@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -15,6 +17,7 @@ import '../../../../core/widgets/sekka_loading.dart';
 import '../../../../core/widgets/sekka_message_dialog.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../bloc/settlement_bloc.dart';
+import '../utils/settlement_pdf_generator.dart';
 import '../widgets/add_partner_sheet.dart';
 import '../widgets/compact_stats_bar.dart';
 import '../widgets/onboarding_overlay.dart';
@@ -83,25 +86,6 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
           appBar: SekkaAppBar(
             title: AppStrings.accountHandover,
             showBack: false,
-          ),
-          floatingActionButton: Padding(
-            padding: EdgeInsets.only(bottom: AppSizes.bottomNavHeight + 8),
-            child: FloatingActionButton.extended(
-              heroTag: 'settlements_fab',
-              onPressed: () => context.push(RouteNames.createSettlement),
-              backgroundColor: AppColors.primary,
-              icon: const Icon(
-                IconsaxPlusLinear.add,
-                color: AppColors.textOnPrimary,
-              ),
-              label: Text(
-                AppStrings.newHandover,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textOnPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
           ),
           body: BlocConsumer<SettlementBloc, SettlementState>(
             listenWhen: (prev, curr) =>
@@ -188,8 +172,8 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
     if (!balancesPending) {
       for (final p in state.partners) {
         final b = state.partnerBalances[p.id];
-        if (b == null) continue; // silently failed fetch — skip, don't mislead
-        if (b.pendingBalance > 0 || b.pendingOrderCount > 0) {
+        if (b == null) continue;
+        if (b.pendingBalance > 0) {
           unsettled.add(p);
         }
       }
@@ -222,6 +206,10 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
         children: [
           // 1. Compact stats bar (tappable to expand)
           CompactStatsBar(summary: state.summary),
+          SizedBox(height: AppSizes.lg),
+
+          // 2. Quick Actions row
+          _SettlementQuickActions(state: state),
           SizedBox(height: AppSizes.xl),
 
           // 2. Unsettled partners checklist (the primary focus)
@@ -268,10 +256,6 @@ class _SettlementsScreenState extends State<SettlementsScreen> {
             SizedBox(height: AppSizes.xl),
           ],
 
-          // 4. Footer: Add partner + Full history link
-          _FooterActions(
-            hasHistory: state.settlements.length > todaySettled.length,
-          ),
           SizedBox(height: AppSizes.md),
         ],
       ),
@@ -425,20 +409,16 @@ class _AllSettledState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(AppSizes.xl),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.surfaceDark : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-      ),
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSizes.lg),
       child: Column(
         children: [
-          Icon(
-            IconsaxPlusBold.tick_circle,
-            color: AppColors.success,
-            size: AppSizes.iconXl,
+          SvgPicture.asset(
+            'assets/images/settle_pending.svg',
+            width: Responsive.w(180),
+            height: Responsive.h(140),
           ),
-          SizedBox(height: AppSizes.sm),
+          SizedBox(height: AppSizes.lg),
           Text(
             AppStrings.settleAllDoneTitle,
             style: AppTypography.titleMedium.copyWith(
@@ -478,87 +458,154 @@ class _EmptyPartnersState extends StatelessWidget {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// ── Footer actions ──
+// ── Quick Actions Row ──
 // ════════════════════════════════════════════════════════════════════════
 
-class _FooterActions extends StatelessWidget {
-  const _FooterActions({required this.hasHistory});
-  final bool hasHistory;
+class _SettlementQuickActions extends StatelessWidget {
+  const _SettlementQuickActions({required this.state});
+  final SettlementLoaded state;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
       children: [
-        _FooterChip(
-          icon: IconsaxPlusLinear.add_circle,
-          label: AppStrings.addPartner,
-          onTap: () => showAddPartnerSheet(
-            context,
-            onPartnerCreated: () {
-              context
-                  .read<SettlementBloc>()
-                  .add(const SettlementRefreshRequested());
-            },
+        Expanded(
+          child: _QuickChip(
+            icon: IconsaxPlusLinear.money_send,
+            label: AppStrings.newHandover,
+            primary: true,
+            isDark: isDark,
+            onTap: () => context.push(RouteNames.createSettlement),
           ),
         ),
-        if (hasHistory) ...[
-          SizedBox(height: AppSizes.sm),
-          _FooterChip(
+        SizedBox(width: AppSizes.sm),
+        Expanded(
+          child: _QuickChip(
+            icon: IconsaxPlusLinear.add_circle,
+            label: AppStrings.addPartner,
+            isDark: isDark,
+            onTap: () => showAddPartnerSheet(
+              context,
+              onPartnerCreated: () {
+                context
+                    .read<SettlementBloc>()
+                    .add(const SettlementRefreshRequested());
+              },
+            ),
+          ),
+        ),
+        SizedBox(width: AppSizes.sm),
+        Expanded(
+          child: _QuickChip(
             icon: IconsaxPlusLinear.clock_1,
             label: AppStrings.settleFullHistoryLink,
-            onTap: () =>
-                context.push(RouteNames.settlementHistory),
+            isDark: isDark,
+            onTap: () => context.push(RouteNames.settlementHistory),
           ),
-        ],
+        ),
+        SizedBox(width: AppSizes.sm),
+        Expanded(
+          child: _QuickChip(
+            icon: IconsaxPlusLinear.document_upload,
+            label: AppStrings.settleShareSummary,
+            isDark: isDark,
+            onTap: () => _sharePdf(context),
+          ),
+        ),
       ],
+    );
+  }
+
+  Future<void> _sharePdf(BuildContext context) async {
+    final today = DateTime.now();
+    final todaySettled = state.settlements
+        .where((s) =>
+            s.settledAt.year == today.year &&
+            s.settledAt.month == today.month &&
+            s.settledAt.day == today.day)
+        .toList();
+
+    final unsettled = <PartnerModel>[];
+    for (final p in state.partners) {
+      final b = state.partnerBalances[p.id];
+      if (b != null && b.pendingBalance > 0) {
+        unsettled.add(p);
+      }
+    }
+
+    await SettlementPdfGenerator.generateAndShare(
+      summary: state.summary,
+      todaySettlements: todaySettled,
+      unsettledPartners: unsettled,
+      balances: state.partnerBalances,
     );
   }
 }
 
-class _FooterChip extends StatelessWidget {
-  const _FooterChip({
+class _QuickChip extends StatelessWidget {
+  const _QuickChip({
     required this.icon,
     required this.label,
     required this.onTap,
+    required this.isDark,
+    this.primary = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+  final bool isDark;
+  final bool primary;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = primary
+        ? AppColors.primary
+        : (isDark ? AppColors.surfaceDark : AppColors.surface);
+    final fg = primary
+        ? AppColors.textOnPrimary
+        : (isDark ? AppColors.textBodyDark : AppColors.textBody);
     return Material(
-      color: isDark ? AppColors.surfaceDark : AppColors.surface,
+      color: bg,
       borderRadius: BorderRadius.circular(AppSizes.cardRadius),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+        splashColor: primary
+            ? AppColors.textOnPrimary.withValues(alpha: 0.15)
+            : AppColors.primary.withValues(alpha: 0.15),
         child: Padding(
-          padding: EdgeInsets.all(AppSizes.md),
-          child: Row(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSizes.sm,
+            vertical: AppSizes.md,
+          ),
+          child: Column(
             children: [
-              Icon(
-                icon,
-                size: AppSizes.iconSm,
-                color: AppColors.primary,
-              ),
-              SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+              Container(
+                padding: EdgeInsets.all(AppSizes.xs),
+                decoration: BoxDecoration(
+                  color: primary
+                      ? AppColors.textOnPrimary.withValues(alpha: 0.18)
+                      : AppColors.primary.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: primary ? AppColors.textOnPrimary : AppColors.primary,
+                  size: AppSizes.iconMd,
                 ),
               ),
-              Icon(
-                IconsaxPlusLinear.arrow_left_2,
-                size: AppSizes.iconSm,
-                color: AppColors.textCaption,
+              SizedBox(height: AppSizes.xs),
+              Text(
+                label,
+                style: AppTypography.captionSmall.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ],
           ),

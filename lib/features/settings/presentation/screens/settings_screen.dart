@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
+import '../../../../shared/services/focus_mode_service.dart';
+import '../../../../shared/services/speed_alert_service.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -241,21 +243,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onExpansionChanged: (val) => _handleSectionExpansion(2, val),
           children: [
             SekkaToggleTile(
-              label: AppStrings.focusModeAuto,
+              label: AppStrings.focusModeEnabled,
               value: s.focusModeAutoTrigger,
-              onChanged: (val) => toggle('focusModeAutoTrigger', val),
+              onChanged: (val) async {
+                toggle('focusModeAutoTrigger', val);
+                if (val) {
+                  await FocusModeService.instance.enable();
+                } else {
+                  await FocusModeService.instance.disable();
+                }
+              },
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: AppSizes.xs,
+              ),
+              child: Text(
+                AppStrings.focusModeDescription,
+                style: AppTypography.caption.copyWith(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // ── Speed Alert ────────────────────────────
+        SekkaExpandableSection(
+          title: AppStrings.speedAlert,
+          leadingIcon: IconsaxPlusLinear.flash_1,
+          children: [
+            SekkaToggleTile(
+              label: AppStrings.speedAlertEnabled,
+              value: s.speedAlertEnabled,
+              onChanged: (val) {
+                toggle('speedAlertEnabled', val);
+                SpeedAlertService.instance.updateSettings(
+                  enabled: val,
+                  speedLimit: s.speedAlertLimit,
+                );
+              },
             ),
             SizedBox(height: AppSizes.sm),
             _SliderTile(
-              label: AppStrings.focusModeSpeed,
-              value: s.focusModeSpeedThreshold.toDouble(),
-              min: 5,
-              max: 60,
-              divisions: 11,
+              label: AppStrings.speedAlertLimit,
+              value: s.speedAlertLimit.toDouble(),
+              min: 20,
+              max: 120,
+              divisions: 10,
               unit: ' km/h',
               isDark: isDark,
-              onChanged: (val) =>
-                  update({'focusModeSpeedThreshold': val.round()}),
+              onChanged: (val) {
+                update({'speedAlertLimit': val.round()});
+                SpeedAlertService.instance.updateSettings(
+                  enabled: s.speedAlertEnabled,
+                  speedLimit: val.round(),
+                );
+              },
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: AppSizes.xs,
+              ),
+              child: Text(
+                AppStrings.speedAlertDescription,
+                style: AppTypography.caption.copyWith(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                ),
+              ),
             ),
           ],
         ),
