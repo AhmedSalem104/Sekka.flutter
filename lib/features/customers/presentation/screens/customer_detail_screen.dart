@@ -34,6 +34,7 @@ import '../../data/models/caller_id_model.dart';
 import '../../data/repositories/caller_id_repository.dart';
 import '../../data/repositories/customer_repository.dart';
 import '../../data/repositories/customer_insights_repository.dart';
+import '../../data/services/favorite_customers_service.dart';
 import '../bloc/customer_detail_bloc.dart';
 import '../widgets/rate_customer_sheet.dart';
 
@@ -114,7 +115,40 @@ class _CustomerDetailScreenState extends State<CustomerDetailScreen> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: SekkaAppBar(title: AppStrings.customerDetails),
+      appBar: SekkaAppBar(
+        title: AppStrings.customerDetails,
+        actions: [
+          AnimatedBuilder(
+            animation: FavoriteCustomersService.instance,
+            builder: (context, _) {
+              return FutureBuilder<bool>(
+                future: FavoriteCustomersService.instance
+                    .isFavorite(widget.customerId),
+                builder: (context, snap) {
+                  final isFav = snap.data ?? false;
+                  return IconButton(
+                    tooltip: isFav
+                        ? 'إزالة من المفضلة'
+                        : 'إضافة للمفضلة',
+                    icon: Icon(
+                      isFav
+                          ? IconsaxPlusBold.heart
+                          : IconsaxPlusLinear.heart,
+                      color: isFav
+                          ? AppColors.error
+                          : (isDark
+                              ? AppColors.textBodyDark
+                              : AppColors.textBody),
+                    ),
+                    onPressed: () => FavoriteCustomersService.instance
+                        .toggle(widget.customerId),
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
       body: BlocConsumer<CustomerDetailBloc, CustomerDetailState>(
         bloc: _bloc,
         listener: (context, state) {

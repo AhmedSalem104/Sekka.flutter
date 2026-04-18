@@ -18,6 +18,7 @@ import '../../../../shared/network/dio_client.dart';
 import '../../../search/data/repositories/search_repository.dart';
 import '../../data/models/customer_model.dart';
 import '../../data/repositories/customer_repository.dart';
+import 'favorite_customers_screen.dart';
 import '../bloc/customers_bloc.dart';
 import '../bloc/customers_event.dart';
 import '../bloc/customers_state.dart';
@@ -107,13 +108,31 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                 horizontal: Responsive.w(20),
                 vertical: Responsive.h(16),
               ),
-              child: Text(
-                AppStrings.customers,
-                style: AppTypography.headlineMedium.copyWith(
-                  color: isDark
-                      ? AppColors.textHeadlineDark
-                      : AppColors.textHeadline,
-                ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      AppStrings.customers,
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: isDark
+                            ? AppColors.textHeadlineDark
+                            : AppColors.textHeadline,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'العملاء المفضلين',
+                    icon: Icon(
+                      IconsaxPlusLinear.heart,
+                      color: AppColors.error,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FavoriteCustomersScreen(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 

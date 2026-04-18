@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
@@ -9,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_card.dart';
 import '../../../../shared/enums/order_enums.dart';
+import '../../../../shared/services/connectivity_service.dart';
 import '../../data/models/order_model.dart';
 
 class OrderCard extends StatefulWidget {
@@ -27,11 +30,25 @@ class OrderCard extends StatefulWidget {
 
 class _OrderCardState extends State<OrderCard> {
   String? _resolvedDeliveryAddress;
+  StreamSubscription<bool>? _connectivitySub;
 
   @override
   void initState() {
     super.initState();
     _resolve();
+    // Retry reverse-geocoding when the device reconnects — the initial
+    // attempt fails silently when the order was created offline, so the
+    // card would stay showing lat/lng forever otherwise.
+    _connectivitySub =
+        ConnectivityService.instance.onConnectivityChanged.listen((online) {
+      if (online && _needsResolve()) _resolve();
+    });
+  }
+
+  @override
+  void dispose() {
+    _connectivitySub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -44,13 +61,24 @@ class _OrderCardState extends State<OrderCard> {
     }
   }
 
+  bool _needsResolve() {
+    final current = _resolvedDeliveryAddress ?? widget.order.deliveryAddress;
+    return RegExp(r'^[-\d.,\s]+$').hasMatch(current.trim());
+  }
+
   Future<void> _resolve() async {
     final resolved = await _resolveAddress(
       widget.order.deliveryAddress,
       widget.order.deliveryLatitude,
       widget.order.deliveryLongitude,
     );
-    if (mounted) setState(() => _resolvedDeliveryAddress = resolved);
+    if (!mounted) return;
+    // Only cache when the resolver actually produced readable text — if it
+    // still looks like raw coordinates, leave the cache null so the next
+    // reconnect/refresh retries.
+    final stillCoords = RegExp(r'^[-\d.,\s]+$').hasMatch(resolved.trim());
+    if (stillCoords) return;
+    setState(() => _resolvedDeliveryAddress = resolved);
   }
 
   /// If address looks like coordinates, reverse geocode it.

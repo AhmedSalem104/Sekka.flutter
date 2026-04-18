@@ -24,6 +24,7 @@ import '../../../customers/data/repositories/customer_repository.dart';
 import '../../../customers/presentation/bloc/customers_bloc.dart';
 import '../../../customers/presentation/bloc/customers_event.dart';
 import '../../../customers/presentation/bloc/customers_state.dart';
+import '../../../customers/presentation/screens/favorite_customers_screen.dart';
 import '../../../partners/data/models/partner_model.dart';
 import '../../../partners/data/repositories/partner_repository.dart';
 import '../../../partners/presentation/bloc/partners_bloc.dart';
@@ -178,18 +179,38 @@ class _ContactsScreenState extends State<ContactsScreen>
           children: [
             SizedBox(height: Responsive.h(16)),
 
-            // Title
-            Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
-                child: Text(
-                  'عملائي',
-                  style: AppTypography.headlineMedium.copyWith(
-                    color: isDark
-                        ? AppColors.textHeadlineDark
-                        : AppColors.textHeadline,
+            // Title (centered) + favorites action on the opposite side
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
+              child: Row(
+                children: [
+                  SizedBox(width: Responsive.r(44)),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        'عملائي',
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: isDark
+                              ? AppColors.textHeadlineDark
+                              : AppColors.textHeadline,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                  IconButton(
+                    tooltip: 'العملاء المفضلين',
+                    icon: Icon(
+                      IconsaxPlusBold.heart,
+                      color: AppColors.error,
+                      size: AppSizes.iconMd,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const FavoriteCustomersScreen(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
