@@ -1,9 +1,12 @@
 import 'dart:developer' as dev;
 
+import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
-import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../network/api_constants.dart';
+import '../storage/token_storage.dart';
 import 'focus_mode_service.dart';
+import 'local_notification_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -26,13 +29,10 @@ class FcmService {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     final settings = await _messaging.requestPermission();
-    dev.log(
-      'Notification permission: ${settings.authorizationStatus}',
-      name: 'FCM',
-    );
+    print('[FCM] Permission: ${settings.authorizationStatus}');
 
     _token = await _messaging.getToken();
-    dev.log('FCM Token: $_token', name: 'FCM');
+    print('[FCM] Token: $_token');
 
     _messaging.onTokenRefresh.listen((newToken) {
       _token = newToken;
@@ -48,28 +48,75 @@ class FcmService {
     }
   }
 
-  Future<void> registerWithBackend(AuthRepositoryImpl authRepository) async {
-    if (_token == null) return;
+  /// Register FCM token with backend using a DIRECT Dio call (bypasses
+  /// the auth interceptor to avoid the race condition where the interceptor
+  /// clears tokens from a previous failed request).
+  Future<void> registerWithBackend(TokenStorage tokenStorage, {
+    int retryCount = 0,
+  }) async {
+    print('[FCM] registerWithBackend called (attempt ${retryCount + 1})');
+    if (_token == null) {
+      print('[FCM] SKIPPED — no FCM token!');
+      return;
+    }
+
+    final jwt = await tokenStorage.getToken();
+    if (jwt == null) {
+      print('[FCM] SKIPPED — no JWT token!');
+      if (retryCount < 3) {
+        final delay = Duration(seconds: 5 * (retryCount + 1));
+        print('[FCM] Will retry in ${delay.inSeconds}s...');
+        Future.delayed(delay, () {
+          registerWithBackend(tokenStorage, retryCount: retryCount + 1);
+        });
+      }
+      return;
+    }
+
     try {
-      await authRepository.registerDevice(
-        fcmToken: _token!,
-        platform: 1,
+      final dio = Dio();
+      await dio.post(
+        ApiConstants.registerDevice,
+        data: {'token': _token!, 'platform': 1},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $jwt',
+            'Content-Type': 'application/json',
+          },
+        ),
       );
-      dev.log('FCM token registered with backend', name: 'FCM');
+      print('[FCM] Token registered with backend SUCCESS');
     } catch (e) {
-      dev.log('Failed to register FCM token: $e', name: 'FCM');
+      print('[FCM] FAILED to register: $e');
+      if (retryCount < 3) {
+        final delay = Duration(seconds: 5 * (retryCount + 1));
+        print('[FCM] Will retry in ${delay.inSeconds}s...');
+        Future.delayed(delay, () {
+          registerWithBackend(tokenStorage, retryCount: retryCount + 1);
+        });
+      }
     }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
     if (FocusModeService.instance.shouldBlockNotification()) {
-      dev.log('FCM blocked (focus mode)', name: 'FCM');
+      print('[FCM] Blocked by focus mode');
       return;
     }
-    dev.log(
-      'Foreground message: ${message.notification?.title}',
-      name: 'FCM',
-    );
+
+    final String title = message.notification?.title ??
+        (message.data['title'] as String?) ?? '';
+    final String body = message.notification?.body ??
+        (message.data['body'] as String?) ?? '';
+    print('[FCM] Foreground message: $title — $body');
+
+    if (title.isNotEmpty || body.isNotEmpty) {
+      LocalNotificationService.instance.show(
+        title: title,
+        body: body,
+        payload: message.data.toString(),
+      );
+    }
   }
 
   void _handleMessageOpenedApp(RemoteMessage message) {

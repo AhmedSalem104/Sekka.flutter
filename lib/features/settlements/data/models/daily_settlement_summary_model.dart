@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/daily_settlement_summary_entity.dart';
 
 class DailySettlementSummaryModel extends DailySettlementSummaryEntity {
@@ -25,8 +26,8 @@ class DailySettlementSummaryModel extends DailySettlementSummaryEntity {
       totalCollected: (json['totalCollected'] as num?)?.toDouble() ?? 0,
       totalSettled: (json['totalSettled'] as num?)?.toDouble() ?? 0,
       remainingBalance: (json['remainingBalance'] as num?)?.toDouble() ?? 0,
-      settlementCount: json['settlementCount'] as int? ?? 0,
-      pendingPartners: json['pendingPartners'] as int? ?? 0,
+      settlementCount: safeInt(json['settlementCount'], 0),
+      pendingPartners: safeInt(json['pendingPartners'], 0),
     );
   }
 }

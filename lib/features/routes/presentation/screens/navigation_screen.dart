@@ -789,7 +789,7 @@ class _HelpRequestCard extends StatelessWidget {
               ),
               SizedBox(width: AppSizes.xs),
               Text(
-                DateFormat('h:mm a', 'ar').format(request.createdAt),
+                DateFormat('h:mm a', AppStrings.currentLang).format(request.createdAt),
                 style: AppTypography.captionSmall.copyWith(
                   color: isDark
                       ? AppColors.textCaptionDark

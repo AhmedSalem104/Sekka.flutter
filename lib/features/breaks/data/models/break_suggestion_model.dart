@@ -9,13 +9,19 @@ class BreakSuggestionModel extends BreakSuggestionEntity {
     required super.nearbySpots,
   });
 
+  static int safeInt(dynamic v, [int fallback = 0]) {
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v) ?? fallback;
+    return fallback;
+  }
+
   factory BreakSuggestionModel.fromJson(Map<String, dynamic> json) {
     final spots = json['nearbySpots'];
     return BreakSuggestionModel(
       shouldBreak: (json['shouldBreak'] as bool?) ?? false,
-      urgency: (json['urgency'] as int?) ?? 0,
-      suggestedDurationMinutes:
-          (json['suggestedDurationMinutes'] as int?) ?? 15,
+      urgency: safeInt(json['urgency']),
+      suggestedDurationMinutes: safeInt(json['suggestedDurationMinutes'], 15),
       reason: (json['reason'] as String?) ?? '',
       nearbySpots: spots is List
           ? spots.map((e) => e.toString()).toList()

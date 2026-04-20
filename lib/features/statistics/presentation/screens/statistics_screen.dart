@@ -1205,11 +1205,7 @@ class _WeekPickerBar extends StatelessWidget {
 }
 
 String _formatArabicDate(DateTime d) {
-  const arMonths = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
-  ];
   final isAr = AppStrings.currentLang == 'ar';
-  if (isAr) return '${d.day} ${arMonths[d.month - 1]}';
+  if (isAr) return '${d.day} ${AppStrings.monthNames[d.month - 1]}';
   return '${d.day}/${d.month}/${d.year}';
 }

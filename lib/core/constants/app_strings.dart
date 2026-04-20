@@ -9,6 +9,13 @@ abstract final class AppStrings {
   static String get appTagline =>
       _isAr ? 'شريك شغلك في الديليفري' : 'Your delivery work partner';
 
+  // Bottom Nav
+  static String get navHome => _isAr ? 'الرئيسية' : 'Home';
+  static String get navOrders => _isAr ? 'الطلبات' : 'Orders';
+  static String get navCustomers => _isAr ? 'عملائي' : 'Contacts';
+  static String get navWallet => _isAr ? 'جيبي' : 'Wallet';
+  static String get navAccounts => _isAr ? 'الحسابات' : 'Accounts';
+
   // Force Update
   static String get forceUpdateTitle =>
       _isAr ? 'لازم تحدّث التطبيق' : 'Update Required';
@@ -190,6 +197,56 @@ abstract final class AppStrings {
   static String get timeoutError =>
       _isAr ? 'النت بطيء عندك، جرّب تاني' : 'Connection timed out. Try again.';
 
+  // Error Mapper — user-friendly error messages
+  static String get passwordComplexity =>
+      _isAr ? 'كلمة السر لازم تكون فيها حروف كبيرة وصغيرة وأرقام' : 'Password must contain uppercase, lowercase letters and numbers';
+  static String get wrongCredentials =>
+      _isAr ? 'رقم الموبايل أو كلمة السر غلط' : 'Wrong phone number or password';
+  static String get phoneAlreadyRegistered =>
+      _isAr ? 'الرقم ده مسجّل قبل كدا، جرّب تسجّل دخول' : 'This number is already registered. Try logging in.';
+  static String get wrongOtpCode =>
+      _isAr ? 'الكود غلط، تأكد منه وجرّب تاني' : 'Wrong code. Check and try again.';
+  static String get otpExpired =>
+      _isAr ? 'الكود خلص وقته، ابعت كود جديد' : 'Code expired. Send a new one.';
+  static String get tooManyAttempts =>
+      _isAr ? 'جرّبت كتير، استنى شوية وحاول تاني' : 'Too many attempts. Wait and try again.';
+  static String get accountSuspended =>
+      _isAr ? 'الحساب متوقف، تواصل مع الدعم' : 'Account suspended. Contact support.';
+  static String get accountNotFound =>
+      _isAr ? 'مفيش حساب بالرقم ده' : 'No account found with this number';
+  static String get sessionNotFound =>
+      _isAr ? 'الجلسة دي مش موجودة' : 'This session does not exist';
+  static String get smsSendFailed =>
+      _isAr ? 'مقدرناش نبعت الرسالة، جرّب تاني' : 'Could not send the message. Try again.';
+  static String get serviceUnavailable =>
+      _isAr ? 'الخدمة مش متاحة دلوقتي، جرّب بعد شوية' : 'Service unavailable. Try again later.';
+  static String get somethingWentWrong =>
+      _isAr ? 'حصلت مشكلة' : 'Something went wrong';
+  static String get noInternetConnection =>
+      _isAr ? 'مفيش إنترنت — تأكد من الاتصال' : 'No internet — check your connection';
+  static String get requestTimedOut =>
+      _isAr ? 'انتهت المهلة — جرّب تاني' : 'Request timed out — try again';
+  static String get requestCancelled =>
+      _isAr ? 'تم إلغاء الطلب' : 'Request cancelled';
+  static String get unexpectedError =>
+      _isAr ? 'حصلت مشكلة غير متوقعة' : 'An unexpected error occurred';
+
+  // Time Ago
+  static String get justNow => _isAr ? 'الآن' : 'Just now';
+  static String minutesAgo(int n) => _isAr ? 'من $n دقيقة' : '$n minutes ago';
+  static String hoursAgo(int n) => _isAr ? 'من $n ساعة' : '$n hours ago';
+  static String daysAgo(int n) => _isAr ? 'من $n يوم' : '$n days ago';
+
+  // Customers — Search
+  static String get searchCustomerHint =>
+      _isAr ? 'بحث باسم العميل أو رقمه...' : 'Search by customer name or number...';
+  static String get tryDifferentSearch =>
+      _isAr ? 'جرّب اسم أو رقم تاني' : 'Try a different name or number';
+  static String get noFavoriteCustomers =>
+      _isAr ? 'مفيش عملاء مفضلين' : 'No favorite customers';
+  static String get addFavoriteCustomerHint =>
+      _isAr ? 'اضغطي على القلب في صفحة العميل عشان تضيفيه هنا' : 'Tap the heart on a customer page to add them here';
+
   // Validation — friendly
   static String get phoneRequired =>
       _isAr ? 'اكتب رقم الموبايل' : 'Phone number is required';
@@ -251,6 +308,35 @@ abstract final class AppStrings {
   static String get walletYesterday => _isAr ? 'إمبارح' : 'Yesterday';
   static String get walletSharePdf =>
       _isAr ? 'شارك PDF' : 'Share PDF';
+
+  // Wallet — Transaction Types
+  static String get txOrderEarning => _isAr ? 'ربح من طلب' : 'Order Earning';
+  static String get txCommission => _isAr ? 'عمولة' : 'Commission';
+  static String get txSettlement => _isAr ? 'تسوية' : 'Settlement';
+  static String transactionTypeName(int type) => switch (type) {
+        0 => txOrderEarning,
+        1 => txCommission,
+        2 => txSettlement,
+        _ => _isAr ? 'معاملة' : 'Transaction',
+      };
+  static String get pdfWalletSummaryTitle =>
+      _isAr ? 'سِكّة — ملخص المحفظة' : 'Sekka — Wallet Summary';
+  static String get pdfMoneyWithYou =>
+      _isAr ? 'الفلوس اللي معاك' : 'Money with you';
+  static String get pdfTotalEarned =>
+      _isAr ? 'إجمالي اللي جالك' : 'Total earned';
+  static String get pdfTotalSettled =>
+      _isAr ? 'إجمالي اللي سلّمته' : 'Total settled';
+  static String get pdfPendingPartners =>
+      _isAr ? 'لسه للشركاء' : 'Pending for partners';
+  static String get pdfTransactionCount =>
+      _isAr ? 'عدد المعاملات' : 'Transaction count';
+  static String get pdfRecentTransactions =>
+      _isAr ? 'آخر المعاملات' : 'Recent transactions';
+  static String get pdfGeneratedBy =>
+      _isAr ? 'تم الإنشاء من تطبيق سِكّة' : 'Generated by Sekka app';
+  static String get pdfShareText =>
+      _isAr ? 'ملخص جيبي — سِكّة' : 'Wallet summary — Sekka';
   static String get currentBalance =>
       _isAr ? 'رصيدك عند الشركة' : 'Your balance';
   static String get cashOnHand => _isAr ? 'كاش معاك (فلوس شغل)' : 'Cash with you (work money)';
@@ -1867,4 +1953,168 @@ abstract final class AppStrings {
       _isAr ? 'طلب' : 'orders';
   static String get analyticsNoData =>
       _isAr ? 'مفيش بيانات كافية لسه' : 'Not enough data yet';
+
+  // Contacts Screen
+  static String get favoriteCustomers =>
+      _isAr ? 'العملاء المفضلين' : 'Favorite Customers';
+  static String get noCustomers =>
+      _isAr ? 'مفيش عملاء' : 'No customers';
+  static String get noCustomersDesc =>
+      _isAr ? 'العملاء هيظهروا هنا لما تبدأ توصيل' : 'Customers will appear here when you start delivering';
+  static String get noPartners =>
+      _isAr ? 'مفيش شركاء' : 'No partners';
+  static String get noPartnersDesc =>
+      _isAr ? 'مفيش شركاء متاحين دلوقتي' : 'No partners available right now';
+  static String get otherType =>
+      _isAr ? 'أخرى' : 'Other';
+
+  // Onboarding
+  static String get onboardingTitle =>
+      _isAr ? 'طريقك أخضر.. ومكسبك أكبر' : 'Your path is clear.. and your profit is bigger';
+  static String get onboardingDesc =>
+      _isAr
+          ? 'أوردراتك قريبة، خريطتك دقيقة، وفلوسك بتزيد مع كل مشوار. سِكّة هو اللي شايل عنك التفكير.'
+          : 'Your orders are nearby, your map is accurate, and your earnings grow with every trip. Sekka takes care of the thinking for you.';
+  static String get letsStart =>
+      _isAr ? 'نبدأ دلوقتي!' : 'Let\'s start!';
+  static String get tryWithoutRegistration =>
+      _isAr ? 'جرّب بدون تسجيل' : 'Try without registration';
+
+  // Map Picker
+  static String get searchPlace =>
+      _isAr ? 'ابحث عن مكان...' : 'Search for a place...';
+  static String get fetchingAddress =>
+      _isAr ? 'بنجيب العنوان...' : 'Getting address...';
+  static String get moveMapToSelect =>
+      _isAr ? 'حرّك الخريطة عشان تحدد المكان' : 'Move the map to select location';
+  static String get confirmLocation =>
+      _isAr ? 'تأكيد الموقع' : 'Confirm Location';
+
+  // Dialog
+  static String get infoTitle =>
+      _isAr ? 'معلومة' : 'Info';
+
+  // Validators
+  static String get thisField =>
+      _isAr ? 'هذا الحقل' : 'This field';
+  static String get isRequired =>
+      _isAr ? 'مطلوب' : 'is required';
+  static String get enterAmount =>
+      _isAr ? 'أدخل المبلغ' : 'Enter amount';
+  static String get enterValidAmount =>
+      _isAr ? 'أدخل مبلغ صحيح' : 'Enter a valid amount';
+  static String get enterAddressValidation =>
+      _isAr ? 'أدخل العنوان' : 'Enter address';
+  static String get addressTooShort =>
+      _isAr ? 'العنوان قصير جداً' : 'Address is too short';
+
+  // Orders — Detail Screen (Menu)
+  static String get menuEditOrder => _isAr ? 'عدّل الطلب' : 'Edit Order';
+  static String get menuDeleteOrder => _isAr ? 'امسح الطلب' : 'Delete Order';
+  static String get menuSwapAddress => _isAr ? 'غيّر العنوان' : 'Change Address';
+  static String get menuPhotoOrder => _isAr ? 'صوّر الطلب' : 'Photo Order';
+  static String get menuDisclaimer => _isAr ? 'إخلاء مسؤولية' : 'Disclaimer';
+  static String get menuOpenDispute => _isAr ? 'فتح نزاع' : 'Open Dispute';
+  static String get menuRequestRefund => _isAr ? 'طلب استرداد' : 'Request Refund';
+  static String get menuBookSlot => _isAr ? 'احجز موعد تسليم' : 'Book Delivery Slot';
+
+  // Orders — Detail Screen (Labels)
+  static String get deliveryDestination => _isAr ? 'هيتوصّل فين' : 'Delivery destination';
+  static String get pickupSource => _isAr ? 'هيتستلم منين' : 'Pickup source';
+  static String get partnerMerchant => _isAr ? 'الشريك/التاجر' : 'Partner/Merchant';
+  static String get shipmentDescriptionLabel => _isAr ? 'وصف الشحنة' : 'Shipment description';
+  static String get worthScoreLabel => _isAr ? 'نقاط القيمة' : 'Worth score';
+  static String get deliverySequence => _isAr ? 'ترتيب التوصيل' : 'Delivery sequence';
+
+  // Orders — Detail Screen (Buttons)
+  static String get partialDelivery => _isAr ? 'تسليم جزئي' : 'Partial Delivery';
+  static String get couldNotDeliver => _isAr ? 'معرفتش أسلّم' : 'Could not deliver';
+  static String get cancelThisOrder => _isAr ? 'ألغي الطلب' : 'Cancel Order';
+
+  // Orders — Detail Screen (Timer)
+  static String get waitingTimer => _isAr ? 'مؤقت الانتظار' : 'Waiting Timer';
+  static String get timerRunning => _isAr ? 'المؤقت شغال...' : 'Timer running...';
+  static String get timerStopped => _isAr ? 'المؤقت واقف' : 'Timer stopped';
+  static String get stopTimer => _isAr ? 'وقّف المؤقت' : 'Stop Timer';
+  static String get startTimer => _isAr ? 'ابدأ المؤقت' : 'Start Timer';
+
+  // Orders — Detail Screen (Terminal Banners)
+  static String get orderDeliveredBanner => _isAr ? 'الطلب اتسلّم بنجاح' : 'Order delivered successfully';
+  static String get orderPartialBanner => _isAr ? 'اتسلّم جزء من الطلب' : 'Partially delivered';
+  static String get orderCancelledBanner => _isAr ? 'الطلب ده اتلغى' : 'Order cancelled';
+  static String get orderReturnedBanner => _isAr ? 'الطلب رجع تاني' : 'Order returned';
+
+  // Orders — Detail Screen (Photo)
+  static String get choosePhotoType => _isAr ? 'اختار نوع الصورة' : 'Choose photo type';
+  static String orderPhotos(int count) => _isAr ? 'صور الطلب ($count)' : 'Order photos ($count)';
+
+  // Orders — Detail Screen (Forms)
+  static String get moreDetailsOptional => _isAr ? 'تفاصيل أكتر (اختياري)' : 'More details (optional)';
+  static String get howManyDelivered => _isAr ? 'كام قطعة سلّمت؟' : 'How many items delivered?';
+  static String get totalItems => _isAr ? 'إجمالي القطع' : 'Total items';
+  static String get collectedAmountHint => _isAr ? 'المبلغ اللي حصّلته' : 'Amount collected';
+  static String get remainingAmountHint => _isAr ? 'المبلغ المتبقي' : 'Remaining amount';
+  static String get reasonOptional => _isAr ? 'السبب (اختياري)' : 'Reason (optional)';
+
+  // Orders — Detail Screen (Swap Address)
+  static String get swapAddressTitle => _isAr ? 'غيّر العنوان' : 'Change Address';
+  static String get pickNewAddress => _isAr ? 'حدد العنوان الجديد' : 'Pick new address';
+  static String get tapToPickNewAddress => _isAr ? 'اضغط عشان تحدد العنوان الجديد' : 'Tap to pick new address';
+
+  // Orders — Detail Screen (Disclaimer)
+  static String get disclaimerTitle => _isAr ? 'إخلاء مسؤولية' : 'Disclaimer';
+  static String get shipmentCondition => _isAr ? 'حالة الشحنة' : 'Shipment condition';
+  static String get shipmentConditionHint => _isAr ? 'حالة الشحنة (مثلاً: مكسورة، مفتوحة)' : 'Condition (e.g. broken, opened)';
+  static String get contentsDescription => _isAr ? 'وصف المحتويات' : 'Contents description';
+  static String get contentsDescriptionHint => _isAr ? 'وصف المحتويات (مثلاً: 2 كرتونة، علبة)' : 'Contents (e.g. 2 boxes, 1 bag)';
+
+  // Orders — Detail Screen (Dispute)
+  static String get openDisputeTitle => _isAr ? 'فتح نزاع' : 'Open Dispute';
+  static String get describeProblemInDetail => _isAr ? 'اوصف المشكلة بالتفصيل' : 'Describe the problem in detail';
+
+  // Orders — Detail Screen (Refund)
+  static String get requestRefundTitle => _isAr ? 'طلب استرداد' : 'Request Refund';
+  static String get refundAmount => _isAr ? 'مبلغ الاسترداد' : 'Refund amount';
+  static String get refundReason => _isAr ? 'سبب الاسترداد' : 'Refund reason';
+
+  // Orders — Detail Screen (Booking)
+  static String get bookSlotTitle => _isAr ? 'احجز موعد تسليم' : 'Book Delivery Slot';
+  static String get slotNumber => _isAr ? 'رقم الموعد' : 'Slot number';
+  static String get dateLabel => _isAr ? 'التاريخ' : 'Date';
+  static String get datePlaceholder => _isAr ? 'التاريخ (مثال: 2026-03-28)' : 'Date (e.g. 2026-03-28)';
+  static String get bookSlotAction => _isAr ? 'احجز الموعد' : 'Book Slot';
+
+  // Orders — List Screen
+  static String get noOrdersTitle => _isAr ? 'مفيش طلبات' : 'No orders';
+  static String get noOrdersWithFilter => _isAr ? 'مفيش طلبات بالحالة دي' : 'No orders with this status';
+  static String get noSearchResults => _isAr ? 'مفيش نتايج' : 'No results';
+  static String get tryDifferentSearchOrder => _isAr ? 'جرّب اسم عميل أو رقم تاني' : 'Try a different customer name or number';
+
+  // Orders — Duplicate Warning
+  static String get orderNumberPrefix => _isAr ? 'رقم الطلب' : 'Order number';
+  static String matchScoreLabel(int score) => _isAr ? 'نسبة التشابه: $score%' : 'Match score: $score%';
+
+  // Orders — Create Screen (Voice Tab)
+  static String get voiceOrderTitle => _isAr ? 'قول الطلب بصوتك' : 'Say your order';
+  static String get voiceOrderHint =>
+      _isAr
+          ? 'اضغط على المايك وقول بيانات الطلب\nزي: "طلب لمحمد، العنوان المعادي، المبلغ 150 جنيه"'
+          : 'Press the mic and say order details\ne.g. "Order for Mohamed, address Maadi, amount 150 EGP"';
+  static String get voiceComingSoon => _isAr ? 'الميزة دي جاية قريب' : 'Coming soon';
+
+  // Date — Localized
+  static String get greetingMorning =>
+      _isAr ? 'صباح الخير' : 'Good morning';
+  static String get greetingEvening =>
+      _isAr ? 'مساء الخير' : 'Good evening';
+  static String get greetingNight =>
+      _isAr ? 'أهلا بيك' : 'Welcome';
+  static String get amPeriod => _isAr ? 'ص' : 'AM';
+  static String get pmPeriod => _isAr ? 'م' : 'PM';
+  static List<String> get dayNames => _isAr
+      ? const ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد']
+      : const ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  static List<String> get monthNames => _isAr
+      ? const ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
+      : const ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 }

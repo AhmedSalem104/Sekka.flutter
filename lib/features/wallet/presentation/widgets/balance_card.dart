@@ -13,7 +13,7 @@ class BalanceCard extends StatelessWidget {
   final WalletBalanceEntity balance;
 
   String _formatAmount(double amount) =>
-      NumberFormat('#,##0.00', 'ar_EG').format(amount);
+      NumberFormat('#,##0.00', AppStrings.currentLang == 'ar' ? 'ar_EG' : 'en_US').format(amount);
 
   @override
   Widget build(BuildContext context) {

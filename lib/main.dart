@@ -66,6 +66,7 @@ import 'features/customers/data/repositories/address_repository.dart';
 import 'features/notifications/data/repositories/notification_repository.dart';
 import 'shared/network/dio_client.dart';
 import 'shared/services/fcm_service.dart';
+import 'shared/services/local_notification_service.dart';
 import 'shared/storage/token_storage.dart';
 import 'shared/storage/user_storage.dart';
 
@@ -75,6 +76,7 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp();
   await FcmService.instance.initialize();
+  await LocalNotificationService.instance.initialize();
 
   // Initialize offline-first infrastructure
   HydratedBloc.storage = await HydratedStorage.build(
@@ -109,7 +111,7 @@ void main() async {
 
   // Theme & locale notifiers for Settings — restore from prefs so the user's
   // last choice survives app restarts (and doesn't flash default on cold start)
-  final savedThemeIndex = prefs.getInt('settings_theme') ?? 0;
+  final savedThemeIndex = prefs.getInt('settings_theme') ?? 1;
   final savedLanguage = prefs.getString('settings_language') ?? 'ar';
   final themeModeNotifier = ValueNotifier<ThemeMode>(
     switch (savedThemeIndex) {

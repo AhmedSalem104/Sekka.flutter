@@ -35,31 +35,31 @@ class _MainShellState extends State<MainShell> {
     const SettlementsScreen(),
   ];
 
-  final _navItems = [
+  List<SekkaBottomNavItem> get _navItems => [
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.home_2,
       activeIcon: IconsaxPlusBold.home_2,
-      label: 'الرئيسية',
+      label: AppStrings.navHome,
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.clipboard_text,
       activeIcon: IconsaxPlusBold.clipboard_text,
-      label: 'الطلبات',
+      label: AppStrings.navOrders,
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.profile_2user,
       activeIcon: IconsaxPlusBold.profile_2user,
-      label: 'عملائي',
+      label: AppStrings.navCustomers,
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.moneys,
       activeIcon: IconsaxPlusBold.moneys,
-      label: 'جيبي',
+      label: AppStrings.navWallet,
     ),
     SekkaBottomNavItem(
       icon: IconsaxPlusLinear.calculator,
       activeIcon: IconsaxPlusBold.calculator,
-      label: AppStrings.accountHandover,
+      label: AppStrings.navAccounts,
     ),
   ];
 
@@ -71,6 +71,9 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    // Force rebuild when locale changes
+    Localizations.localeOf(context);
+
     return PopScope(
       canPop: _currentIndex == 0,
       onPopInvokedWithResult: (didPop, _) {

@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/settings_entity.dart';
 
 class SettingsModel extends SettingsEntity {
@@ -34,15 +35,24 @@ class SettingsModel extends SettingsEntity {
     required super.backToBaseRadiusKm,
   });
 
+  static int _parseTheme(dynamic v) {
+    if (v is int) return v;
+    if (v is String) {
+      const map = {'system': 0, 'light': 1, 'dark': 2};
+      return map[v.toLowerCase()] ?? 1;
+    }
+    return 1; // default light
+  }
+
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
-      theme: json['theme'] as int? ?? 1,
+      theme: _parseTheme(json['theme']),
       language: json['language'] as String? ?? 'ar',
-      numberFormat: json['numberFormat'] as int? ?? 0,
+      numberFormat: safeInt(json['numberFormat'], 0),
       focusModeAutoTrigger: json['focusModeAutoTrigger'] as bool? ?? true,
-      focusModeSpeedThreshold: json['focusModeSpeedThreshold'] as int? ?? 20,
+      focusModeSpeedThreshold: safeInt(json['focusModeSpeedThreshold'], 20),
       speedAlertEnabled: json['speedAlertEnabled'] as bool? ?? false,
-      speedAlertLimit: json['speedAlertLimit'] as int? ?? 60,
+      speedAlertLimit: safeInt(json['speedAlertLimit'], 60),
       textToSpeechEnabled: json['textToSpeechEnabled'] as bool? ?? false,
       hapticFeedback: json['hapticFeedback'] as bool? ?? true,
       highContrastMode: json['highContrastMode'] as bool? ?? false,
@@ -56,12 +66,12 @@ class SettingsModel extends SettingsEntity {
       notifyVibration: json['notifyVibration'] as bool? ?? true,
       quietHoursStart: json['quietHoursStart'] as String?,
       quietHoursEnd: json['quietHoursEnd'] as String?,
-      preferredMapApp: json['preferredMapApp'] as int? ?? 0,
-      maxOrdersPerShift: json['maxOrdersPerShift'] as int?,
+      preferredMapApp: safeInt(json['preferredMapApp'], 0),
+      maxOrdersPerShift: json['maxOrdersPerShift'] is int ? json['maxOrdersPerShift'] as int : (json['maxOrdersPerShift'] is String ? int.tryParse(json['maxOrdersPerShift'] as String) : null),
       autoSendReceipt: json['autoSendReceipt'] as bool? ?? true,
       locationTrackingInterval:
-          json['locationTrackingInterval'] as int? ?? 10,
-      offlineSyncInterval: json['offlineSyncInterval'] as int? ?? 30,
+          safeInt(json['locationTrackingInterval'], 10),
+      offlineSyncInterval: safeInt(json['offlineSyncInterval'], 30),
       homeLatitude: (json['homeLatitude'] as num?)?.toDouble(),
       homeLongitude: (json['homeLongitude'] as num?)?.toDouble(),
       homeAddress: json['homeAddress'] as String?,

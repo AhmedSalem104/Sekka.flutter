@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import 'package:equatable/equatable.dart';
 
 class NearbyDriverModel extends Equatable {
@@ -26,7 +27,7 @@ class NearbyDriverModel extends Equatable {
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       distanceKm: (json['distanceKm'] as num?)?.toDouble() ?? 0,
-      vehicleType: json['vehicleType'] as int?,
+      vehicleType: parseVehicleType(json['vehicleType']),
       isOnline: json['isOnline'] as bool? ?? true,
     );
   }

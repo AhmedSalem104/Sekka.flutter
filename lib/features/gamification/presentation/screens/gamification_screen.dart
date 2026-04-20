@@ -550,7 +550,7 @@ class _AchievementCard extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return DateFormat('d/M/yyyy', 'ar').format(date);
+    return DateFormat('d/M/yyyy', AppStrings.currentLang).format(date);
   }
 }
 
@@ -1036,6 +1036,6 @@ class _PointHistoryRow extends StatelessWidget {
   }
 
   String _formatDateTime(DateTime date) {
-    return DateFormat('d/M · h:mm a', 'ar').format(date);
+    return DateFormat('d/M · h:mm a', AppStrings.currentLang).format(date);
   }
 }

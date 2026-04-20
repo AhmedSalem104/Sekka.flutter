@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_animations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/routing/route_names.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
@@ -141,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'طريقك أخضر.. ومكسبك أكبر',
+                      AppStrings.onboardingTitle,
                       style: AppTypography.headlineMedium.copyWith(
                         color: isDark
                             ? AppColors.textHeadlineDark
@@ -151,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                     SizedBox(height: Responsive.h(12)),
                     Text(
-                      'أوردراتك قريبة، خريطتك دقيقة، وفلوسك بتزيد مع كل مشوار. سِكّة هو اللي شايل عنك التفكير.',
+                      AppStrings.onboardingDesc,
                       style: AppTypography.bodyLarge.copyWith(
                         color: isDark
                             ? AppColors.textBodyDark
@@ -172,14 +173,14 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SekkaButton(
-                      label: 'نبدأ دلوقتي!',
+                      label: AppStrings.letsStart,
                       onPressed: _onGetStarted,
                     ),
                     SizedBox(height: Responsive.h(16)),
                     GestureDetector(
                       onTap: _onTryDemo,
                       child: Text(
-                        'جرّب بدون تسجيل',
+                        AppStrings.tryWithoutRegistration,
                         style: AppTypography.bodyMedium.copyWith(
                           color: isDark
                               ? AppColors.textCaptionDark

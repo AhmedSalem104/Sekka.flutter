@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import 'package:equatable/equatable.dart';
 
 class BadgeVerifyModel extends Equatable {
@@ -23,7 +24,7 @@ class BadgeVerifyModel extends Equatable {
         isActive: json['isActive'] as bool? ?? false,
         verifiedAt: json['verifiedAt'] as String? ?? '',
         driverName: json['driverName'] as String?,
-        vehicleType: json['vehicleType'] as int?,
+        vehicleType: parseVehicleType(json['vehicleType']),
         rating: (json['rating'] as num?)?.toDouble(),
       );
 

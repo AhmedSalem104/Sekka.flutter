@@ -116,6 +116,12 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
     for (final entry in event.updates.entries) {
       optimistic = _applyField(optimistic, entry.key, entry.value);
     }
+    // Sync theme/locale immediately for instant feedback
+    if (event.updates.containsKey('theme') ||
+        event.updates.containsKey('language')) {
+      _syncNotifiers(optimistic.theme, optimistic.language);
+    }
+
     emit(SettingsLoaded(settings: optimistic, isSaving: true));
 
     try {
@@ -128,12 +134,6 @@ class SettingsBloc extends HydratedBloc<SettingsEvent, SettingsState> {
         await _repository.updateFocusMode(event.updates);
       } else {
         await _repository.updateSettings(event.updates);
-      }
-
-      // Sync theme/locale notifiers if changed
-      if (event.updates.containsKey('theme') ||
-          event.updates.containsKey('language')) {
-        _syncNotifiers(optimistic.theme, optimistic.language);
       }
 
       emit(SettingsLoaded(settings: optimistic));

@@ -13,7 +13,7 @@ class WalletSummaryRow extends StatelessWidget {
 
   final WalletSummaryEntity summary;
 
-  String _format(double v) => NumberFormat('#,##0', 'ar_EG').format(v);
+  String _format(double v) => NumberFormat('#,##0', AppStrings.currentLang == 'ar' ? 'ar_EG' : 'en_US').format(v);
 
   @override
   Widget build(BuildContext context) {

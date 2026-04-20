@@ -97,7 +97,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateFormat = DateFormat('yyyy/MM/dd', 'ar');
+    final dateFormat = DateFormat('yyyy/MM/dd', AppStrings.currentLang);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,

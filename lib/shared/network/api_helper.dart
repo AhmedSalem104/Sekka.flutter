@@ -1,6 +1,8 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+
+import '../../core/constants/app_strings.dart';
 import 'api_result.dart';
 
 /// Helper to execute API calls with unified error handling.
@@ -25,7 +27,7 @@ abstract final class ApiHelper {
         if (!isSuccess) {
           return ApiFailure<T>(
             ApiError(
-              message: message ?? 'حصلت مشكلة',
+              message: message ?? AppStrings.somethingWentWrong,
               statusCode: response.statusCode,
             ),
           );
@@ -42,8 +44,8 @@ abstract final class ApiHelper {
       return ApiFailure<T>(_handleDioError(e));
     } on SocketException {
       return ApiFailure<T>(
-        const ApiError(
-          message: 'مفيش إنترنت — تأكد من الاتصال',
+        ApiError(
+          message: AppStrings.noInternetConnection,
           statusCode: 0,
         ),
       );
@@ -62,14 +64,14 @@ abstract final class ApiHelper {
       case DioExceptionType.connectionTimeout:
       case DioExceptionType.sendTimeout:
       case DioExceptionType.receiveTimeout:
-        return const ApiError(
-          message: 'انتهت المهلة — جرّب تاني',
+        return ApiError(
+          message: AppStrings.requestTimedOut,
           statusCode: 408,
         );
 
       case DioExceptionType.connectionError:
-        return const ApiError(
-          message: 'مفيش إنترنت — تأكد من الاتصال',
+        return ApiError(
+          message: AppStrings.noInternetConnection,
           statusCode: 0,
         );
 
@@ -77,7 +79,7 @@ abstract final class ApiHelper {
         final statusCode = e.response?.statusCode;
         final data = e.response?.data;
 
-        String message = 'حصلت مشكلة';
+        String message = AppStrings.somethingWentWrong;
 
         if (data is Map<String, dynamic>) {
           message = (data['message'] as String?) ??
@@ -91,15 +93,15 @@ abstract final class ApiHelper {
         );
 
       case DioExceptionType.cancel:
-        return const ApiError(
-          message: 'تم إلغاء الطلب',
+        return ApiError(
+          message: AppStrings.requestCancelled,
           statusCode: -1,
         );
 
       case DioExceptionType.badCertificate:
       case DioExceptionType.unknown:
         return ApiError(
-          message: e.message ?? 'حصلت مشكلة غير متوقعة',
+          message: e.message ?? AppStrings.unexpectedError,
           statusCode: -1,
         );
     }

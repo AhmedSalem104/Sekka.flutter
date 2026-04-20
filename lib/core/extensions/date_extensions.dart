@@ -1,29 +1,24 @@
+import '../constants/app_strings.dart';
+
 extension DateExtensions on DateTime {
-  /// Returns Arabic greeting based on time of day
+  /// Returns locale-aware greeting based on time of day
   String get arabicGreeting {
-    if (hour >= 5 && hour < 12) return 'صباح الخير';
-    if (hour >= 12 && hour < 18) return 'مساء الخير';
-    if (hour >= 18 && hour < 22) return 'مساء الخير';
-    return 'أهلا بيك'; // late night
+    if (hour >= 5 && hour < 12) return AppStrings.greetingMorning;
+    if (hour >= 12 && hour < 22) return AppStrings.greetingEvening;
+    return AppStrings.greetingNight; // late night
   }
 
-  /// Returns formatted Arabic date: "الأحد 2 مارس"
+  /// Returns formatted locale-aware date: "الأحد 2 مارس" / "Sunday 2 March"
   String get arabicDate {
-    const days = [
-      'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس',
-      'الجمعة', 'السبت', 'الأحد',
-    ];
-    const months = [
-      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
-    ];
+    final days = AppStrings.dayNames;
+    final months = AppStrings.monthNames;
     return '${days[weekday - 1]} $day ${months[month - 1]}';
   }
 
-  /// Returns formatted time: "8:30 ص"
+  /// Returns formatted time: "8:30 ص" / "8:30 AM"
   String get arabicTime {
     final h = hour > 12 ? hour - 12 : hour;
-    final period = hour >= 12 ? 'م' : 'ص';
+    final period = hour >= 12 ? AppStrings.pmPeriod : AppStrings.amPeriod;
     final m = minute.toString().padLeft(2, '0');
     return '$h:$m $period';
   }

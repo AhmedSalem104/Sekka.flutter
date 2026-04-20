@@ -110,7 +110,7 @@ class _DeliverBottomSheetState extends State<DeliverBottomSheet> {
                   style: AppTypography.headlineSmall,
                 ),
                 SizedBox(height: AppSizes.lg),
-                Text('قيّم العميل', style: AppTypography.titleMedium),
+                Text(AppStrings.rateCustomer, style: AppTypography.titleMedium),
                 SizedBox(height: AppSizes.sm),
                 Center(
                   child: SekkaStarRating(

@@ -163,7 +163,16 @@
       "Bash(head -5 echo \"---\" grep -n \"class.*Widget\" lib/features/wallet/presentation/widgets/*.dart)",
       "Bash(grep -l \"focusMode\\\\|speed.*threshold\" lib/shared/services/*.dart)",
       "Bash(grep -rn \"class IconsaxPlusLinear\" C:/Users/win/Downloads/flutter_windows_3.35.3-stable/flutter/.pub-cache/hosted/pub.dev/iconsax_plus-*/lib/)",
-      "Bash(echo \"EXIT: $?\")"
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(grep -rn \"['\\\\\"].*[ء-ي].*['\\\\\"]\" lib/features/home/presentation/screens/*.dart lib/features/orders/presentation/screens/*.dart lib/features/orders/presentation/widgets/*.dart lib/features/settlements/presentation/screens/*.dart lib/features/settlements/presentation/widgets/*.dart lib/features/auth/presentation/screens/*.dart)",
+      "Bash(tee /tmp/flutter_log.txt)",
+      "Bash(cp android/app/google-services.json android/app/google-services.json.bak)",
+      "Bash(cp \"c:/Users/win/Downloads/google-services \\(14\\).json\" android/app/google-services.json)",
+      "Bash(grep -rn \"as int?\" lib/features/*/data/models/*.dart lib/features/*/data/models/**/*.dart)",
+      "Bash(grep -rn \"as int?\" lib/features/settlements/data/models/*.dart lib/features/orders/data/models/*.dart)",
+      "Bash(grep -rn \"as int?\" lib/features/settings/data/models/*.dart)",
+      "Bash(ls android/app/build.gradle*)",
+      "Bash(head -5 android/app/build.gradle.kts)"
     ]
   }
 }

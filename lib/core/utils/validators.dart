@@ -59,9 +59,9 @@ abstract final class Validators {
   }
 
   /// Validates required text field
-  static String? required(String? value, [String fieldName = 'هذا الحقل']) {
+  static String? required(String? value, [String? fieldName]) {
     if (value == null || value.trim().isEmpty) {
-      return '$fieldName مطلوب';
+      return '${fieldName ?? AppStrings.thisField} ${AppStrings.isRequired}';
     }
     return null;
   }
@@ -80,12 +80,12 @@ abstract final class Validators {
   /// Validates amount (positive number)
   static String? amount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'أدخل المبلغ';
+      return AppStrings.enterAmount;
     }
     final cleaned = value.toEnglishNumbers.trim();
     final number = double.tryParse(cleaned);
     if (number == null || number <= 0) {
-      return 'أدخل مبلغ صحيح';
+      return AppStrings.enterValidAmount;
     }
     return null;
   }
@@ -93,10 +93,10 @@ abstract final class Validators {
   /// Validates address (at least 5 characters)
   static String? address(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'أدخل العنوان';
+      return AppStrings.enterAddressValidation;
     }
     if (value.trim().length < 5) {
-      return 'العنوان قصير جداً';
+      return AppStrings.addressTooShort;
     }
     return null;
   }

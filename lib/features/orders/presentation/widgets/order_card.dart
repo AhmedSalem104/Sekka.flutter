@@ -309,7 +309,7 @@ class _OrderCardState extends State<OrderCard> {
       children: [
         // Amount
         Text(
-          '${order.amount.toStringAsFixed(0)} ج.م',
+          '${order.amount.toStringAsFixed(0)} ${AppStrings.currency}',
           style: AppTypography.titleMedium.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w700,

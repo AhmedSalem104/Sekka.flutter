@@ -35,14 +35,14 @@ Color settlementTypeColor(int type) => switch (type) {
       _ => AppColors.settlementCash,
     };
 
-/// Formats a monetary amount with Arabic locale.
+/// Formats a monetary amount with locale-aware formatting.
 String formatAmount(double amount) =>
-    NumberFormat('#,##0.00', 'ar_EG').format(amount);
+    NumberFormat('#,##0.00', AppStrings.currentLang == 'ar' ? 'ar_EG' : 'en_US').format(amount);
 
-/// Formats a DateTime to a readable Arabic-friendly string.
+/// Formats a DateTime to a readable locale-aware string.
 String formatSettlementDate(DateTime date) =>
-    DateFormat('d MMM yyyy — h:mm a', 'ar').format(date);
+    DateFormat('d MMM yyyy — h:mm a', AppStrings.currentLang).format(date);
 
 /// Formats a DateTime to short date only.
 String formatShortDate(DateTime date) =>
-    DateFormat('d MMM', 'ar').format(date);
+    DateFormat('d MMM', AppStrings.currentLang).format(date);

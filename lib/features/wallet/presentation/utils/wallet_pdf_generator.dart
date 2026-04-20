@@ -6,6 +6,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/entities/wallet_balance_entity.dart';
 import '../../domain/entities/wallet_summary_entity.dart';
@@ -22,6 +23,10 @@ class WalletPdfGenerator {
     final logoData = await rootBundle.load('assets/images/logo.png');
     final logoImage = pw.MemoryImage(logoData.buffer.asUint8List());
     final pdf = pw.Document();
+
+    final isAr = AppStrings.currentLang == 'ar';
+    final textDir = isAr ? pw.TextDirection.rtl : pw.TextDirection.ltr;
+    final currSymbol = isAr ? 'ج' : 'EGP';
 
     final now = DateTime.now();
     final dateStr = '${now.day}-${now.month}-${now.year}';
@@ -58,7 +63,7 @@ class WalletPdfGenerator {
 
     pdf.addPage(
       pw.Page(
-        textDirection: pw.TextDirection.rtl,
+        textDirection: textDir,
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(40),
         build: (context) => pw.Column(
@@ -75,7 +80,7 @@ class WalletPdfGenerator {
             ),
             pw.SizedBox(height: 12),
             pw.Center(
-              child: pw.Text('سِكّة — ملخص المحفظة', style: titleStyle),
+              child: pw.Text(AppStrings.pdfWalletSummaryTitle, style: titleStyle),
             ),
             pw.SizedBox(height: 16),
             pw.Divider(color: PdfColors.orange),
@@ -86,15 +91,15 @@ class WalletPdfGenerator {
               child: pw.Column(
                 children: [
                   pw.Text(
-                    'الفلوس اللي معاك',
+                    AppStrings.pdfMoneyWithYou,
                     style: labelStyle,
-                    textDirection: pw.TextDirection.rtl,
+                    textDirection: textDir,
                   ),
                   pw.SizedBox(height: 4),
                   pw.Text(
-                    '${summary.netBalance.toStringAsFixed(0)} ج',
+                    '${summary.netBalance.toStringAsFixed(0)} $currSymbol',
                     style: bigValueStyle,
-                    textDirection: pw.TextDirection.rtl,
+                    textDirection: textDir,
                   ),
                 ],
               ),
@@ -102,15 +107,15 @@ class WalletPdfGenerator {
             pw.SizedBox(height: 20),
 
             // Summary
-            _row(font, 'إجمالي اللي جالك', '${summary.totalEarnings.toStringAsFixed(0)} ج'),
-            _row(font, 'إجمالي اللي سلّمته', '${summary.totalSettlements.toStringAsFixed(0)} ج'),
-            _row(font, 'لسه للشركاء', '${balance.pendingSettlements.toStringAsFixed(0)} ج'),
-            _row(font, 'عدد المعاملات', '${summary.transactionCount}'),
+            _row(font, AppStrings.pdfTotalEarned, '${summary.totalEarnings.toStringAsFixed(0)} $currSymbol', textDir),
+            _row(font, AppStrings.pdfTotalSettled, '${summary.totalSettlements.toStringAsFixed(0)} $currSymbol', textDir),
+            _row(font, AppStrings.pdfPendingPartners, '${balance.pendingSettlements.toStringAsFixed(0)} $currSymbol', textDir),
+            _row(font, AppStrings.pdfTransactionCount, '${summary.transactionCount}', textDir),
             pw.SizedBox(height: 24),
 
             // Recent transactions
             if (recentTx.isNotEmpty) ...[
-              pw.Text('آخر المعاملات', style: headStyle),
+              pw.Text(AppStrings.pdfRecentTransactions, style: headStyle),
               pw.SizedBox(height: 8),
               ...recentTx.map(
                 (t) => pw.Padding(
@@ -122,12 +127,12 @@ class WalletPdfGenerator {
                         child: pw.Text(
                           t.description,
                           style: baseStyle,
-                          textDirection: pw.TextDirection.rtl,
+                          textDirection: textDir,
                           maxLines: 1,
                         ),
                       ),
                       pw.Text(
-                        '${t.amount > 0 ? '+' : ''}${t.amount.toStringAsFixed(0)} ج',
+                        '${t.amount > 0 ? '+' : ''}${t.amount.toStringAsFixed(0)} $currSymbol',
                         style: pw.TextStyle(
                           font: font,
                           fontSize: 14,
@@ -136,7 +141,7 @@ class WalletPdfGenerator {
                               ? PdfColors.green
                               : PdfColors.red,
                         ),
-                        textDirection: pw.TextDirection.rtl,
+                        textDirection: textDir,
                       ),
                     ],
                   ),
@@ -149,7 +154,7 @@ class WalletPdfGenerator {
             pw.SizedBox(height: 8),
             pw.Center(
               child: pw.Text(
-                'تم الإنشاء من تطبيق سِكّة',
+                AppStrings.pdfGeneratedBy,
                 style: pw.TextStyle(
                   font: font,
                   fontSize: 10,
@@ -169,12 +174,12 @@ class WalletPdfGenerator {
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path)],
-        text: 'ملخص جيبي — سِكّة — $dateStr',
+        text: '${AppStrings.pdfShareText} — $dateStr',
       ),
     );
   }
 
-  static pw.Widget _row(pw.Font font, String label, String value) {
+  static pw.Widget _row(pw.Font font, String label, String value, pw.TextDirection textDir) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 4),
       child: pw.Row(
@@ -187,7 +192,7 @@ class WalletPdfGenerator {
               fontSize: 13,
               color: PdfColors.grey700,
             ),
-            textDirection: pw.TextDirection.rtl,
+            textDirection: textDir,
           ),
           pw.Text(
             value,
@@ -196,7 +201,7 @@ class WalletPdfGenerator {
               fontSize: 15,
               fontWeight: pw.FontWeight.bold,
             ),
-            textDirection: pw.TextDirection.rtl,
+            textDirection: textDir,
           ),
         ],
       ),

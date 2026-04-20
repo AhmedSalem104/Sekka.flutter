@@ -445,7 +445,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
   String _formatTime(TimeOfDay time) {
     final h = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
     final m = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'ص' : 'م';
+    final period = time.period == DayPeriod.am ? AppStrings.amPeriod : AppStrings.pmPeriod;
     return '$h:$m $period';
   }
 
@@ -631,7 +631,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
     final matchedOrder = dupData['matchedOrder'] as Map<String, dynamic>?;
 
     final orderInfo = matchedOrder != null
-        ? '\n\nرقم الطلب: ${matchedOrder['orderNumber'] ?? ''}'
+        ? '\n\n${AppStrings.orderNumberPrefix}: ${matchedOrder['orderNumber'] ?? ''}'
         : '';
 
     final result = await showDialog<bool>(
@@ -654,7 +654,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
           ),
           content: Text(
             '${AppStrings.duplicateWarningMessage}'
-            '${matchScore > 0 ? '\n\nنسبة التشابه: $matchScore%' : ''}'
+            '${matchScore > 0 ? '\n\n${AppStrings.matchScoreLabel(matchScore.toInt())}' : ''}'
             '$orderInfo',
             style: AppTypography.bodyMedium,
           ),
@@ -1908,7 +1908,7 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
                   ),
                 ),
                 Text(
-                  '${priceData['suggestedPrice'] ?? '—'} ج.م',
+                  '${priceData['suggestedPrice'] ?? '—'} ${AppStrings.currency}',
                   style: AppTypography.headlineSmall.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
@@ -2011,18 +2011,18 @@ class _CreateOrderScreenState extends State<CreateOrderScreen>
             ),
             SizedBox(height: AppSizes.xxl),
             Text(
-              'قول الطلب بصوتك',
+              AppStrings.voiceOrderTitle,
               style: AppTypography.titleLarge,
             ),
             SizedBox(height: AppSizes.md),
             Text(
-              'اضغط على المايك وقول بيانات الطلب\nزي: "طلب لمحمد، العنوان المعادي، المبلغ 150 جنيه"',
+              AppStrings.voiceOrderHint,
               style: AppTypography.bodyMedium.copyWith(color: captionColor),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: AppSizes.xxl),
             Text(
-              'الميزة دي جاية قريب',
+              AppStrings.voiceComingSoon,
               style: AppTypography.caption.copyWith(
                 color: AppColors.warning,
                 fontWeight: FontWeight.w600,

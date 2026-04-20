@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:iconsax_plus/iconsax_plus.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/responsive.dart';
 import '../../../../core/widgets/sekka_app_bar.dart';
@@ -75,15 +76,14 @@ class _FavoriteCustomersScreenState extends State<FavoriteCustomersScreen> {
     return Scaffold(
       backgroundColor:
           isDark ? AppColors.backgroundDark : AppColors.background,
-      appBar: const SekkaAppBar(title: 'العملاء المفضلين'),
+      appBar: SekkaAppBar(title: AppStrings.favoriteCustomers),
       body: _loading
           ? const SekkaLoading()
           : _favorites.isEmpty
-              ? const SekkaEmptyState(
+              ? SekkaEmptyState(
                   icon: IconsaxPlusLinear.heart,
-                  title: 'مفيش عملاء مفضلين',
-                  description:
-                      'اضغطي على القلب في صفحة العميل عشان تضيفيه هنا',
+                  title: AppStrings.noFavoriteCustomers,
+                  description: AppStrings.addFavoriteCustomerHint,
                 )
               : ListView.builder(
                   padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),

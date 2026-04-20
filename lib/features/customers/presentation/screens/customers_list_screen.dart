@@ -121,7 +121,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'العملاء المفضلين',
+                    tooltip: AppStrings.favoriteCustomers,
                     icon: Icon(
                       IconsaxPlusLinear.heart,
                       color: AppColors.error,
@@ -141,7 +141,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
               padding: EdgeInsets.symmetric(horizontal: Responsive.w(20)),
               child: SekkaSearchBar(
                 controller: _searchController,
-                hint: 'بحث باسم العميل أو رقمه...',
+                hint: AppStrings.searchCustomerHint,
                 onChanged: (value) {
                   setState(() => _searchTerm = value.trim());
                 },
@@ -162,7 +162,7 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                     CustomersError(:final message) => SekkaEmptyState(
                         icon: IconsaxPlusLinear.warning_2,
                         title: message,
-                        actionLabel: 'جرّب تاني',
+                        actionLabel: AppStrings.retry,
                         onAction: () {
                           _bloc.add(const CustomersLoadRequested());
                         },
@@ -179,11 +179,11 @@ class _CustomersListScreenState extends State<CustomersListScreen> {
                               SekkaEmptyState(
                                 icon: IconsaxPlusLinear.profile_2user,
                                 title: _searchTerm.isNotEmpty
-                                    ? 'مفيش نتايج'
-                                    : 'مفيش عملاء',
+                                    ? AppStrings.searchNoResults
+                                    : AppStrings.noCustomers,
                                 description: _searchTerm.isNotEmpty
-                                    ? 'جرّب اسم أو رقم تاني'
-                                    : 'العملاء هيظهروا هنا لما تبدأ توصيل',
+                                    ? AppStrings.tryDifferentSearch
+                                    : AppStrings.noCustomersDesc,
                               ),
                             ],
                           ),

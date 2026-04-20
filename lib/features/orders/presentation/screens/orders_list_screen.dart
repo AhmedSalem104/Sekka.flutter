@@ -201,7 +201,7 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                     child: SekkaSearchBar(
                       controller: _searchController,
                       onChanged: _onSearchChanged,
-                      hint: 'بحث باسم العميل أو رقمه...',
+                      hint: AppStrings.searchCustomerHint,
                     ),
                   ),
                   SizedBox(width: AppSizes.sm),
@@ -269,18 +269,18 @@ class _OrdersListScreenState extends State<OrdersListScreen> {
                   OrdersLoaded(:final orders) when orders.isEmpty =>
                     SekkaEmptyState(
                       icon: IconsaxPlusLinear.clipboard_text,
-                      title: 'مفيش طلبات',
+                      title: AppStrings.noOrdersTitle,
                       description: _selectedStatusFilter != null
-                          ? 'مفيش طلبات بالحالة دي'
+                          ? AppStrings.noOrdersWithFilter
                           : null,
                     ),
                   OrdersLoaded(:final orders, :final isLoadingMore) => () {
                       final filtered = _filterOrders(orders);
                       if (filtered.isEmpty && _searchTerm.isNotEmpty) {
-                        return const SekkaEmptyState(
+                        return SekkaEmptyState(
                           icon: IconsaxPlusLinear.search_normal_1,
-                          title: 'مفيش نتايج',
-                          description: 'جرّب اسم عميل أو رقم تاني',
+                          title: AppStrings.noSearchResults,
+                          description: AppStrings.tryDifferentSearchOrder,
                         );
                       }
                       return _buildOrdersList(filtered, isLoadingMore, isDark);

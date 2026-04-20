@@ -15,13 +15,13 @@ abstract final class ErrorMapper {
           lower.contains('uppercase') ||
           lower.contains('digit') ||
           lower.contains('must have')) {
-        return 'كلمة السر لازم تكون فيها حروف كبيرة وصغيرة وأرقام';
+        return AppStrings.passwordComplexity;
       }
       if (lower.contains('غير متطابقة') || lower.contains('mismatch')) {
         return AppStrings.passwordMismatch;
       }
       if (lower.contains('غير صحيحة') || lower.contains('incorrect')) {
-        return 'رقم الموبايل أو كلمة السر غلط';
+        return AppStrings.wrongCredentials;
       }
     }
 
@@ -30,7 +30,7 @@ abstract final class ErrorMapper {
       return AppStrings.phoneInvalid;
     }
     if (lower.contains('مسجل بالفعل') || lower.contains('already registered')) {
-      return 'الرقم ده مسجّل قبل كدا، جرّب تسجّل دخول';
+      return AppStrings.phoneAlreadyRegistered;
     }
 
     // OTP errors
@@ -39,21 +39,21 @@ abstract final class ErrorMapper {
         lower.contains('invalid otp') ||
         lower.contains('invalid confirmation') ||
         lower.contains('invalid code')) {
-      return 'الكود غلط، تأكد منه وجرّب تاني';
+      return AppStrings.wrongOtpCode;
     }
     if (lower.contains('منتهي الصلاحية') || lower.contains('expired')) {
-      return 'الكود خلص وقته، ابعت كود جديد';
+      return AppStrings.otpExpired;
     }
     if (lower.contains('تم تجاوز') || lower.contains('too many')) {
-      return 'جرّبت كتير، استنى شوية وحاول تاني';
+      return AppStrings.tooManyAttempts;
     }
 
     // Account errors
     if (lower.contains('موقوف') || lower.contains('suspended')) {
-      return 'الحساب متوقف، تواصل مع الدعم';
+      return AppStrings.accountSuspended;
     }
     if (lower.contains('غير موجود') || lower.contains('not found')) {
-      return 'مفيش حساب بالرقم ده';
+      return AppStrings.accountNotFound;
     }
 
     // Token errors
@@ -63,12 +63,12 @@ abstract final class ErrorMapper {
 
     // Session errors
     if (lower.contains('الجلسة غير موجودة')) {
-      return 'الجلسة دي مش موجودة';
+      return AppStrings.sessionNotFound;
     }
 
     // SMS errors
     if (lower.contains('فشل إرسال') || lower.contains('sms')) {
-      return 'مقدرناش نبعت الرسالة، جرّب تاني';
+      return AppStrings.smsSendFailed;
     }
 
     // If message contains English characters, it's likely technical

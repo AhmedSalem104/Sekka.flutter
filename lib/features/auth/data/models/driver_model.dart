@@ -25,7 +25,7 @@ class DriverModel extends DriverEntity {
       email: json['email'] as String?,
       profileImageUrl: json['profileImageUrl'] as String?,
       licenseImageUrl: json['licenseImageUrl'] as String?,
-      vehicleType: json['vehicleType'] as int,
+      vehicleType: parseVehicleType(json['vehicleType']),
       isOnline: json['isOnline'] as bool? ?? false,
       cashOnHand: (json['cashOnHand'] as num?)?.toDouble() ?? 0,
       totalPoints: json['totalPoints'] as int? ?? 0,
@@ -33,6 +33,21 @@ class DriverModel extends DriverEntity {
       joinedAt: DateTime.parse(json['joinedAt'] as String),
       referralCode: json['referralCode'] as String?,
     );
+  }
+
+  static int parseVehicleType(dynamic v) {
+    if (v is int) return v;
+    if (v is String) {
+      const map = {
+        'motorcycle': 0,
+        'car': 1,
+        'van': 2,
+        'truck': 3,
+        'bicycle': 4,
+      };
+      return map[v.toLowerCase()] ?? 0;
+    }
+    return 0;
   }
 
   Map<String, dynamic> toJson() => {

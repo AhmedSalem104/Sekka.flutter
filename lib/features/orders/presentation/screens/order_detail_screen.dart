@@ -70,7 +70,7 @@ Color _statusColor(OrderStatus s) => switch (s) {
 // ---------------------------------------------------------------------------
 // Date formatter
 // ---------------------------------------------------------------------------
-final _dateFmt = DateFormat('yyyy/MM/dd - hh:mm a', 'ar');
+DateFormat get _dateFmt => DateFormat('yyyy/MM/dd - hh:mm a', AppStrings.currentLang);
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  ORDER DETAIL SCREEN
@@ -117,7 +117,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 builder: (ctx) {
                   final isDark = Theme.of(ctx).brightness == Brightness.dark;
                   return Text(
-                    'اختار نوع الصورة',
+                    AppStrings.choosePhotoType,
                     style: AppTypography.headlineSmall.copyWith(
                       color: isDark
                           ? AppColors.textHeadlineDark
@@ -265,22 +265,21 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       onSelected: (value) => _onMenuSelected(value, order),
       itemBuilder: (_) => [
         if (canEdit)
-          const PopupMenuItem(value: 'edit', child: Text('عدّل الطلب')),
+          PopupMenuItem(value: 'edit', child: Text(AppStrings.menuEditOrder)),
         if (canEdit)
-          const PopupMenuItem(value: 'delete', child: Text('امسح الطلب')),
+          PopupMenuItem(value: 'delete', child: Text(AppStrings.menuDeleteOrder)),
         if (isActive)
-        if (isActive)
-          const PopupMenuItem(value: 'swap_address', child: Text('غيّر العنوان')),
+          PopupMenuItem(value: 'swap_address', child: Text(AppStrings.menuSwapAddress)),
         if (order.trackingCode != null && order.trackingCode!.isNotEmpty)
           PopupMenuItem(value: 'share_tracking', child: Text(AppStrings.shareTrackingLink)),
-        const PopupMenuItem(value: 'photo', child: Text('صوّر الطلب')),
-        const PopupMenuItem(value: 'disclaimer', child: Text('إخلاء مسؤولية')),
+        PopupMenuItem(value: 'photo', child: Text(AppStrings.menuPhotoOrder)),
+        PopupMenuItem(value: 'disclaimer', child: Text(AppStrings.menuDisclaimer)),
         if (isDeliveredOrFailed)
-          const PopupMenuItem(value: 'dispute', child: Text('فتح نزاع')),
+          PopupMenuItem(value: 'dispute', child: Text(AppStrings.menuOpenDispute)),
         if (isDelivered)
-          const PopupMenuItem(value: 'refund', child: Text('طلب استرداد')),
+          PopupMenuItem(value: 'refund', child: Text(AppStrings.menuRequestRefund)),
         if (isActive)
-          const PopupMenuItem(value: 'book_slot', child: Text('احجز موعد تسليم')),
+          PopupMenuItem(value: 'book_slot', child: Text(AppStrings.menuBookSlot)),
       ],
     );
   }
@@ -1066,7 +1065,7 @@ class _AddressCardState extends State<_AddressCard> {
             context,
             IconsaxPlusLinear.location,
             deliveryText,
-            label: 'هيتوصّل فين',
+            label: AppStrings.deliveryDestination,
           ),
           if (pickupText != null && pickupText.isNotEmpty) ...[
             SizedBox(height: AppSizes.md),
@@ -1074,7 +1073,7 @@ class _AddressCardState extends State<_AddressCard> {
               context,
               IconsaxPlusLinear.location_tick,
               pickupText,
-              label: 'هيتستلم منين',
+              label: AppStrings.pickupSource,
             ),
           ],
         ],
@@ -1202,11 +1201,11 @@ class _DetailsCard extends StatelessWidget {
           _detailRow(AppStrings.orderNumberLabel, order.orderNumber),
           if (order.partnerName != null && order.partnerName!.isNotEmpty) ...[
             _divider(),
-            _detailRow('الشريك/التاجر', order.partnerName!),
+            _detailRow(AppStrings.partnerMerchant, order.partnerName!),
           ],
           if (order.description != null && order.description!.isNotEmpty) ...[
             _divider(),
-            _detailRow('وصف الشحنة', order.description!),
+            _detailRow(AppStrings.shipmentDescriptionLabel, order.description!),
           ],
           _divider(),
           _detailRow(AppStrings.priorityLabel, order.priority.arabic),
@@ -1223,11 +1222,11 @@ class _DetailsCard extends StatelessWidget {
           ],
           if (order.worthScore != null) ...[
             _divider(),
-            _detailRow('نقاط القيمة', '${order.worthScore!.toStringAsFixed(1)}'),
+            _detailRow(AppStrings.worthScoreLabel, '${order.worthScore!.toStringAsFixed(1)}'),
           ],
           if (order.sequenceIndex != null) ...[
             _divider(),
-            _detailRow('ترتيب التوصيل', '#${order.sequenceIndex}'),
+            _detailRow(AppStrings.deliverySequence, '#${order.sequenceIndex}'),
           ],
           if (order.scheduledDate != null && order.scheduledDate!.isNotEmpty) ...[
             _divider(),
@@ -1338,7 +1337,7 @@ class _PhotosSection extends StatelessWidget {
               ),
               SizedBox(width: AppSizes.sm),
               Text(
-                'صور الطلب (${photos.length})',
+                AppStrings.orderPhotos(photos.length),
                 style: AppTypography.titleMedium,
               ),
             ],
@@ -1555,7 +1554,7 @@ class _WaitingTimerSectionState extends State<_WaitingTimerSection> {
                 color: _isRunning ? AppColors.warning : AppColors.textCaption,
               ),
               SizedBox(width: AppSizes.sm),
-              Text('مؤقت الانتظار', style: AppTypography.titleMedium),
+              Text(AppStrings.waitingTimer, style: AppTypography.titleMedium),
             ],
           ),
           SizedBox(height: AppSizes.lg),
@@ -1597,7 +1596,7 @@ class _WaitingTimerSectionState extends State<_WaitingTimerSection> {
                 ),
                 SizedBox(height: AppSizes.xs),
                 Text(
-                  _isRunning ? 'المؤقت شغال...' : 'المؤقت واقف',
+                  _isRunning ? AppStrings.timerRunning : AppStrings.timerStopped,
                   style: AppTypography.caption.copyWith(
                     color: _isRunning
                         ? AppColors.warning
@@ -1614,13 +1613,13 @@ class _WaitingTimerSectionState extends State<_WaitingTimerSection> {
           // الأزرار
           _isRunning
               ? SekkaButton(
-                  label: 'وقّف المؤقت',
+                  label: AppStrings.stopTimer,
                   type: SekkaButtonType.secondary,
                   icon: IconsaxPlusLinear.timer_pause,
                   onPressed: _stop,
                 )
               : SekkaButton(
-                  label: 'ابدأ المؤقت',
+                  label: AppStrings.startTimer,
                   icon: IconsaxPlusLinear.timer_1,
                   onPressed: _start,
                 ),
@@ -1687,22 +1686,22 @@ class _ActionArea extends StatelessWidget {
     final (icon, label, color) = switch (status) {
       OrderStatus.delivered => (
           IconsaxPlusBold.tick_circle,
-          'الطلب اتسلّم بنجاح',
+          AppStrings.orderDeliveredBanner,
           AppColors.success,
         ),
       OrderStatus.partiallyDelivered => (
           IconsaxPlusBold.box_tick,
-          'اتسلّم جزء من الطلب',
+          AppStrings.orderPartialBanner,
           AppColors.warning,
         ),
       OrderStatus.cancelled => (
           IconsaxPlusBold.close_circle,
-          'الطلب ده اتلغى',
+          AppStrings.orderCancelledBanner,
           AppColors.error,
         ),
       OrderStatus.returned => (
           IconsaxPlusBold.box_remove,
-          'الطلب رجع تاني',
+          AppStrings.orderReturnedBanner,
           AppColors.error,
         ),
       _ => (
@@ -1766,7 +1765,7 @@ class _ActionArea extends StatelessWidget {
               children: [
                 Expanded(
                   child: _ActionChip(
-                    label: 'تسليم جزئي',
+                    label: AppStrings.partialDelivery,
                     icon: IconsaxPlusLinear.box_tick,
                     color: AppColors.warning,
                     onTap: () => _showPartialSheet(context),
@@ -1775,7 +1774,7 @@ class _ActionArea extends StatelessWidget {
                 SizedBox(width: AppSizes.sm),
                 Expanded(
                   child: _ActionChip(
-                    label: 'معرفتش أسلّم',
+                    label: AppStrings.couldNotDeliver,
                     icon: IconsaxPlusLinear.close_circle,
                     color: AppColors.error,
                     onTap: () => _showFailSheet(context),
@@ -1784,7 +1783,7 @@ class _ActionArea extends StatelessWidget {
                 SizedBox(width: AppSizes.sm),
                 Expanded(
                   child: _ActionChip(
-                    label: 'ألغي الطلب',
+                    label: AppStrings.cancelThisOrder,
                     icon: IconsaxPlusLinear.trash,
                     color: AppColors.textCaption,
                     onTap: () => _showCancelSheet(context),
@@ -2073,7 +2072,7 @@ class _FailBottomSheetState extends State<_FailBottomSheet> {
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _detailsCtrl,
-                  hint: 'تفاصيل أكتر (اختياري)',
+                  hint: AppStrings.moreDetailsOptional,
                   maxLines: 3,
                 ),
                 SizedBox(height: AppSizes.xl),
@@ -2159,7 +2158,7 @@ class _CancelBottomSheetState extends State<_CancelBottomSheet> {
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _detailsCtrl,
-                  hint: 'تفاصيل أكتر (اختياري)',
+                  hint: AppStrings.moreDetailsOptional,
                   maxLines: 3,
                 ),
                 SizedBox(height: AppSizes.xl),
@@ -2249,37 +2248,37 @@ class _PartialDeliveryBottomSheetState
               children: [
                 _buildHandle(),
                 SizedBox(height: AppSizes.lg),
-                Text('تسليم جزئي', style: AppTypography.headlineSmall),
+                Text(AppStrings.partialDelivery, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
                   controller: _deliveredCountCtrl,
-                  hint: 'كام قطعة سلّمت؟',
+                  hint: AppStrings.howManyDelivered,
                   keyboardType: TextInputType.number,
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _totalCountCtrl,
-                  hint: 'إجمالي القطع',
+                  hint: AppStrings.totalItems,
                   keyboardType: TextInputType.number,
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _collectedAmountCtrl,
-                  hint: 'المبلغ اللي حصّلته',
+                  hint: AppStrings.collectedAmountHint,
                   keyboardType: TextInputType.number,
                   prefixIcon: IconsaxPlusLinear.money_recive,
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _remainingAmountCtrl,
-                  hint: 'المبلغ المتبقي',
+                  hint: AppStrings.remainingAmountHint,
                   keyboardType: TextInputType.number,
                   prefixIcon: IconsaxPlusLinear.money_send,
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _reasonCtrl,
-                  hint: 'السبب (اختياري)',
+                  hint: AppStrings.reasonOptional,
                   maxLines: 2,
                 ),
                 SizedBox(height: AppSizes.xl),
@@ -2349,7 +2348,7 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
   Future<void> _openMapPicker() async {
     final result = await SekkaMapPicker.show(
       context,
-      title: 'حدد العنوان الجديد',
+      title: AppStrings.pickNewAddress,
     );
     if (result == null || !mounted) return;
 
@@ -2384,7 +2383,7 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
               children: [
                 _buildHandle(),
                 SizedBox(height: AppSizes.lg),
-                Text('غيّر العنوان', style: AppTypography.headlineSmall),
+                Text(AppStrings.swapAddressTitle, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 // Address field — tap to open map
                 GestureDetector(
@@ -2418,7 +2417,7 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
                           child: Text(
                             _addressCtrl.text.isNotEmpty
                                 ? _addressCtrl.text
-                                : 'اضغط عشان تحدد العنوان الجديد',
+                                : AppStrings.tapToPickNewAddress,
                             style: _addressCtrl.text.isNotEmpty
                                 ? AppTypography.bodyMedium
                                 : AppTypography.bodyMedium
@@ -2447,7 +2446,7 @@ class _SwapAddressBottomSheetState extends State<_SwapAddressBottomSheet> {
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _reasonCtrl,
-                  hint: 'السبب (اختياري)',
+                  hint: AppStrings.reasonOptional,
                   maxLines: 2,
                 ),
                 SizedBox(height: AppSizes.xl),
@@ -2524,20 +2523,20 @@ class _DisclaimerBottomSheetState extends State<_DisclaimerBottomSheet> {
               children: [
                 _buildHandle(),
                 SizedBox(height: AppSizes.lg),
-                Text('إخلاء مسؤولية', style: AppTypography.headlineSmall),
+                Text(AppStrings.disclaimerTitle, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
                   controller: _conditionCtrl,
-                  hint: 'حالة الشحنة (مثلاً: مكسورة، مفتوحة)',
-                  label: 'حالة الشحنة',
+                  hint: AppStrings.shipmentConditionHint,
+                  label: AppStrings.shipmentCondition,
                   maxLines: 3,
                   onChanged: (_) => _checkCanSubmit(),
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _itemsCtrl,
-                  hint: 'وصف المحتويات (مثلاً: 2 كرتونة، علبة)',
-                  label: 'وصف المحتويات',
+                  hint: AppStrings.contentsDescriptionHint,
+                  label: AppStrings.contentsDescription,
                   maxLines: 3,
                   onChanged: (_) => _checkCanSubmit(),
                 ),
@@ -2611,11 +2610,11 @@ class _DisputeBottomSheetState extends State<_DisputeBottomSheet> {
               children: [
                 _buildHandle(),
                 SizedBox(height: AppSizes.lg),
-                Text('فتح نزاع', style: AppTypography.headlineSmall),
+                Text(AppStrings.openDisputeTitle, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
                   controller: _descriptionCtrl,
-                  hint: 'اوصف المشكلة بالتفصيل',
+                  hint: AppStrings.describeProblemInDetail,
                   maxLines: 5,
                   onChanged: _onDescriptionChanged,
                 ),
@@ -2698,18 +2697,18 @@ class _RefundBottomSheetState extends State<_RefundBottomSheet> {
               children: [
                 _buildHandle(),
                 SizedBox(height: AppSizes.lg),
-                Text('طلب استرداد', style: AppTypography.headlineSmall),
+                Text(AppStrings.requestRefundTitle, style: AppTypography.headlineSmall),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
                   controller: _amountCtrl,
-                  hint: 'مبلغ الاسترداد',
+                  hint: AppStrings.refundAmount,
                   keyboardType: TextInputType.number,
                   prefixIcon: IconsaxPlusLinear.money_recive,
                 ),
                 SizedBox(height: AppSizes.md),
                 SekkaInputField(
                   controller: _reasonCtrl,
-                  hint: 'سبب الاسترداد',
+                  hint: AppStrings.refundReason,
                   maxLines: 3,
                 ),
                 SizedBox(height: AppSizes.xl),
@@ -2792,25 +2791,25 @@ class _BookSlotBottomSheetState extends State<_BookSlotBottomSheet> {
                   ),
                 ),
                 Text(
-                  'احجز موعد تسليم',
+                  AppStrings.bookSlotTitle,
                   style: AppTypography.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: AppSizes.xxl),
                 SekkaInputField(
                   controller: _slotIdCtrl,
-                  hint: 'رقم الموعد',
+                  hint: AppStrings.slotNumber,
                   prefixIcon: IconsaxPlusLinear.timer_1,
                 ),
                 SizedBox(height: AppSizes.lg),
                 SekkaInputField(
                   controller: _dateCtrl,
-                  hint: 'التاريخ (مثال: 2026-03-28)',
+                  hint: AppStrings.datePlaceholder,
                   prefixIcon: IconsaxPlusLinear.calendar_1,
                 ),
                 SizedBox(height: AppSizes.xxl),
                 SekkaButton(
-                  label: 'احجز الموعد',
+                  label: AppStrings.bookSlotAction,
                   icon: IconsaxPlusLinear.tick_circle,
                   onPressed: () {
                     if (_slotIdCtrl.text.trim().isEmpty) return;

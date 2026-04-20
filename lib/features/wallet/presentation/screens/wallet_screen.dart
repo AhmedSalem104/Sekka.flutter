@@ -504,7 +504,7 @@ class _DateHeader extends StatelessWidget {
     } else if (date == yesterday) {
       label = AppStrings.walletYesterday;
     } else {
-      label = DateFormat('d MMMM yyyy', 'ar').format(date);
+      label = DateFormat('d MMMM yyyy', AppStrings.currentLang).format(date);
     }
 
     return Padding(

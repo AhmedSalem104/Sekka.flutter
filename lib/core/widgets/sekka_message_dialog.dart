@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/app_colors.dart';
 import '../constants/app_sizes.dart';
+import '../constants/app_strings.dart';
 import '../theme/app_typography.dart';
 import 'sekka_button.dart';
 
@@ -49,9 +50,9 @@ class SekkaMessageDialog extends StatelessWidget {
       };
 
   String get _defaultTitle => switch (type) {
-        SekkaMessageType.error => 'أوبس!',
-        SekkaMessageType.success => 'تمام!',
-        SekkaMessageType.info => 'معلومة',
+        SekkaMessageType.error => AppStrings.errorTitle,
+        SekkaMessageType.success => AppStrings.successTitle,
+        SekkaMessageType.info => AppStrings.infoTitle,
       };
 
   @override
@@ -105,7 +106,7 @@ class SekkaMessageDialog extends StatelessWidget {
 
             // Button
             SekkaButton(
-              label: buttonText ?? 'تمام',
+              label: buttonText ?? AppStrings.ok,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],

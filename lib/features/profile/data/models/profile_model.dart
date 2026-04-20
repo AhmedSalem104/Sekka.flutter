@@ -59,6 +59,19 @@ class ProfileModel extends ProfileEntity {
         'referralCode': referralCode,
       };
 
+  static const _vehicleTypes = {
+    'motorcycle': 0, 'car': 1, 'van': 2, 'truck': 3, 'bicycle': 4,
+  };
+  static const _shiftStatuses = {
+    'offshift': 0, 'onshift': 1,
+  };
+
+  static int _parseEnum(dynamic v, Map<String, int> map) {
+    if (v is int) return v;
+    if (v is String) return map[v.toLowerCase()] ?? 0;
+    return 0;
+  }
+
   factory ProfileModel.fromJson(Map<String, dynamic> json) {
     return ProfileModel(
       id: json['id'] as String? ?? '',
@@ -67,7 +80,7 @@ class ProfileModel extends ProfileEntity {
       email: json['email'] as String?,
       profileImageUrl: json['profileImageUrl'] as String?,
       licenseImageUrl: json['licenseImageUrl'] as String?,
-      vehicleType: json['vehicleType'] as int? ?? 0,
+      vehicleType: _parseEnum(json['vehicleType'], _vehicleTypes),
       isOnline: json['isOnline'] as bool? ?? false,
       defaultRegion: json['defaultRegion'] as String?,
       cashOnHand: (json['cashOnHand'] as num?)?.toDouble() ?? 0,
@@ -81,7 +94,7 @@ class ProfileModel extends ProfileEntity {
       totalOrders: json['totalOrders'] as int? ?? 0,
       totalDelivered: json['totalDelivered'] as int? ?? 0,
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0,
-      shiftStatus: json['shiftStatus'] as int? ?? 0,
+      shiftStatus: _parseEnum(json['shiftStatus'], _shiftStatuses),
       healthScore: json['healthScore'] as int? ?? 0,
       badgesCount: json['badgesCount'] as int? ?? 0,
       currentStreak: json['currentStreak'] as int? ?? 0,

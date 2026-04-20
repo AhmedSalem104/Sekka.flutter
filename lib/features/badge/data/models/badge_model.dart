@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import 'package:equatable/equatable.dart';
 
 class BadgeModel extends Equatable {
@@ -28,7 +29,7 @@ class BadgeModel extends Equatable {
   factory BadgeModel.fromJson(Map<String, dynamic> json) => BadgeModel(
         driverName: json['driverName'] as String? ?? '',
         driverId: json['driverId'] as String? ?? '',
-        vehicleType: json['vehicleType'] as int? ?? 0,
+        vehicleType: parseVehicleType(json['vehicleType']),
         averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
         totalDeliveries: json['totalDeliveries'] as int? ?? 0,
         memberSince: json['memberSince'] as String? ?? '',

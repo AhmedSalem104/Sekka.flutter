@@ -165,7 +165,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
                 ),
                 label: Text(
-                  'إضافة شريك',
+                  AppStrings.addPartner,
                   style: AppTypography.titleMedium.copyWith(
                     color: AppColors.textOnPrimary,
                   ),
@@ -188,7 +188,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                   Expanded(
                     child: Center(
                       child: Text(
-                        'عملائي',
+                        AppStrings.navCustomers,
                         style: AppTypography.headlineMedium.copyWith(
                           color: isDark
                               ? AppColors.textHeadlineDark
@@ -198,7 +198,7 @@ class _ContactsScreenState extends State<ContactsScreen>
                     ),
                   ),
                   IconButton(
-                    tooltip: 'العملاء المفضلين',
+                    tooltip: AppStrings.favoriteCustomers,
                     icon: Icon(
                       IconsaxPlusBold.heart,
                       color: AppColors.error,
@@ -276,7 +276,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           CustomersError(:final message) => SekkaEmptyState(
               icon: IconsaxPlusLinear.warning_2,
               title: message,
-              actionLabel: 'جرّب تاني',
+              actionLabel: AppStrings.retry,
               onAction: () =>
                   _customersBloc.add(const CustomersLoadRequested()),
             ),
@@ -286,11 +286,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                   onRefresh: _onRefreshCustomers,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    children: const [
+                    children: [
                       SekkaEmptyState(
                         icon: IconsaxPlusLinear.profile_2user,
-                        title: 'مفيش عملاء',
-                        description: 'العملاء هيظهروا هنا لما تبدأ توصيل',
+                        title: AppStrings.noCustomers,
+                        description: AppStrings.noCustomersDesc,
                       ),
                     ],
                   ),
@@ -432,7 +432,7 @@ class _ContactsScreenState extends State<ContactsScreen>
           PartnersError(:final message) => SekkaEmptyState(
               icon: IconsaxPlusLinear.warning_2,
               title: message,
-              actionLabel: 'جرّب تاني',
+              actionLabel: AppStrings.retry,
               onAction: () =>
                   _partnersBloc.add(const PartnersLoadRequested()),
             ),
@@ -442,11 +442,11 @@ class _ContactsScreenState extends State<ContactsScreen>
                   onRefresh: _onRefreshPartners,
                   child: ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    children: const [
+                    children: [
                       SekkaEmptyState(
                         icon: IconsaxPlusLinear.building_4,
-                        title: 'مفيش شركاء',
-                        description: 'مفيش شركاء متاحين دلوقتي',
+                        title: AppStrings.noPartners,
+                        description: AppStrings.noPartnersDesc,
                       ),
                     ],
                   ),
@@ -581,6 +581,6 @@ class _ContactsScreenState extends State<ContactsScreen>
         3 => AppStrings.supermarketType,
         4 => AppStrings.warehouseType,
         5 => AppStrings.eCommerceType,
-        _ => 'أخرى',
+        _ => AppStrings.otherType,
       };
 }

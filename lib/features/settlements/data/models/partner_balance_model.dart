@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/partner_balance_entity.dart';
 
 class PartnerBalanceModel extends PartnerBalanceEntity {
@@ -26,7 +27,7 @@ class PartnerBalanceModel extends PartnerBalanceEntity {
       totalCollected: (json['totalCollected'] as num?)?.toDouble() ?? 0,
       totalSettled: (json['totalSettled'] as num?)?.toDouble() ?? 0,
       pendingBalance: (json['pendingBalance'] as num?)?.toDouble() ?? 0,
-      pendingOrderCount: json['pendingOrderCount'] as int? ?? 0,
+      pendingOrderCount: safeInt(json['pendingOrderCount'], 0),
     );
   }
 }

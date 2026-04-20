@@ -51,9 +51,9 @@ class ApiException implements Exception {
     return ApiException(
       message: switch (statusCode) {
         401 => AppStrings.sessionExpired,
-        409 => 'الرقم ده مسجّل قبل كدا، جرّب تسجّل دخول',
-        429 => 'جرّبت كتير، استنى شوية وحاول تاني',
-        503 => 'الخدمة مش متاحة دلوقتي، جرّب بعد شوية',
+        409 => AppStrings.phoneAlreadyRegistered,
+        429 => AppStrings.tooManyAttempts,
+        503 => AppStrings.serviceUnavailable,
         final code? when code >= 500 => AppStrings.serverError,
         _ => AppStrings.unknownError,
       },

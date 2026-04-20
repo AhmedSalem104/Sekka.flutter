@@ -69,7 +69,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final driver = DriverModel.fromJson(driverJson);
         authStatusNotifier.value = true;
         emit(AuthAuthenticated(driver));
-        _registerFcmToken();
+        // FCM registration deferred — don't call with potentially expired token.
+        // It will register after the first successful API call refreshes the JWT,
+        // or on next fresh login (line ~92).
+        Future.delayed(const Duration(seconds: 8), _registerFcmToken);
         return;
       }
     }
@@ -231,9 +234,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _registerFcmToken() {
-    final repo = _repository;
-    if (repo is AuthRepositoryImpl) {
-      FcmService.instance.registerWithBackend(repo);
-    }
+    print('[AUTH] _registerFcmToken called');
+    FcmService.instance.registerWithBackend(_tokenStorage);
   }
 }

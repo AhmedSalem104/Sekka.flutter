@@ -445,7 +445,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                                 style: AppTypography.bodyMedium,
                                 textDirection: TextDirection.rtl,
                                 decoration: InputDecoration(
-                                  hintText: 'ابحث عن مكان...',
+                                  hintText: AppStrings.searchPlace,
                                   hintStyle: AppTypography.bodyMedium.copyWith(
                                     color: isDark
                                         ? AppColors.textCaptionDark
@@ -699,7 +699,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                                         ),
                                         SizedBox(width: AppSizes.xs),
                                         Text(
-                                          'بنجيب العنوان...',
+                                          AppStrings.fetchingAddress,
                                           style: AppTypography.caption
                                               .copyWith(
                                             color: isDark
@@ -712,7 +712,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                                   else
                                     Text(
                                       _currentAddress ??
-                                          'حرّك الخريطة عشان تحدد المكان',
+                                          AppStrings.moveMapToSelect,
                                       style:
                                           AppTypography.bodySmall.copyWith(
                                         color: isDark
@@ -742,7 +742,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
 
                         // Confirm button
                         SekkaButton(
-                          label: 'تأكيد الموقع',
+                          label: AppStrings.confirmLocation,
                           icon: IconsaxPlusLinear.tick_circle,
                           onPressed: _confirmLocation,
                         ),

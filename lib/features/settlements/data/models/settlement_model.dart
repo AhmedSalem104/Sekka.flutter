@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/settlement_entity.dart';
 
 class SettlementModel extends SettlementEntity {
@@ -39,8 +40,8 @@ class SettlementModel extends SettlementEntity {
       partnerId: json['partnerId'] as String? ?? '',
       partnerName: json['partnerName'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      settlementType: json['settlementType'] as int? ?? 0,
-      orderCount: json['orderCount'] as int? ?? 0,
+      settlementType: safeInt(json['settlementType'], 0),
+      orderCount: safeInt(json['orderCount'], 0),
       notes: json['notes'] as String?,
       receiptImageUrl: json['receiptImageUrl'] as String?,
       whatsAppSent: json['whatsAppSent'] as bool? ?? false,

@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../../../shared/enums/order_enums.dart';
 
 class OrderPhotoModel {
@@ -17,7 +18,7 @@ class OrderPhotoModel {
     return OrderPhotoModel(
       id: json['id'] as String? ?? '',
       photoUrl: json['photoUrl'] as String? ?? '',
-      photoType: json['photoType'] as int? ?? 0,
+      photoType: safeInt(json['photoType'], 0),
       takenAt: json['takenAt'] != null
           ? DateTime.tryParse(json['takenAt'] as String)
           : null,
@@ -167,9 +168,9 @@ class OrderModel {
       description: json['description'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
       commissionAmount: (json['commissionAmount'] as num?)?.toDouble(),
-      paymentMethod: PaymentMethod.fromValue(json['paymentMethod'] as int? ?? 0),
-      status: OrderStatus.fromValue(json['status'] as int? ?? 0),
-      priority: OrderPriority.fromValue(json['priority'] as int? ?? 0),
+      paymentMethod: PaymentMethod.fromValue(safeInt(json['paymentMethod'], 0)),
+      status: OrderStatus.fromValue(safeInt(json['status'], 0)),
+      priority: OrderPriority.fromValue(safeInt(json['priority'], 0)),
       pickupAddress: json['pickupAddress'] as String?,
       pickupLatitude: (json['pickupLatitude'] as num?)?.toDouble(),
       pickupLongitude: (json['pickupLongitude'] as num?)?.toDouble(),
@@ -177,10 +178,10 @@ class OrderModel {
       deliveryLatitude: (json['deliveryLatitude'] as num?)?.toDouble(),
       deliveryLongitude: (json['deliveryLongitude'] as num?)?.toDouble(),
       distanceKm: (json['distanceKm'] as num?)?.toDouble(),
-      sequenceIndex: json['sequenceIndex'] as int?,
+      sequenceIndex: json['sequenceIndex'] is int ? json['sequenceIndex'] as int : (json['sequenceIndex'] is String ? int.tryParse(json['sequenceIndex'] as String) : null),
       worthScore: (json['worthScore'] as num?)?.toDouble(),
       notes: json['notes'] as String?,
-      itemCount: json['itemCount'] as int?,
+      itemCount: json['itemCount'] is int ? json['itemCount'] as int : (json['itemCount'] is String ? int.tryParse(json['itemCount'] as String) : null),
       timeWindowStart: json['timeWindowStart'] != null
           ? DateTime.tryParse(json['timeWindowStart'] as String)
           : null,
@@ -202,7 +203,7 @@ class OrderModel {
       recurrencePattern: json['recurrencePattern'] as String?,
       isPaused: json['isPaused'] as bool? ?? false,
       nextScheduledDate: json['nextScheduledDate'] as String?,
-      totalOccurrences: json['totalOccurrences'] as int?,
+      totalOccurrences: json['totalOccurrences'] is int ? json['totalOccurrences'] as int : (json['totalOccurrences'] is String ? int.tryParse(json['totalOccurrences'] as String) : null),
       trackingCode: json['trackingCode'] as String?,
     );
   }
@@ -267,9 +268,9 @@ class OrderModel {
       customerName: json['customerName'] as String?,
       customerPhone: json['customerPhone'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      paymentMethod: PaymentMethod.fromValue(json['paymentMethod'] as int? ?? 0),
-      status: OrderStatus.fromValue(json['status'] as int? ?? 0),
-      priority: OrderPriority.fromValue(json['priority'] as int? ?? 0),
+      paymentMethod: PaymentMethod.fromValue(safeInt(json['paymentMethod'], 0)),
+      status: OrderStatus.fromValue(safeInt(json['status'], 0)),
+      priority: OrderPriority.fromValue(safeInt(json['priority'], 0)),
       deliveryAddress: json['deliveryAddress'] as String? ?? '',
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
@@ -278,7 +279,7 @@ class OrderModel {
       recurrencePattern: json['recurrencePattern'] as String?,
       isPaused: json['isPaused'] as bool? ?? false,
       nextScheduledDate: json['nextScheduledDate'] as String?,
-      totalOccurrences: json['totalOccurrences'] as int?,
+      totalOccurrences: json['totalOccurrences'] is int ? json['totalOccurrences'] as int : (json['totalOccurrences'] is String ? int.tryParse(json['totalOccurrences'] as String) : null),
     );
   }
 

@@ -17,8 +17,31 @@ import '../bloc/notifications_bloc.dart';
 import '../bloc/notifications_event.dart';
 import '../bloc/notifications_state.dart';
 
-class NotificationsScreen extends StatelessWidget {
+class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
+
+  @override
+  State<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends State<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Auto mark all as read after a short delay (gives user time to see badges)
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted) return;
+      final bloc = context.read<NotificationsBloc>();
+      if (bloc.state is NotificationsLoaded) {
+        final hasUnread = (bloc.state as NotificationsLoaded)
+            .notifications
+            .any((n) => !n.isRead);
+        if (hasUnread) {
+          bloc.add(const NotificationsMarkAllAsRead());
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -247,10 +270,10 @@ class NotificationsScreen extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(dateTime);
 
-    if (diff.inMinutes < 1) return 'الآن';
-    if (diff.inMinutes < 60) return 'من ${diff.inMinutes} دقيقة';
-    if (diff.inHours < 24) return 'من ${diff.inHours} ساعة';
-    if (diff.inDays < 7) return 'من ${diff.inDays} يوم';
+    if (diff.inMinutes < 1) return AppStrings.justNow;
+    if (diff.inMinutes < 60) return AppStrings.minutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return AppStrings.hoursAgo(diff.inHours);
+    if (diff.inDays < 7) return AppStrings.daysAgo(diff.inDays);
     return '${dateTime.day}/${dateTime.month}';
   }
 }

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "487153179973",
-    "project_id": "sekka-app",
-    "storage_bucket": "sekka-app.firebasestorage.app"
+    "project_number": "1002517893457",
+    "project_id": "sekka-176a3",
+    "storage_bucket": "sekka-176a3.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:487153179973:android:6fc3dd6a0276261a84f22c",
+        "mobilesdk_app_id": "1:1002517893457:android:5ab93f91ac4350c5100370",
         "android_client_info": {
           "package_name": "com.sekka.sekka"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDlneyimdKuvNZDQoXVQ1C5xUFQPa2JEcw"
+          "current_key": "AIzaSyDLhDRmaMfcGPnBT9qBw_rwdGQIBgIwhVc"
         }
       ],
       "services": {
