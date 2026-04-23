@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import '../../../../shared/services/notification_badge_refresh.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1811,11 +1813,23 @@ class _NotificationBadge extends StatefulWidget {
 
 class _NotificationBadgeState extends State<_NotificationBadge> {
   int _unreadCount = 0;
+  StreamSubscription<void>? _fcmSub;
+  StreamSubscription<void>? _refreshSub;
+
 
   @override
   void initState() {
     super.initState();
     _loadUnreadCount();
+    _fcmSub = FirebaseMessaging.onMessage.listen((_) => _loadUnreadCount());
+    _refreshSub = NotificationBadgeRefresh.stream.listen((_) => _loadUnreadCount());
+  }
+
+  @override
+  void dispose() {
+    _fcmSub?.cancel();
+    _refreshSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUnreadCount() async {

@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class ConversationModel {
   const ConversationModel({
     required this.id,
@@ -22,7 +24,7 @@ class ConversationModel {
   factory ConversationModel.fromJson(Map<String, dynamic> json) {
     return ConversationModel(
       id: json['id'] as String? ?? '',
-      chatType: json['chatType'] as int? ?? 3,
+      chatType: parseChatType(json['chatType']),
       subject: json['subject'] as String?,
       isClosed: json['isClosed'] as bool? ?? false,
       lastMessage: json['lastMessage'] as String?,
@@ -80,7 +82,7 @@ class ChatMessageModel {
       senderType: json['senderType'] as String? ?? 'Driver',
       content: json['content'] as String? ?? '',
       attachmentUrl: json['attachmentUrl'] as String?,
-      status: json['status'] as int? ?? 0,
+      status: parseChatStatus(json['status']),
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : DateTime.now(),

@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/invoice_entity.dart';
 
 class InvoiceModel extends InvoiceEntity {
@@ -31,7 +32,7 @@ class InvoiceModel extends InvoiceEntity {
       totalCommissions: (json['totalCommissions'] as num?)?.toDouble() ?? 0,
       totalExpenses: (json['totalExpenses'] as num?)?.toDouble() ?? 0,
       netAmount: (json['netAmount'] as num?)?.toDouble() ?? 0,
-      status: json['status'] as int? ?? 0,
+      status: parseInvoiceStatus(json['status']),
       statusName: json['statusName'] as String? ?? '',
       statusNameAr: json['statusNameAr'] as String? ?? '',
       issuedAt: DateTime.parse(

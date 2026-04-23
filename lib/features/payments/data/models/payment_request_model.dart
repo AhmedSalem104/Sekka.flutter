@@ -1,3 +1,4 @@
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/payment_request_entity.dart';
 
 class PaymentRequestModel extends PaymentRequestEntity {
@@ -29,12 +30,12 @@ class PaymentRequestModel extends PaymentRequestEntity {
       planName: json['planName'] as String? ?? '',
       planDescription: json['planDescription'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      paymentMethod: json['paymentMethod'] as int? ?? 0,
+      paymentMethod: parsePaymentMethod(json['paymentMethod']),
       paymentMethodName: json['paymentMethodName'] as String? ?? '',
       senderPhone: json['senderPhone'] as String?,
       senderName: json['senderName'] as String?,
       notes: json['notes'] as String?,
-      status: json['status'] as int? ?? 0,
+      status: parsePaymentStatus(json['status']),
       statusName: json['statusName'] as String? ?? '',
       statusNameAr: json['statusNameAr'] as String? ?? '',
       proofImageUrl: json['proofImageUrl'] as String?,

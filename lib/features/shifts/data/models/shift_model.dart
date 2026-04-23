@@ -1,5 +1,6 @@
 import 'dart:developer' as dev;
 
+import '../../../../shared/utils/safe_parse.dart';
 import '../../domain/entities/shift_entity.dart';
 
 class ShiftModel extends ShiftEntity {
@@ -29,7 +30,7 @@ class ShiftModel extends ShiftEntity {
     return ShiftModel(
       id: json['id'] as String? ?? '',
       driverId: json['driverId'] as String? ?? '',
-      status: json['status'] as int? ?? 0,
+      status: parseShiftStatus(json['status']),
       startTime: parsedStart,
       endTime: json['endTime'] != null
           ? _parseUtc(json['endTime'] as String)

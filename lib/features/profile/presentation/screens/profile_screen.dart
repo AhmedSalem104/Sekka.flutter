@@ -165,6 +165,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           SizedBox(height: AppSizes.sm),
 
           ProfileSectionTile(
+            icon: IconsaxPlusLinear.people,
+            label: AppStrings.favoriteDriversTitle,
+            onTap: () => context.push(RouteNames.favoriteDrivers),
+          ),
+          SizedBox(height: AppSizes.sm),
+
+          ProfileSectionTile(
             icon: IconsaxPlusLinear.money_send,
             label: AppStrings.expenses,
             onTap: () => context.push(RouteNames.profileExpenses),

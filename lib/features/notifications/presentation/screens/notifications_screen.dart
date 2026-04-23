@@ -25,23 +25,6 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Auto mark all as read after a short delay (gives user time to see badges)
-    Future.delayed(const Duration(seconds: 2), () {
-      if (!mounted) return;
-      final bloc = context.read<NotificationsBloc>();
-      if (bloc.state is NotificationsLoaded) {
-        final hasUnread = (bloc.state as NotificationsLoaded)
-            .notifications
-            .any((n) => !n.isRead);
-        if (hasUnread) {
-          bloc.add(const NotificationsMarkAllAsRead());
-        }
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,7 +251,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   String _formatTime(DateTime dateTime) {
     final now = DateTime.now();
-    final diff = now.difference(dateTime);
+    final local = dateTime.isUtc ? dateTime.toLocal() : dateTime;
+    final diff = now.difference(local);
 
     if (diff.inMinutes < 1) return AppStrings.justNow;
     if (diff.inMinutes < 60) return AppStrings.minutesAgo(diff.inMinutes);

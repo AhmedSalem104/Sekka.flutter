@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class CallerIdModel {
   const CallerIdModel({
     required this.phoneNumber,
@@ -25,7 +27,7 @@ class CallerIdModel {
     return CallerIdModel(
       phoneNumber: json['phoneNumber'] as String? ?? '',
       displayName: json['displayName'] as String?,
-      contactType: json['contactType'] as int? ?? 0,
+      contactType: safeInt(json['contactType'], 0),
       customerName: json['customerName'] as String?,
       partnerName: json['partnerName'] as String?,
       lastOrderDate: json['lastOrderDate'] != null

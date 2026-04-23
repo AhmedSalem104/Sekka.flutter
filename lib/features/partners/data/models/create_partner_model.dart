@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class CreatePartnerModel {
   const CreatePartnerModel({
     required this.name,
@@ -24,12 +26,12 @@ class CreatePartnerModel {
   factory CreatePartnerModel.fromJson(Map<String, dynamic> json) {
     return CreatePartnerModel(
       name: json['name'] as String,
-      partnerType: json['partnerType'] as int? ?? 0,
+      partnerType: parsePartnerType(json['partnerType']),
       phone: json['phone'] as String?,
       address: json['address'] as String?,
-      commissionType: json['commissionType'] as int? ?? 0,
+      commissionType: parseCommissionType(json['commissionType']),
       commissionValue: (json['commissionValue'] as num?)?.toDouble() ?? 0.0,
-      defaultPaymentMethod: json['defaultPaymentMethod'] as int? ?? 0,
+      defaultPaymentMethod: parsePaymentMethod(json['defaultPaymentMethod']),
       color: json['color'] as String?,
       receiptHeader: json['receiptHeader'] as String?,
     );

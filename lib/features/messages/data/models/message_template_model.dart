@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class MessageTemplateModel {
   const MessageTemplateModel({
     required this.id,
@@ -19,7 +21,7 @@ class MessageTemplateModel {
     return MessageTemplateModel(
       id: json['id'] as String,
       messageText: json['messageText'] as String,
-      category: json['category'] as int? ?? 4,
+      category: safeInt(json['category'], 4),
       usageCount: json['usageCount'] as int? ?? 0,
       isSystemTemplate: json['isSystemTemplate'] as bool? ?? false,
       sortOrder: json['sortOrder'] as int? ?? 0,

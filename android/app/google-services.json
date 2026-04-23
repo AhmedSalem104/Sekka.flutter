@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:487153179973:android:6fc3dd6a0276261a84f22c",
+        "mobilesdk_app_id": "1:487153179973:android:762b91aa83609e5d84f22c",
         "android_client_info": {
-          "package_name": "com.sekka.sekka"
+          "package_name": "com.sekkaride.driver"
         }
       },
       "oauth_client": [],

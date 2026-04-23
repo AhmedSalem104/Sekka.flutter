@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class SearchResultModel {
   const SearchResultModel({
     required this.orders,
@@ -67,7 +69,7 @@ class SearchOrderItem {
       customerPhone: json['customerPhone'] as String?,
       deliveryAddress: json['deliveryAddress'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] as int? ?? 0,
+      status: parseOrderStatus(json['status']),
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'] as String)
           : null,
@@ -120,7 +122,7 @@ class SearchPartnerItem {
     return SearchPartnerItem(
       id: json['id'] as String,
       name: json['name'] as String? ?? '',
-      partnerType: json['partnerType'] as int?,
+      partnerType: json['partnerType'] != null ? parsePartnerType(json['partnerType']) : null,
       phone: json['phone'] as String?,
       color: json['color'] as String?,
     );

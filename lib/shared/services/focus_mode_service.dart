@@ -6,7 +6,7 @@ class FocusModeService {
   FocusModeService._();
   static final instance = FocusModeService._();
 
-  static const _channel = MethodChannel('com.sekka.sekka/dnd');
+  static const _channel = MethodChannel('com.sekkaride.driver/dnd');
 
   bool _enabled = false;
 

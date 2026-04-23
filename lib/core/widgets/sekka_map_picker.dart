@@ -342,7 +342,7 @@ class _SekkaMapPickerState extends State<SekkaMapPicker>
                 TileLayer(
                   urlTemplate:
                       'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.sekka.sekka',
+                  userAgentPackageName: 'com.sekkaride.driver',
                 ),
               ],
             ),

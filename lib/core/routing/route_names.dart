@@ -20,6 +20,7 @@ abstract final class RouteNames {
   static const String editProfile = '/edit-profile';
   static const String profileStats = '/profile-stats';
   static const String profileExpenses = '/profile-expenses';
+  static const String favoriteDrivers = '/favorite-drivers';
   static const String settings = '/settings';
   static const String privacy = '/privacy';
   static const String shiftSummary = '/shift-summary';

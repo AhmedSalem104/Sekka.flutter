@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class ReferralModel {
   const ReferralModel({
     required this.id,
@@ -25,7 +27,7 @@ class ReferralModel {
           '',
       referredDriverPhone: json['referredDriverPhone'] as String? ??
           json['phone'] as String?,
-      status: json['status'] as int? ?? 0,
+      status: parseReferralStatus(json['status']),
       rewardAmount: (json['rewardAmount'] as num?)?.toDouble() ?? 0,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)

@@ -5,6 +5,7 @@ import 'package:hydrated_bloc/hydrated_bloc.dart';
 
 import '../../../../core/constants/app_strings.dart';
 import '../../../../shared/enums/order_enums.dart';
+import '../../../../shared/services/notification_badge_refresh.dart';
 import '../../../../shared/network/api_exception.dart';
 import '../../../../shared/network/api_result.dart';
 import '../../../../shared/offline/offline_queue_service.dart';
@@ -580,6 +581,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         isActionInProgress: false,
         actionMessage: () => AppStrings.orderCreatedSuccess,
       ));
+      NotificationBadgeRefresh.trigger();
     } on ApiException catch (e) {
       emit(loaded.copyWith(
         isActionInProgress: false,
@@ -643,6 +645,7 @@ class OrdersBloc extends HydratedBloc<OrdersEvent, OrdersState> {
         isActionInProgress: false,
         actionMessage: () => AppStrings.orderCreatedSuccess,
       ));
+      NotificationBadgeRefresh.trigger();
     } on ApiException catch (e) {
       emit(loaded.copyWith(
         isActionInProgress: false,

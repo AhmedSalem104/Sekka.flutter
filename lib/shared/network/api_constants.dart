@@ -253,6 +253,16 @@ abstract final class ApiConstants {
   static const String healthScore = _healthScore;
   static const String healthScoreTips = '$_healthScore/tips';
 
+  // Favorite Drivers endpoints
+  static const String _favoriteDrivers = '$baseUrl/favorite-drivers';
+  static const String favoriteDrivers = _favoriteDrivers;
+  static String favoriteDriverDetail(String id) => '$_favoriteDrivers/$id';
+  static String favoriteDriverRefresh(String id) =>
+      '$_favoriteDrivers/$id/refresh';
+  static String driverByPhone(String phone) => '$baseUrl/drivers/by-phone/$phone';
+  static String orderShareLink(String orderId) =>
+      '${orderDetail(orderId)}/share-link';
+
   // Colleague Radar endpoints
   static const String _colleagueRadar = '$baseUrl/colleague-radar';
   static const String colleagueRadarNearby = '$_colleagueRadar/nearby';

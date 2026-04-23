@@ -1,4 +1,4 @@
-package com.sekka.sekka
+package com.sekkaride.driver
 
 import android.app.NotificationManager
 import android.content.Context
@@ -10,7 +10,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.sekka.sekka/dnd"
+    private val CHANNEL = "com.sekkaride.driver/dnd"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)

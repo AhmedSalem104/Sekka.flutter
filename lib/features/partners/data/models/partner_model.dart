@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class PartnerModel {
   const PartnerModel({
     required this.id,
@@ -43,15 +45,15 @@ class PartnerModel {
     return PartnerModel(
       id: json['id'] as String,
       name: json['name'] as String,
-      partnerType: json['partnerType'] as int? ?? 0,
+      partnerType: parsePartnerType(json['partnerType']),
       phone: json['phone'] as String?,
       address: json['address'] as String?,
-      commissionType: json['commissionType'] as int? ?? 0,
+      commissionType: parseCommissionType(json['commissionType']),
       commissionValue: (json['commissionValue'] as num?)?.toDouble() ?? 0.0,
       color: json['color'] as String? ?? '#FC5D01',
       logoUrl: json['logoUrl'] as String?,
       isActive: json['isActive'] as bool? ?? true,
-      verificationStatus: json['verificationStatus'] as int? ?? 0,
+      verificationStatus: parseVerificationStatus(json['verificationStatus']),
     );
   }
 }

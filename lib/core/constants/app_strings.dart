@@ -2117,4 +2117,42 @@ abstract final class AppStrings {
   static List<String> get monthNames => _isAr
       ? const ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
       : const ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  // Favorite Drivers
+  static String get favoriteDriversTitle =>
+      _isAr ? 'زملائي المفضلين' : 'My Favorites';
+  static String get favoriteDriversEmpty =>
+      _isAr ? 'مفيش زملاء مفضلين' : 'No favorite colleagues';
+  static String get favoriteDriversEmptyDesc =>
+      _isAr
+          ? 'أضف زملاءك عشان تحوّلهم أوردرات بسرعة'
+          : 'Add colleagues for quick order transfers';
+  static String get addFavoriteDriver =>
+      _isAr ? 'أضف زميل' : 'Add colleague';
+  static String get colleagueName =>
+      _isAr ? 'اسم الزميل' : 'Colleague name';
+  static String get colleaguePhone =>
+      _isAr ? 'رقم الزميل' : 'Colleague phone';
+  static String get onApp =>
+      _isAr ? 'على التطبيق' : 'On app';
+  static String get notOnApp =>
+      _isAr ? 'مش على التطبيق' : 'Not on app';
+  static String get sendViaWhatsApp =>
+      _isAr ? 'ابعت على واتساب' : 'Send via WhatsApp';
+  static String get transferDirect =>
+      _isAr ? 'حوّل مباشر' : 'Transfer directly';
+  static String get searchByPhone =>
+      _isAr ? 'ابحث برقم الموبايل' : 'Search by phone';
+  static String get removeFavoriteConfirm =>
+      _isAr ? 'هتشيل الزميل ده من المفضلين؟' : 'Remove this colleague from favorites?';
+  static String get remove =>
+      _isAr ? 'شيّل' : 'Remove';
+  static String get maxFavoritesReached =>
+      _isAr ? 'وصلت الحد الأقصى (30 زميل)' : 'Maximum reached (30 colleagues)';
+  static String get phoneHintEgyptian =>
+      _isAr ? 'مثال: ٠١٠١٢٣٤٥٦٧٨' : 'e.g. 01012345678';
+  static String get transferChooseMethod =>
+      _isAr ? 'اختار طريقة التحويل' : 'Choose transfer method';
+  static String get orSearchNewColleague =>
+      _isAr ? 'أو ابحث عن زميل جديد' : 'Or search for a new colleague';
 }

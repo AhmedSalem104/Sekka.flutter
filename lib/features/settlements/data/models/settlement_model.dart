@@ -40,7 +40,7 @@ class SettlementModel extends SettlementEntity {
       partnerId: json['partnerId'] as String? ?? '',
       partnerName: json['partnerName'] as String?,
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      settlementType: safeInt(json['settlementType'], 0),
+      settlementType: parseSettlementType(json['settlementType']),
       orderCount: safeInt(json['orderCount'], 0),
       notes: json['notes'] as String?,
       receiptImageUrl: json['receiptImageUrl'] as String?,

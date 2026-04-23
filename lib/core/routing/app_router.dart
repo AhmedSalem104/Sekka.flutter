@@ -52,6 +52,10 @@ import '../../features/badge/data/repositories/badge_repository.dart';
 import '../../features/badge/presentation/bloc/badge_bloc.dart';
 import '../../features/badge/presentation/bloc/badge_event.dart';
 import '../../features/badge/presentation/screens/badge_screen.dart';
+import '../../features/favorite_drivers/data/repositories/favorite_drivers_repository.dart';
+import '../../features/favorite_drivers/presentation/bloc/favorite_drivers_bloc.dart';
+import '../../features/favorite_drivers/presentation/bloc/favorite_drivers_event.dart';
+import '../../features/favorite_drivers/presentation/screens/favorite_drivers_screen.dart';
 import '../../features/gamification/data/repositories/gamification_repository.dart';
 import '../../features/gamification/presentation/bloc/gamification_bloc.dart';
 import '../../features/gamification/presentation/bloc/gamification_event.dart';
@@ -262,6 +266,18 @@ GoRouter createAppRouter(ValueNotifier<bool> authStatusNotifier) {
       GoRoute(
         path: RouteNames.profileExpenses,
         builder: (_, __) => const ExpensesScreen(),
+      ),
+      GoRoute(
+        path: RouteNames.favoriteDrivers,
+        builder: (context, __) {
+          final dio = context.read<DioClient>().dio;
+          return BlocProvider(
+            create: (_) =>
+                FavoriteDriversBloc(repository: FavoriteDriversRepository(dio))
+                  ..add(const FavoriteDriversLoadRequested()),
+            child: const FavoriteDriversScreen(),
+          );
+        },
       ),
       GoRoute(
         path: RouteNames.settings,

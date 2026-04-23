@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class NotificationModel {
   const NotificationModel({
     required this.id,
@@ -30,7 +32,7 @@ class NotificationModel {
       isRead: json['isRead'] as bool? ?? false,
       actionType: json['actionType'] as String?,
       actionData: json['actionData'] as String?,
-      priority: json['priority'] as int? ?? 1,
+      priority: safeInt(json['priority'], 1),
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }

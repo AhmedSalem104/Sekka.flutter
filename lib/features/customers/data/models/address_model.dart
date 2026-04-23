@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class AddressModel {
   const AddressModel({
     required this.id,
@@ -27,7 +29,7 @@ class AddressModel {
       addressText: json['addressText'] as String,
       latitude: (json['latitude'] as num?)?.toDouble(),
       longitude: (json['longitude'] as num?)?.toDouble(),
-      addressType: json['addressType'] as int? ?? 0,
+      addressType: safeInt(json['addressType'], 0),
       visitCount: json['visitCount'] as int? ?? 0,
       landmarks: json['landmarks'] as String?,
       deliveryNotes: json['deliveryNotes'] as String?,

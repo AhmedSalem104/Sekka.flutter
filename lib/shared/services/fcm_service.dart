@@ -99,8 +99,13 @@ class FcmService {
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
+    print('[FCM] ──── FOREGROUND MESSAGE RECEIVED ────');
+    print('[FCM] notification: ${message.notification?.title} / ${message.notification?.body}');
+    print('[FCM] data: ${message.data}');
+    print('[FCM] focus mode enabled: ${FocusModeService.instance.isEnabled}');
+
     if (FocusModeService.instance.shouldBlockNotification()) {
-      print('[FCM] Blocked by focus mode');
+      print('[FCM] BLOCKED by focus mode');
       return;
     }
 
@@ -108,14 +113,21 @@ class FcmService {
         (message.data['title'] as String?) ?? '';
     final String body = message.notification?.body ??
         (message.data['body'] as String?) ?? '';
-    print('[FCM] Foreground message: $title — $body');
+
+    print('[FCM] Will show local notification: title="$title" body="$body"');
 
     if (title.isNotEmpty || body.isNotEmpty) {
       LocalNotificationService.instance.show(
         title: title,
         body: body,
         payload: message.data.toString(),
-      );
+      ).then((_) {
+        print('[FCM] Local notification shown successfully');
+      }).catchError((e) {
+        print('[FCM] ERROR showing local notification: $e');
+      });
+    } else {
+      print('[FCM] SKIPPED — title and body both empty');
     }
   }
 

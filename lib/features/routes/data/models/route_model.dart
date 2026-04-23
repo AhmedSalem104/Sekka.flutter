@@ -1,3 +1,5 @@
+import '../../../../shared/utils/safe_parse.dart';
+
 class RouteOrderModel {
   const RouteOrderModel({
     required this.orderId,
@@ -29,7 +31,7 @@ class RouteOrderModel {
       customerName: json['customerName'] as String?,
       deliveryAddress: json['deliveryAddress'] as String? ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      status: json['status'] as int? ?? 0,
+      status: parseRouteStatus(json['status']),
       estimatedArrivalMinutes: json['estimatedArrivalMinutes'] as int?,
     );
   }
